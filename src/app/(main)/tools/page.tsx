@@ -1,7 +1,6 @@
 import {
   TestTube,
   Filter,
-  CalendarClock,
   AlertTriangle,
   CheckCircle2,
   PackagePlus,
@@ -72,12 +71,6 @@ const statusVariant: Record<
   "Chờ kiểm định": "warning",
 };
 
-function daysUntil(dateStr: string) {
-  const diff =
-    (new Date(dateStr).getTime() - new Date("2026-06-21").getTime()) /
-    (1000 * 60 * 60 * 24);
-  return Math.round(diff);
-}
 
 export default async function ToolsPage({
   searchParams,
@@ -97,8 +90,6 @@ export default async function ToolsPage({
           t.spec.toLowerCase().includes(query),
       )
     : all;
-
-  const categories = Array.from(new Set(all.map((t) => t.category)));
 
   const [supplies, toolUsageLogs] = await Promise.all([
     supplyStore.list(),
@@ -131,14 +122,6 @@ export default async function ToolsPage({
       accent: "bg-violet-50 text-violet-600",
     },
   ];
-
-  const calibrationDue = all
-    .filter((t) => t.calibrationRequired && t.nextCalibration)
-    .sort(
-      (a, b) =>
-        daysUntil(a.nextCalibration as string) -
-        daysUntil(b.nextCalibration as string),
-    );
 
   return (
     <>
@@ -296,89 +279,6 @@ export default async function ToolsPage({
             </div>
           </CardContent>
         </Card>
-
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Lịch kiểm định dụng cụ thể tích</CardTitle>
-              <CardDescription>
-                Pipet, bình định mức, buret – kiểm định định kỳ theo TCVN
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {calibrationDue.slice(0, 6).map((t) => {
-                  const days = daysUntil(t.nextCalibration as string);
-                  return (
-                    <li
-                      key={t.id}
-                      className="flex items-center gap-3 p-3 rounded-md border bg-card"
-                    >
-                      <CalendarClock className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">
-                          {t.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {t.code} · {t.location}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs text-muted-foreground">
-                          {t.nextCalibration}
-                        </div>
-                        <div
-                          className={`text-xs font-medium ${
-                            days < 0
-                              ? "text-destructive"
-                              : days <= 60
-                                ? "text-warning"
-                                : "text-muted-foreground"
-                          }`}
-                        >
-                          {days < 0
-                            ? `Quá ${Math.abs(days)} ngày`
-                            : `Còn ${days} ngày`}
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Phân bổ theo nhóm</CardTitle>
-              <CardDescription>
-                Tỷ trọng dụng cụ theo phân loại
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {categories.map((c) => {
-                const count = tools.filter((t) => t.category === c).length;
-                const pct = Math.round((count / tools.length) * 100);
-                return (
-                  <div key={c}>
-                    <div className="flex items-center justify-between text-sm mb-1.5">
-                      <span className="truncate pr-2">{c}</span>
-                      <span className="text-muted-foreground text-xs">
-                        {count} · {pct}%
-                      </span>
-                    </div>
-                    <div className="h-2 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full bg-primary"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
-        </section>
 
         {/* Danh mục vật tư */}
         <CrudTableCard

@@ -1,14 +1,10 @@
 import {
   Beaker,
   AlertTriangle,
-  PackagePlus,
-  PackageMinus,
   CalendarOff,
-  Filter,
   ShieldAlert,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -17,7 +13,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -26,7 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { type Chemical } from "@/lib/mock-data";
 import { chemicalsStore } from "@/lib/data/chemicals";
 import { chemicalProfileStore } from "@/lib/data/chemical-profiles";
 import { chemicalUsageLogStore } from "@/lib/data/chemical-usage-logs";
@@ -41,16 +35,6 @@ import {
 import { CrudTableCard } from "@/components/crud/crud-table-card";
 
 export const dynamic = "force-dynamic";
-
-const hazardVariant: Record<
-  Chemical["hazard"],
-  "secondary" | "destructive" | "warning"
-> = {
-  Thường: "secondary",
-  "Độc hại": "destructive",
-  "Dễ cháy": "warning",
-  "Ăn mòn": "warning",
-};
 
 function daysUntil(dateStr: string) {
   const diff =
@@ -173,26 +157,15 @@ export default async function ChemicalsPage({
             <div>
               <CardTitle>Danh mục hóa chất, chất chuẩn</CardTitle>
               <CardDescription>
-                Tồn kho hiện tại, mức tối thiểu, hạn sử dụng và mức cảnh báo
+                Đặc tính kỹ thuật, điều kiện & vị trí bảo quản, ngày nhận và hạn
+                sử dụng
               </CardDescription>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <EntitySearchInput
                 basePath="/chemicals"
-                placeholder="Tìm theo tên, CAS..."
+                placeholder="Tìm theo tên, mã..."
               />
-              <Button variant="outline" size="sm">
-                <Filter />
-                Lọc
-              </Button>
-              <Button variant="outline" size="sm">
-                <PackageMinus />
-                Xuất kho
-              </Button>
-              <Button variant="outline" size="sm">
-                <PackagePlus />
-                Nhập kho
-              </Button>
               <AddChemicalDialog />
             </div>
           </CardHeader>
@@ -201,14 +174,15 @@ export default async function ChemicalsPage({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40">
-                    <TableHead>Mã</TableHead>
+                    <TableHead>Mã hiệu</TableHead>
                     <TableHead>Tên hóa chất</TableHead>
-                    <TableHead>CAS</TableHead>
-                    <TableHead>Tồn kho</TableHead>
-                    <TableHead className="w-[180px]">Mức tồn</TableHead>
-                    <TableHead>Hạn dùng</TableHead>
-                    <TableHead>Vị trí</TableHead>
-                    <TableHead>Phân loại</TableHead>
+                    <TableHead>Đặc tính kỹ thuật</TableHead>
+                    <TableHead>Ngày SX</TableHead>
+                    <TableHead>Điều kiện bảo quản</TableHead>
+                    <TableHead>Vị trí bảo quản</TableHead>
+                    <TableHead>Dùng cho phép thử</TableHead>
+                    <TableHead>Ngày nhận</TableHead>
+                    <TableHead>Hạn sử dụng</TableHead>
                     <TableHead className="w-[160px]"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -216,7 +190,7 @@ export default async function ChemicalsPage({
                   {chemicals.length === 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={9}
+                        colSpan={10}
                         className="text-center text-sm text-muted-foreground py-8"
                       >
                         {query
@@ -226,40 +200,49 @@ export default async function ChemicalsPage({
                     </TableRow>
                   )}
                   {chemicals.map((c) => {
-                    const lowStock = c.stock < c.minStock;
                     const expDays = daysUntil(c.expiry);
                     const expiringSoon = expDays <= 120;
-                    const stockPct = Math.min(
-                      100,
-                      Math.round((c.stock / Math.max(c.minStock * 2, 1)) * 100),
-                    );
                     return (
                       <TableRow key={c.id}>
                         <TableCell className="font-mono">{c.code}</TableCell>
-                        <TableCell className="font-medium max-w-[260px]">
+                        <TableCell className="font-medium max-w-[240px]">
                           {c.name}
                         </TableCell>
-                        <TableCell className="text-muted-foreground font-mono text-xs">
-                          {c.cas}
+                        <TableCell className="text-sm max-w-[200px]">
+                          {c.technicalSpec || "—"}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                          {c.manufactureDate || "—"}
+                        </TableCell>
+                        <TableCell className="text-sm max-w-[200px]">
+                          {c.storageCondition || "—"}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {c.location || "—"}
                         </TableCell>
                         <TableCell>
-                          <span
-                            className={
-                              lowStock ? "text-destructive font-medium" : ""
-                            }
-                          >
-                            {c.stock} {c.unit}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Progress value={stockPct} className="flex-1" />
-                            <span className="text-xs text-muted-foreground w-14 text-right">
-                              tối thiểu {c.minStock}
+                          {c.usedFor.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 max-w-[220px]">
+                              {c.usedFor.map((u) => (
+                                <Badge
+                                  key={u}
+                                  variant="secondary"
+                                  className="text-[11px] font-normal"
+                                >
+                                  {u}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">
+                              —
                             </span>
-                          </div>
+                          )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                          {c.receivedAt || "—"}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <span
                               className={
@@ -268,20 +251,12 @@ export default async function ChemicalsPage({
                                   : "text-muted-foreground"
                               }
                             >
-                              {c.expiry}
+                              {c.expiry || "—"}
                             </span>
-                            {expiringSoon && (
+                            {c.expiry && expiringSoon && (
                               <AlertTriangle className="w-3.5 h-3.5 text-warning" />
                             )}
                           </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-xs">
-                          {c.location}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={hazardVariant[c.hazard]}>
-                            {c.hazard}
-                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1.5">
@@ -301,113 +276,6 @@ export default async function ChemicalsPage({
             </div>
           </CardContent>
         </Card>
-
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Nhật ký nhập – xuất gần đây</CardTitle>
-              <CardDescription>
-                7 ngày qua · ghi nhận theo mã mẫu phân tích
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {[
-                  {
-                    type: "Nhập",
-                    name: "Methanol HPLC",
-                    qty: "+ 10 lít",
-                    note: "PO-2026-0182 · NCC ChemAsia",
-                    date: "2026-05-19",
-                  },
-                  {
-                    type: "Xuất",
-                    name: "Acid nitric HNO3 65%",
-                    qty: "- 0.5 lít",
-                    note: "Mẫu M-2026-00318 · As/Pb",
-                    date: "2026-05-19",
-                  },
-                  {
-                    type: "Xuất",
-                    name: "Dung dịch chuẩn As 1000 ppm",
-                    qty: "- 25 ml",
-                    note: "Mẫu M-2026-00321",
-                    date: "2026-05-18",
-                  },
-                  {
-                    type: "Nhập",
-                    name: "Đệm pH 4.01",
-                    qty: "+ 2 lít",
-                    note: "PO-2026-0181",
-                    date: "2026-05-17",
-                  },
-                ].map((row, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center gap-3 p-3 rounded-md border bg-card"
-                  >
-                    <Badge
-                      variant={row.type === "Nhập" ? "success" : "secondary"}
-                    >
-                      {row.type}
-                    </Badge>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">
-                        {row.name}
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {row.note}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium">{row.qty}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {row.date}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>An toàn & MSDS</CardTitle>
-              <CardDescription>
-                Liên kết MSDS, EPI và cảnh báo phân loại GHS cho từng hóa chất
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {chemicals
-                  .filter((c) =>
-                    ["Độc hại", "Dễ cháy", "Ăn mòn"].includes(c.hazard),
-                  )
-                  .slice(0, 5)
-                  .map((c) => (
-                    <li
-                      key={c.id}
-                      className="flex items-center gap-3 p-3 rounded-md border bg-card"
-                    >
-                      <ShieldAlert className="w-4 h-4 text-warning shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">
-                          {c.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          CAS {c.cas} · {c.location}
-                        </div>
-                      </div>
-                      <Badge variant={hazardVariant[c.hazard]}>
-                        {c.hazard}
-                      </Badge>
-                    </li>
-                  ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </section>
 
         {/* Hồ sơ hóa chất, chất chuẩn */}
         <CrudTableCard

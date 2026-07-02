@@ -10,13 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Chemical } from "@/lib/mock-data";
 
-const HAZARDS: Chemical["hazard"][] = [
-  "Thường",
-  "Độc hại",
-  "Dễ cháy",
-  "Ăn mòn",
-];
-
 export function EditChemicalDialog({ row }: { row: Chemical }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,23 +22,16 @@ export function EditChemicalDialog({ row }: { row: Chemical }) {
     const payload = {
       code: String(formData.get("code") ?? "").trim(),
       name: String(formData.get("name") ?? "").trim(),
-      cas: String(formData.get("cas") ?? "—").trim(),
-      unit: String(formData.get("unit") ?? "lít").trim(),
-      stock: Number(formData.get("stock") ?? 0),
-      minStock: Number(formData.get("minStock") ?? 0),
-      expiry: String(formData.get("expiry") ?? ""),
-      hazard: String(formData.get("hazard") ?? row.hazard) as Chemical["hazard"],
-      location: String(formData.get("location") ?? "").trim(),
       technicalSpec: String(formData.get("technicalSpec") ?? "").trim(),
-      manufacturer: String(formData.get("manufacturer") ?? "").trim(),
       manufactureDate: String(formData.get("manufactureDate") ?? ""),
-      receivedAt: String(formData.get("receivedAt") ?? ""),
       storageCondition: String(formData.get("storageCondition") ?? "").trim(),
+      location: String(formData.get("location") ?? "").trim(),
       usedFor: usedForRaw
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean),
-      isReference: formData.get("isReference") === "on",
+      receivedAt: String(formData.get("receivedAt") ?? ""),
+      expiry: String(formData.get("expiry") ?? ""),
     };
     const res = await fetch(`/api/chemicals/${row.id}`, {
       method: "PATCH",
@@ -85,7 +71,7 @@ export function EditChemicalDialog({ row }: { row: Chemical }) {
           <div className="flex items-start justify-between gap-2 mb-3">
             <div>
               <Dialog.Title className="text-base font-semibold">
-                Sửa hóa chất / chất chuẩn
+                Sửa hóa chất, chất chuẩn
               </Dialog.Title>
               <Dialog.Description className="text-xs text-muted-foreground">
                 {row.code} · {row.name}
@@ -100,7 +86,7 @@ export function EditChemicalDialog({ row }: { row: Chemical }) {
           <form action={onSubmit} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="code">Mã *</Label>
+                <Label htmlFor="code">Mã hiệu *</Label>
                 <Input
                   id="code"
                   name="code"
@@ -110,60 +96,36 @@ export function EditChemicalDialog({ row }: { row: Chemical }) {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="cas">CAS</Label>
-                <Input id="cas" name="cas" defaultValue={row.cas} />
+                <Label htmlFor="name">Tên hóa chất *</Label>
+                <Input id="name" name="name" required defaultValue={row.name} />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="name">Tên hóa chất *</Label>
+              <Label htmlFor="technicalSpec">Đặc tính kỹ thuật</Label>
               <Input
-                id="name"
-                name="name"
-                required
-                defaultValue={row.name}
+                id="technicalSpec"
+                name="technicalSpec"
+                defaultValue={row.technicalSpec}
               />
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="stock">Tồn kho</Label>
+                <Label htmlFor="manufactureDate">Ngày sản xuất</Label>
                 <Input
-                  id="stock"
-                  name="stock"
-                  type="number"
-                  step="0.01"
-                  defaultValue={row.stock}
+                  id="manufactureDate"
+                  name="manufactureDate"
+                  type="date"
+                  defaultValue={row.manufactureDate}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="minStock">Tối thiểu</Label>
+                <Label htmlFor="receivedAt">Ngày nhận</Label>
                 <Input
-                  id="minStock"
-                  name="minStock"
-                  type="number"
-                  step="0.01"
-                  defaultValue={row.minStock}
+                  id="receivedAt"
+                  name="receivedAt"
+                  type="date"
+                  defaultValue={row.receivedAt}
                 />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="unit">Đơn vị</Label>
-                <Input id="unit" name="unit" defaultValue={row.unit} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="hazard">Phân loại</Label>
-                <select
-                  id="hazard"
-                  name="hazard"
-                  defaultValue={row.hazard}
-                  className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
-                >
-                  {HAZARDS.map((h) => (
-                    <option key={h} value={h}>
-                      {h}
-                    </option>
-                  ))}
-                </select>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="expiry">Hạn sử dụng</Label>
@@ -177,35 +139,15 @@ export function EditChemicalDialog({ row }: { row: Chemical }) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="manufacturer">Nhà sản xuất</Label>
+                <Label htmlFor="storageCondition">Điều kiện bảo quản</Label>
                 <Input
-                  id="manufacturer"
-                  name="manufacturer"
-                  defaultValue={row.manufacturer}
+                  id="storageCondition"
+                  name="storageCondition"
+                  defaultValue={row.storageCondition}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="manufactureDate">Ngày sản xuất</Label>
-                <Input
-                  id="manufactureDate"
-                  name="manufactureDate"
-                  type="date"
-                  defaultValue={row.manufactureDate}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="receivedAt">Ngày nhận</Label>
-                <Input
-                  id="receivedAt"
-                  name="receivedAt"
-                  type="date"
-                  defaultValue={row.receivedAt}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="location">Vị trí</Label>
+                <Label htmlFor="location">Vị trí bảo quản</Label>
                 <Input
                   id="location"
                   name="location"
@@ -214,38 +156,15 @@ export function EditChemicalDialog({ row }: { row: Chemical }) {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="technicalSpec">Đặc tính kỹ thuật</Label>
-              <Input
-                id="technicalSpec"
-                name="technicalSpec"
-                defaultValue={row.technicalSpec}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="storageCondition">Điều kiện bảo quản</Label>
-              <Input
-                id="storageCondition"
-                name="storageCondition"
-                defaultValue={row.storageCondition}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="usedFor">Dùng cho phép thử (cách bằng dấu phẩy)</Label>
+              <Label htmlFor="usedFor">
+                Dùng cho phép thử (cách nhau bằng dấu phẩy)
+              </Label>
               <Input
                 id="usedFor"
                 name="usedFor"
                 defaultValue={row.usedFor.join(", ")}
               />
             </div>
-            <label className="flex items-center gap-2 text-xs">
-              <input
-                type="checkbox"
-                id="isReference"
-                name="isReference"
-                defaultChecked={row.isReference}
-              />
-              Đây là chất chuẩn (reference material)
-            </label>
             {error && (
               <div className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded px-2.5 py-2">
                 {error}
