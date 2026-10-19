@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { labInfo } from "@/lib/accreditation";
 
 export default function SettingsPage() {
   return (
@@ -40,14 +41,29 @@ export default function SettingsPage() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="iso">Số chứng nhận ISO/IEC 17025</Label>
-                <Input id="iso" defaultValue="VILAS 1501" />
+                <Input id="iso" defaultValue={labInfo.vilasCode} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="manager">Người quản lý PTN</Label>
+                <Input id="manager" defaultValue={labInfo.manager} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="addr">Địa chỉ</Label>
-                <Input
-                  id="addr"
-                  defaultValue="Viện Nông nghiệp tỉnh Thanh Hóa, TP Thanh Hóa"
-                />
+                <Input id="addr" defaultValue={labInfo.address} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="phone">Điện thoại</Label>
+                  <Input id="phone" defaultValue={labInfo.phone} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" defaultValue={labInfo.email} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="web">Website</Label>
+                <Input id="web" defaultValue={labInfo.website} />
               </div>
               <div className="flex justify-end">
                 <Button>Lưu thay đổi</Button>

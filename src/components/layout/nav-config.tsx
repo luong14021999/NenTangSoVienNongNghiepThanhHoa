@@ -22,6 +22,7 @@ import {
   ClipboardEdit,
   MessageSquare,
   Briefcase,
+  Award,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,7 @@ export const navGroups: NavGroup[] = [
   {
     label: "Đảm bảo chất lượng",
     items: [
+      { href: "/accreditation", label: "Phạm vi công nhận VILAS", icon: Award },
       { href: "/qc", label: "QC Levey-Jennings", icon: ShieldCheck },
       { href: "/risks", label: "Đăng ký rủi ro", icon: AlertOctagon },
       { href: "/decision-rules", label: "Quy tắc quyết định", icon: Scale },

@@ -171,8 +171,8 @@ export default async function LoginPage() {
 
         {/* Bottom credit */}
         <div className="absolute bottom-6 left-0 right-0 text-center text-[11px] text-white/50">
-          © {new Date().getFullYear()} Viện Nông nghiệp tỉnh Thanh Hóa · Số 271
-          Nguyễn Phục, TP Thanh Hóa
+          © {new Date().getFullYear()} Viện Nông nghiệp tỉnh Thanh Hóa · 271
+          Nguyễn Thục, phường Đông Quang, tỉnh Thanh Hoá · ĐT 02373.952.119
         </div>
       </div>
     </div>
