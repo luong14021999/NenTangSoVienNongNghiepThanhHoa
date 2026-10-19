@@ -123,10 +123,10 @@ export default async function CustomersPage({
       />
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 scrollbar-thin">
         <div className="flex flex-wrap items-center gap-2">
-          {all[0]?.source === "supabase" ? (
+          {all[0]?.source === "db" ? (
             <Badge variant="success">
               <DatabaseIcon className="w-3 h-3" />
-              Dữ liệu live từ Supabase
+              Dữ liệu live từ Neon
             </Badge>
           ) : (
             <Badge variant="default">

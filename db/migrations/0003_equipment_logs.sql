@@ -1,5 +1,5 @@
 -- 0003: Mở rộng thiết bị + các nhật ký thiết bị (CRUD)
--- Chạy sau 0001, 0002. Ghi qua service role (bỏ qua RLS); đọc qua anon (cần policy select).
+-- Chạy sau 0001, 0002.
 
 -- 1) Cột mở rộng cho equipment
 alter table public.equipment
@@ -70,24 +70,3 @@ create table if not exists public.equipment_manuals (
   note           text,
   created_at     timestamptz default now()
 );
-
--- RLS + policy đọc cho anon/authenticated
-alter table public.calibration_logs   enable row level security;
-alter table public.maintenance_logs   enable row level security;
-alter table public.inspection_records enable row level security;
-alter table public.equipment_manuals  enable row level security;
-
-do $$
-declare t text;
-begin
-  foreach t in array array[
-    'calibration_logs', 'maintenance_logs', 'inspection_records', 'equipment_manuals'
-  ]
-  loop
-    execute format(
-      'drop policy if exists "demo_select_anon" on public.%I;
-       create policy "demo_select_anon" on public.%I for select to anon, authenticated using (true);',
-      t, t
-    );
-  end loop;
-end $$;

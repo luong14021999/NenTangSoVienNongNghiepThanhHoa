@@ -1,5 +1,5 @@
 -- 0004: Hồ sơ hóa chất + nhật ký sử dụng hóa chất mở rộng + Vật tư + nhật ký dụng cụ/vật tư
--- Ghi qua service role (bỏ qua RLS); đọc qua anon (cần policy select).
+--
 
 -- 1) chemical_usage_logs: thêm cột theo mẫu nhật ký sử dụng hóa chất
 alter table public.chemical_usage_logs
@@ -47,21 +47,3 @@ create table if not exists public.tool_usage_logs (
   note        text,
   created_at  timestamptz default now()
 );
-
--- RLS + policy đọc cho anon/authenticated
-alter table public.chemical_profiles enable row level security;
-alter table public.supplies          enable row level security;
-alter table public.tool_usage_logs   enable row level security;
-
-do $$
-declare t text;
-begin
-  foreach t in array array['chemical_profiles', 'supplies', 'tool_usage_logs']
-  loop
-    execute format(
-      'drop policy if exists "demo_select_anon" on public.%I;
-       create policy "demo_select_anon" on public.%I for select to anon, authenticated using (true);',
-      t, t
-    );
-  end loop;
-end $$;

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
-import { createSupabaseBrowser } from "@/lib/supabase/browser";
+import { authClient } from "@/lib/auth/client";
 
 export function LoginForm() {
   const router = useRouter();
@@ -20,17 +20,16 @@ export function LoginForm() {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
-    const supabase = createSupabaseBrowser();
-    const { error: authError } = await supabase.auth.signInWithPassword({
+    const { error: authError } = await authClient.signIn.email({
       email: email.trim(),
       password,
     });
     setSubmitting(false);
     if (authError) {
       const msg =
-        authError.message === "Invalid login credentials"
+        authError.code === "INVALID_EMAIL_OR_PASSWORD"
           ? "Sai email hoặc mật khẩu"
-          : authError.message;
+          : (authError.message ?? "Đăng nhập thất bại");
       setError(msg);
       return;
     }

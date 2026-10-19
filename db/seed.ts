@@ -1,8 +1,8 @@
-// Seed Supabase từ mock-data.ts
-// Chạy: npm run db:seed
+// Seed Neon từ mock-data.ts
+// Chạy: npm run db:seed            (chỉ insert – dùng cho DB mới)
+//       npm run db:seed -- --reset (XOÁ dữ liệu cũ trong các bảng rồi seed lại)
 import { config } from "dotenv";
-import { createClient } from "@supabase/supabase-js";
-import ws from "ws";
+import { neon } from "@neondatabase/serverless";
 import {
   customers,
   staff,
@@ -30,25 +30,35 @@ import {
 } from "../src/lib/mock-data";
 config({ path: ".env.local" });
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const url = process.env.DATABASE_URL;
 
-if (!url || !serviceKey) {
-  console.error(
-    "❌ Thiếu NEXT_PUBLIC_SUPABASE_URL hoặc SUPABASE_SERVICE_ROLE_KEY trong .env.local",
-  );
+if (!url) {
+  console.error("❌ Thiếu DATABASE_URL trong .env.local");
   process.exit(1);
 }
 
-// Seed dùng nhiều bảng – bỏ Database type để không bị kẹt strict types.
-// Realtime transport ws cần thiết cho Node < 22.
-const supabase = createClient(url, serviceKey, {
-  auth: { persistSession: false, autoRefreshToken: false },
-  realtime: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    transport: ws as any,
-  },
-});
+const sql = neon(url);
+const ident = (name: string) => `"${name.replace(/"/g, '""')}"`;
+
+type Row = Record<string, unknown>;
+
+// Insert nhiều dòng trong 1 câu lệnh; Postgres tự ép kiểu theo định nghĩa
+// bảng (json_populate_recordset) → text[], jsonb, date… đều đúng.
+async function insert(table: string, rows: Row[]): Promise<{ id: string }[]> {
+  if (rows.length === 0) return [];
+  const cols = [...new Set(rows.flatMap(Object.keys))].map(ident).join(", ");
+  return sql.query(
+    `insert into public.${ident(table)} (${cols})
+     select ${cols} from json_populate_recordset(null::public.${ident(table)}, $1::json)
+     returning id`,
+    [JSON.stringify(rows)],
+  ) as unknown as Promise<{ id: string }[]>;
+}
+
+async function insertOne(table: string, row: Row) {
+  const [created] = await insert(table, [row]);
+  return created.id;
+}
 
 async function reset() {
   // Xóa theo thứ tự ngược dependency (children trước)
@@ -80,14 +90,16 @@ async function reset() {
     "customers",
   ];
   for (const t of tables) {
-    const { error } = await supabase.from(t).delete().not("id", "is", null);
-    if (error && error.code !== "PGRST116")
-      console.warn(`⚠ Xóa ${t}: ${error.message}`);
+    try {
+      await sql.query(`delete from public.${ident(t)}`);
+    } catch (e) {
+      console.warn(`⚠ Xóa ${t}: ${(e as Error).message}`);
+    }
   }
 }
 
 async function seedCustomers() {
-  const { error } = await supabase.from("customers").insert(
+  await insert("customers",
     customers.map((c) => ({
       code: c.code,
       name: c.name,
@@ -99,12 +111,11 @@ async function seedCustomers() {
       last_sample_at: c.lastSampleAt,
     })),
   );
-  if (error) throw error;
   console.log(`✓ customers: ${customers.length}`);
 }
 
 async function seedStaff() {
-  const { error } = await supabase.from("staff").insert(
+  await insert("staff",
     staff.map((s) => ({
       code: s.code,
       full_name: s.fullName,
@@ -118,12 +129,11 @@ async function seedStaff() {
       status: s.status,
     })),
   );
-  if (error) throw error;
   console.log(`✓ staff: ${staff.length}`);
 }
 
 async function seedEquipment() {
-  const { error } = await supabase.from("equipment").insert(
+  await insert("equipment",
     equipments.map((e) => ({
       code: e.code,
       name: e.name,
@@ -135,10 +145,9 @@ async function seedEquipment() {
       usage_hours: e.usageHours,
     })),
   );
-  if (error) throw error;
   console.log(`✓ equipment: ${equipments.length}`);
 
-  await supabase.from("equipment_usage_logs").insert(
+  await insert("equipment_usage_logs",
     equipmentUsageLogs.map((u) => ({
       equipment_code: u.equipmentCode,
       technician: u.technician,
@@ -149,7 +158,7 @@ async function seedEquipment() {
   );
   console.log(`✓ equipment_usage_logs: ${equipmentUsageLogs.length}`);
 
-  await supabase.from("maintenance_schedule").insert(
+  await insert("maintenance_schedule",
     maintenanceSchedule.map((m) => ({
       equipment_code: m.equipmentCode,
       kind: m.kind,
@@ -159,7 +168,7 @@ async function seedEquipment() {
   );
   console.log(`✓ maintenance_schedule: ${maintenanceSchedule.length}`);
 
-  await supabase.from("environment_readings").insert(
+  await insert("environment_readings",
     environmentReadings.map((r) => ({
       room: r.room,
       monitoring_device: r.monitoringDevice,
@@ -177,7 +186,7 @@ async function seedEquipment() {
 }
 
 async function seedTools() {
-  const { error } = await supabase.from("tools").insert(
+  await insert("tools",
     tools.map((t) => ({
       code: t.code,
       name: t.name,
@@ -193,12 +202,11 @@ async function seedTools() {
       status: t.status,
     })),
   );
-  if (error) throw error;
   console.log(`✓ tools: ${tools.length}`);
 }
 
 async function seedChemicals() {
-  const { error } = await supabase.from("chemicals").insert(
+  await insert("chemicals",
     chemicals.map((c) => ({
       code: c.code,
       name: c.name,
@@ -218,10 +226,9 @@ async function seedChemicals() {
       is_reference: c.isReference ?? false,
     })),
   );
-  if (error) throw error;
   console.log(`✓ chemicals: ${chemicals.length}`);
 
-  await supabase.from("chemical_usage_logs").insert(
+  await insert("chemical_usage_logs",
     chemicalUsageLogs.map((u) => ({
       chemical_code: u.chemicalCode,
       qty: u.qty,
@@ -236,7 +243,7 @@ async function seedChemicals() {
 }
 
 async function seedTestRequests() {
-  const { error } = await supabase.from("test_requests").insert(
+  await insert("test_requests",
     testRequests.map((r) => ({
       code: r.code,
       customer: r.customer,
@@ -258,12 +265,11 @@ async function seedTestRequests() {
       accepted_at: r.acceptedAt ?? null,
     })),
   );
-  if (error) throw error;
   console.log(`✓ test_requests: ${testRequests.length}`);
 }
 
 async function seedSamples() {
-  const { error } = await supabase.from("samples").insert(
+  await insert("samples",
     samples.map((s) => ({
       code: s.code,
       customer: s.customer,
@@ -276,12 +282,11 @@ async function seedSamples() {
       criteria: s.criteria,
     })),
   );
-  if (error) throw error;
   console.log(`✓ samples: ${samples.length}`);
 }
 
 async function seedArchive() {
-  const { error } = await supabase.from("archived_samples").insert(
+  await insert("archived_samples",
     archivedSamples.map((a) => ({
       archive_code: a.archiveCode,
       original_sample_code: a.originalSampleCode,
@@ -298,12 +303,11 @@ async function seedArchive() {
       purpose: a.purpose,
     })),
   );
-  if (error) throw error;
   console.log(`✓ archived_samples: ${archivedSamples.length}`);
 }
 
 async function seedRisks() {
-  await supabase.from("risks").insert(
+  await insert("risks",
     risks.map((r) => ({
       code: r.code,
       category: r.category,
@@ -325,7 +329,7 @@ async function seedRisks() {
   );
   console.log(`✓ risks: ${risks.length}`);
 
-  await supabase.from("opportunities").insert(
+  await insert("opportunities",
     opportunities.map((o) => ({
       title: o.title,
       description: o.description,
@@ -338,7 +342,7 @@ async function seedRisks() {
 }
 
 async function seedDecisionRules() {
-  await supabase.from("decision_rules").insert(
+  await insert("decision_rules",
     decisionRules.map((d) => ({
       criterion: d.criterion,
       matrix: d.matrix,
@@ -363,7 +367,7 @@ async function seedDecisionRules() {
 }
 
 async function seedCampaigns() {
-  await supabase.from("campaigns").insert(
+  await insert("campaigns",
     campaigns.map((c) => ({
       code: c.code,
       name: c.name,
@@ -392,7 +396,7 @@ async function seedCampaigns() {
 }
 
 async function seedField() {
-  await supabase.from("sampling_sessions").insert(
+  await insert("sampling_sessions",
     samplingSessions.map((s) => ({
       code: s.code,
       name: s.name,
@@ -412,7 +416,7 @@ async function seedField() {
   );
   console.log(`✓ sampling_sessions: ${samplingSessions.length}`);
 
-  await supabase.from("field_samples").insert(
+  await insert("field_samples",
     fieldSamples.map((f) => ({
       field_code: f.fieldCode,
       session_code: f.sessionCode,
@@ -438,7 +442,7 @@ async function seedField() {
 }
 
 async function seedServices() {
-  await supabase.from("services").insert(
+  await insert("services",
     services.map((s) => ({
       code: s.code,
       name: s.name,
@@ -455,7 +459,7 @@ async function seedServices() {
 }
 
 async function seedFeedback() {
-  await supabase.from("customer_feedback").insert(
+  await insert("customer_feedback",
     customerFeedbacks.map((f) => ({
       code: f.code,
       customer_name: f.customerName ?? null,
@@ -479,9 +483,9 @@ async function seedFeedback() {
 
 async function seedQC() {
   for (const c of qcCharts) {
-    const { data, error } = await supabase
-      .from("qc_charts")
-      .insert({
+    let id: string;
+    try {
+      id = await insertOne("qc_charts", {
         criterion: c.criterion,
         matrix: c.matrix,
         method: c.method,
@@ -489,16 +493,14 @@ async function seedQC() {
         mean: c.mean,
         sd: c.sd,
         reference_material: c.referenceMaterial,
-      })
-      .select("id")
-      .single();
-    if (error || !data) {
-      console.warn(`⚠ qc_charts ${c.criterion}: ${error?.message}`);
+      });
+    } catch (e) {
+      console.warn(`⚠ qc_charts ${c.criterion}: ${(e as Error).message}`);
       continue;
     }
-    await supabase.from("qc_points").insert(
+    await insert("qc_points",
       c.points.map((p) => ({
-        chart_id: data.id,
+        chart_id: id,
         date: p.date,
         value: p.value,
         technician: p.technician,
@@ -507,7 +509,7 @@ async function seedQC() {
   }
   console.log(`✓ qc_charts: ${qcCharts.length}`);
 
-  await supabase.from("external_qc_rounds").insert(
+  await insert("external_qc_rounds",
     externalQCRounds.map((r) => ({
       type: r.type,
       provider: r.provider,
@@ -523,9 +525,9 @@ async function seedQC() {
 
 async function seedAnalysisResults() {
   for (const r of analysisResults) {
-    const { data, error } = await supabase
-      .from("analysis_results")
-      .insert({
+    let id: string;
+    try {
+      id = await insertOne("analysis_results", {
         result_code: r.resultCode,
         sample_code: r.sampleCode,
         customer_name: r.customerName,
@@ -558,16 +560,14 @@ async function seedAnalysisResults() {
         status: r.status,
         qa_comment: r.qaComment ?? null,
         manager_comment: r.managerComment ?? null,
-      })
-      .select("id")
-      .single();
-    if (error || !data) {
-      console.warn(`⚠ analysis_results ${r.resultCode}: ${error?.message}`);
+      });
+    } catch (e) {
+      console.warn(`⚠ analysis_results ${r.resultCode}: ${(e as Error).message}`);
       continue;
     }
-    await supabase.from("analysis_audit_events").insert(
+    await insert("analysis_audit_events",
       r.auditTrail.map((e) => ({
-        result_id: data.id,
+        result_id: id,
         at: e.at,
         actor: e.actor,
         action: e.action,
@@ -582,8 +582,10 @@ async function seedAnalysisResults() {
 }
 
 async function main() {
-  console.log("→ Reset tables...");
-  await reset();
+  if (process.argv.includes("--reset")) {
+    console.log("→ Reset tables...");
+    await reset();
+  }
   console.log("→ Seeding...");
   await seedCustomers();
   await seedStaff();

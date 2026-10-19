@@ -6,9 +6,8 @@
 | Frontend | Next.js 16 (App Router) · React 19 · Tailwind v4 · Radix UI |
 | Backend / API | Next.js Route Handlers + Server Components |
 | **Storage** | **File JSON trong `data/` folder** – persist khi server restart, không cần DB |
-| Database (sau) | Supabase Postgres (đã có schema sẵn `supabase/migrations/0001_init.sql`) |
-| Auth (sau) | Supabase Auth |
-| Realtime (sau) | Supabase Realtime |
+| Database | Neon Postgres (`@neondatabase/serverless`, schema trong `db/migrations/`) – bật khi có `DATABASE_URL` |
+| Auth | Neon Auth (`@neondatabase/auth`, dựa trên Better Auth) – bật khi có `NEON_AUTH_BASE_URL` |
 
 ## Cấu trúc thư mục
 
@@ -18,8 +17,9 @@
 ├── data/                         # ★ File storage – JSON theo collection (gitignore)
 │   ├── customers.json
 │   └── ...
-├── supabase/                     # (Optional, dùng khi chuyển sang Postgres)
-│   ├── migrations/0001_init.sql
+├── db/                           # Neon Postgres
+│   ├── migrations/*.sql          # schema (chạy bằng npm run db:migrate)
+│   ├── migrate.ts
 │   └── seed.ts
 ├── src/
 │   ├── app/
@@ -29,7 +29,9 @@
 │   ├── lib/
 │   │   ├── mock-data.ts          # Fallback ban đầu khi data/ trống
 │   │   ├── storage/file-storage.ts   # ★ Read/write JSON files
-│   │   ├── supabase/server.ts    # (Optional) Supabase clients
+│   │   ├── db.ts                 # Neon client (DATABASE_URL)
+│   │   ├── auth/server.ts        # Neon Auth (server, proxy, handler)
+│   │   ├── auth/client.ts        # Neon Auth (client: signIn, signOut, useSession)
 │   │   └── data/customers.ts     # Data access layer
 │   └── types/database.ts
 └── docs/
@@ -99,49 +101,38 @@ export async function createSample(s: Sample) {
 
 Sau đó update page tương ứng thành `async function` và `await getSamples()`.
 
-## Setup Supabase (lần đầu)
+## Setup Neon (lần đầu)
 
 ### 1. Tạo project
-- Vào https://app.supabase.com → New Project
-- Đặt tên (ví dụ `lims-vnnth`), chọn region gần nhất (Singapore cho Việt Nam)
-- Chờ ~2 phút để project khởi tạo
+- Vào https://console.neon.tech → New Project, chọn region gần nhất (Singapore cho Việt Nam)
+- **Connection string** (Dashboard → Connect, bản *pooled*) → `DATABASE_URL`
 
-### 2. Lấy keys
-- Vào project → **Settings → API**
-- Copy 3 giá trị:
-  - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
-  - **anon public** → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-  - **service_role** → `SUPABASE_SERVICE_ROLE_KEY` *(giữ bí mật, không commit)*
+### 2. Bật Neon Auth
+- Trong project → **Auth** → bật Neon Auth
+- **Settings → Better Auth → Project Info** → copy Auth URL → `NEON_AUTH_BASE_URL`
+- Tạo cookie secret (≥ 32 ký tự): `openssl rand -base64 32` → `NEON_AUTH_COOKIE_SECRET`
 
 ### 3. Cấu hình env
 ```bash
 cp .env.local.example .env.local
-# Sửa 3 giá trị trong .env.local
+# Điền 3 giá trị trên
 ```
 
-### 4. Chạy migration
-- Vào project Supabase → **SQL Editor**
-- New query → dán toàn bộ nội dung `supabase/migrations/0001_init.sql`
-- Run
-
-Hoặc qua Supabase CLI:
+### 4. Chạy migration + seed
 ```bash
-npx supabase link --project-ref <ref>
-npx supabase db push
+npm run db:migrate   # chạy các file db/migrations/*.sql chưa áp dụng
+npm run db:seed      # đổ mock data từ src/lib/mock-data.ts vào DB mới (chỉ insert)
+npm run db:seed -- --reset   # XOÁ dữ liệu cũ trong các bảng rồi seed lại
 ```
 
-### 5. Seed dữ liệu
-```bash
-npm run db:seed
-```
-
-Script sẽ đọc từ `src/lib/mock-data.ts` và đổ vào Postgres qua service role key.
+### 5. Tạo tài khoản đăng nhập
+App không có trang đăng ký – tạo user trong Neon Console (Auth → Users).
 
 ### 6. Verify
 ```bash
 npm run dev
 ```
-Mở [http://localhost:3000/customers](http://localhost:3000/customers) — badge "Dữ liệu live từ Supabase" hiển thị nếu kết nối OK. Nếu chưa cấu hình env, badge "Đang dùng mock data" hiển thị (fallback).
+Mở [http://localhost:3000/customers](http://localhost:3000/customers) — badge "Dữ liệu live từ Neon" hiển thị nếu kết nối OK. Nếu chưa có `DATABASE_URL`, dữ liệu đọc/ghi từ `data/*.json` (fallback). Nếu chưa cấu hình Neon Auth, mọi trang đều mở (không cần đăng nhập).
 
 ## Schema (24 bảng)
 
@@ -161,20 +152,15 @@ Mỗi entity có 1 file trong `src/lib/data/`:
 
 ```ts
 // src/lib/data/customers.ts
-export async function getCustomers() {
-  if (!isSupabaseConfigured()) {
-    return mockCustomers.map(c => ({ ...c, source: 'mock' }));
-  }
-  const supabase = createServerClient();
-  const { data, error } = await supabase
-    .from('customers')
-    .select('*')
-    .order('samples_ytd', { ascending: false });
-  // ...
-}
+export const customersStore = createEntityStore<Customer>("customers", mockCustomers, {
+  table: "customers",
+  select: "id, code, name, ...",
+  toEntity: (row) => ({ /* snake_case → camelCase */ }),
+  toRow: (c) => ({ /* camelCase → snake_case */ }),
+});
 ```
 
-**Pattern**: pages là server components, gọi data loader bằng `await`. Loader tự fallback về mock nếu Supabase chưa cấu hình → dev experience không bị vỡ.
+**Pattern**: pages là server components, gọi data loader bằng `await`. `createEntityStore` (`src/lib/data/factory.ts`) chạy SQL trên Neon khi có `DATABASE_URL`, ngược lại fallback về file JSON → dev experience không bị vỡ.
 
 Để convert pages khác, copy pattern này cho:
 - `samples` → `src/lib/data/samples.ts`
@@ -182,17 +168,9 @@ export async function getCustomers() {
 - `equipment` → `src/lib/data/equipment.ts`
 - ... v.v.
 
-## Row Level Security (RLS)
+## Phân quyền
 
-Migration mặc định **bật RLS** trên tất cả bảng và tạo policy `demo_select_anon` cho phép **SELECT public**. Phù hợp giai đoạn dev / public catalog dịch vụ.
-
-Cho production cần thay bằng policy chi tiết theo role:
-```sql
--- Ví dụ: chỉ KTV phụ trách mới sửa được kết quả
-create policy "ktv_update_own_results" on analysis_results
-  for update to authenticated
-  using (technician = (select full_name from staff where email = auth.email()));
-```
+App truy cập DB từ server bằng `DATABASE_URL` (role owner), không bật RLS. Mọi trang (trừ `/login`) được `src/proxy.ts` chặn khi chưa đăng nhập Neon Auth. Phân quyền theo role (KTV/QA/Trưởng phòng/Khách) cần làm ở tầng API/server.
 
 ## Roadmap backend
 
@@ -201,11 +179,10 @@ create policy "ktv_update_own_results" on analysis_results
 | ✅ P1 | Schema 24 bảng + seed + 1 page (customers) wire DB |
 | 🟡 P2 | Convert hết các pages list (samples, equipment, chemicals, …) sang fetch DB |
 | 🟡 P2 | API routes `POST/PATCH/DELETE` cho CRUD |
-| 🔵 P3 | Supabase Auth + RLS theo role (KTV/QA/Trưởng phòng/Khách) |
-| 🔵 P3 | Supabase Storage cho raw file + ảnh |
+| 🔵 P3 | Phân quyền theo role (KTV/QA/Trưởng phòng/Khách) |
+| 🔵 P3 | Lưu trữ raw file + ảnh |
 | 🔵 P4 | Realtime: dashboard cảnh báo live, sync mẫu hiện trường |
 
 ## Liên kết tham khảo
-- [Supabase JS client](https://supabase.com/docs/reference/javascript)
-- [Next.js App Router + Supabase](https://supabase.com/docs/guides/auth/server-side/nextjs)
-- [Supabase RLS](https://supabase.com/docs/guides/auth/row-level-security)
+- [Neon serverless driver](https://neon.com/docs/serverless/serverless-driver)
+- [Neon Auth + Next.js](https://neon.com/docs/auth/quick-start/nextjs)

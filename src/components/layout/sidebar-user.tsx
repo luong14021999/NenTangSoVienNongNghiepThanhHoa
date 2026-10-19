@@ -1,33 +1,21 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, Loader2, User as UserIcon } from "lucide-react";
-import { createSupabaseBrowser } from "@/lib/supabase/browser";
+import { authClient } from "@/lib/auth/client";
 
 export function SidebarUser() {
   const router = useRouter();
-  const [email, setEmail] = useState<string | null>(null);
-  const [name, setName] = useState<string | null>(null);
+  const { data: session } = authClient.useSession();
+  const email = session?.user.email ?? null;
+  const name = session?.user.name || null;
   const [pending, startTransition] = useTransition();
   const [signingOut, setSigningOut] = useState(false);
 
-  useEffect(() => {
-    const supabase = createSupabaseBrowser();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      setEmail(user.email ?? null);
-      const meta = user.user_metadata as
-        | { full_name?: string; name?: string }
-        | undefined;
-      setName(meta?.full_name ?? meta?.name ?? null);
-    });
-  }, []);
-
   async function onLogout() {
     setSigningOut(true);
-    const supabase = createSupabaseBrowser();
-    await supabase.auth.signOut();
+    await authClient.signOut();
     setSigningOut(false);
     startTransition(() => {
       router.replace("/login");

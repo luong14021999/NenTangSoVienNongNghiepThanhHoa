@@ -9,13 +9,21 @@ import {
   Wheat,
   Award,
 } from "lucide-react";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth/server";
 import { LoginForm } from "./login-form";
 
 export const metadata = {
   title: "Đăng nhập – Viện Nông Nghiệp Thanh Hóa",
 };
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  // Đã đăng nhập → về trang chủ.
+  if (auth) {
+    const { data: session } = await auth.getSession();
+    if (session?.user) redirect("/");
+  }
+
   return (
     <div className="min-h-[100dvh] flex">
       {/* LEFT: form panel */}

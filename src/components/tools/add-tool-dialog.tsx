@@ -75,7 +75,7 @@ export function AddToolDialog() {
               </Dialog.Title>
               <Dialog.Description className="text-xs text-muted-foreground">
                 Ghi vào <code className="font-mono">data/tools.json</code> hoặc
-                Supabase
+                Neon
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>

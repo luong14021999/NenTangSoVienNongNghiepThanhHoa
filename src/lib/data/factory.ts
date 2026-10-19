@@ -5,11 +5,7 @@ import {
   updateItem,
   deleteItem,
 } from "@/lib/storage/file-storage";
-import {
-  createServerClient,
-  createAdminClient,
-  isSupabaseConfigured,
-} from "@/lib/supabase/server";
+import { dbQuery, ident, isDbConfigured } from "@/lib/db";
 
 export type EntityStore<T extends { id: string }> = {
   collection: string;
@@ -22,10 +18,11 @@ export type EntityStore<T extends { id: string }> = {
 
 /**
  * Cấu hình mapping camelCase TS ↔ snake_case Postgres.
- * Khi cấu hình + env Supabase OK → CRUD đi qua DB, ngược lại fallback file.
+ * Khi cấu hình + DATABASE_URL OK → CRUD đi qua Neon, ngược lại fallback file.
  */
-export type SupabaseMapping<T> = {
+export type DbMapping<T> = {
   table: string;
+  /** Danh sách cột, VD "id, code, name" – dùng nguyên văn trong SELECT/RETURNING. */
   select: string;
   toEntity: (row: Record<string, unknown>) => T;
   toRow: (entity: Partial<T>) => Record<string, unknown>;
@@ -38,29 +35,34 @@ export type SupabaseMapping<T> = {
 export const dateOrNull = (v?: string | null) =>
   v && v !== "" ? v : null;
 
+/**
+ * Truyền cả row dưới dạng 1 tham số JSON rồi để Postgres ép kiểu theo
+ * định nghĩa bảng (json_populate_record) → mảng text[], jsonb, date… đều đúng.
+ */
+const fromJson = (table: string) =>
+  `json_populate_record(null::public.${ident(table)}, $1::json)`;
+
 export function createEntityStore<T extends { id: string }>(
   collection: string,
   mockData: T[],
-  supabase?: SupabaseMapping<T>,
+  db?: DbMapping<T>,
 ): EntityStore<T> {
-  const useSupabase = () => Boolean(supabase) && isSupabaseConfigured();
+  const dbEnabled = () => Boolean(db) && isDbConfigured();
 
   return {
     collection,
 
     async list() {
-      if (useSupabase() && supabase) {
-        const client = createServerClient();
-        const { data, error } = await client
-          .from(supabase.table)
-          .select(supabase.select);
-        if (!error && data) {
-          return (data as unknown as Record<string, unknown>[]).map(supabase.toEntity);
-        }
-        if (error) {
+      if (dbEnabled() && db) {
+        try {
+          const rows = await dbQuery(
+            `select ${db.select} from public.${ident(db.table)}`,
+          );
+          return rows.map(db.toEntity);
+        } catch (e) {
           console.error(
-            `[${collection}] supabase list error:`,
-            error.message,
+            `[${collection}] db list error:`,
+            (e as Error).message,
           );
         }
       }
@@ -68,42 +70,63 @@ export function createEntityStore<T extends { id: string }>(
     },
 
     async create(item: T) {
-      if (useSupabase() && supabase) {
-        const client = createAdminClient();
-        const { data, error } = await client
-          .from(supabase.table)
-          .insert(supabase.toRow(item))
-          .select(supabase.select)
-          .single();
-        if (error) throw new Error(error.message);
-        return supabase.toEntity(data as unknown as Record<string, unknown>);
+      if (dbEnabled() && db) {
+        const row = db.toRow(item);
+        const cols = Object.keys(row).map(ident).join(", ");
+        const [created] = await dbQuery(
+          `insert into public.${ident(db.table)} (${cols})
+           select ${cols} from ${fromJson(db.table)}
+           returning ${db.select}`,
+          [JSON.stringify(row)],
+        );
+        return db.toEntity(created);
       }
       return appendItem<T>(collection, item, mockData);
     },
 
     async update(id, patch) {
-      if (useSupabase() && supabase) {
-        const client = createAdminClient();
-        const { data, error } = await client
-          .from(supabase.table)
-          .update(supabase.toRow(patch))
-          .eq("id", id)
-          .select(supabase.select)
-          .single();
-        if (error) return null;
-        return supabase.toEntity(data as unknown as Record<string, unknown>);
+      if (dbEnabled() && db) {
+        const row = db.toRow(patch);
+        const cols = Object.keys(row).map(ident).join(", ");
+        const table = `public.${ident(db.table)}`;
+        try {
+          const [updated] = cols
+            ? await dbQuery(
+                `update ${table} set (${cols}) = (select ${cols} from ${fromJson(db.table)})
+                 where id = $2 returning ${db.select}`,
+                [JSON.stringify(row), id],
+              )
+            : await dbQuery(
+                `select ${db.select} from ${table} where id = $1`,
+                [id],
+              );
+          return updated ? db.toEntity(updated) : null;
+        } catch (e) {
+          console.error(
+            `[${collection}] db update error:`,
+            (e as Error).message,
+          );
+          return null;
+        }
       }
       return updateItem<T>(collection, id, patch, mockData);
     },
 
     async remove(id) {
-      if (useSupabase() && supabase) {
-        const client = createAdminClient();
-        const { error } = await client
-          .from(supabase.table)
-          .delete()
-          .eq("id", id);
-        return !error;
+      if (dbEnabled() && db) {
+        try {
+          const rows = await dbQuery(
+            `delete from public.${ident(db.table)} where id = $1 returning id`,
+            [id],
+          );
+          return rows.length > 0;
+        } catch (e) {
+          console.error(
+            `[${collection}] db delete error:`,
+            (e as Error).message,
+          );
+          return false;
+        }
       }
       return deleteItem<T>(collection, id, mockData);
     },

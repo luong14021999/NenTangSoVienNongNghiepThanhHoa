@@ -1,8 +1,8 @@
 import { createEntityStore, dateOrNull } from "./factory";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { isDbConfigured } from "@/lib/db";
 import { customers as mockCustomers, type Customer } from "@/lib/mock-data";
 
-export type CustomerListItem = Customer & { source: "supabase" | "file" };
+export type CustomerListItem = Customer & { source: "db" | "file" };
 
 const SELECT =
   "id, code, name, kind, contact, phone, address, samples_ytd, last_sample_at";
@@ -43,11 +43,8 @@ export const customersStore = createEntityStore<Customer>(
 // Backward-compat wrappers – các API routes + page hiện đang import 4 hàm này.
 export async function getCustomers(): Promise<CustomerListItem[]> {
   const items = await customersStore.list();
-  const source: "supabase" | "file" = isSupabaseConfigured()
-    ? "supabase"
-    : "file";
-  // Supabase trả đã sort theo samples_ytd desc trong query bên dưới (factory.list
-  // không sort), nên ta sort lại ở đây để page hiển thị nhất quán.
+  const source: "db" | "file" = isDbConfigured() ? "db" : "file";
+  // factory.list không sort → sort ở đây để page hiển thị nhất quán.
   return items
     .sort((a, b) => b.samplesYTD - a.samplesYTD)
     .map((c) => ({ ...c, source }));

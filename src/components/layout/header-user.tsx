@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, Loader2 } from "lucide-react";
-import { createSupabaseBrowser } from "@/lib/supabase/browser";
+import { authClient } from "@/lib/auth/client";
 
 export function HeaderUser() {
   const router = useRouter();
@@ -12,8 +12,7 @@ export function HeaderUser() {
 
   async function onLogout() {
     setSigningOut(true);
-    const supabase = createSupabaseBrowser();
-    await supabase.auth.signOut();
+    await authClient.signOut();
     setSigningOut(false);
     startTransition(() => {
       router.replace("/login");

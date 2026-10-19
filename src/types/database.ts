@@ -1,5 +1,5 @@
-// Types tương ứng với schema supabase/migrations/0001_init.sql
-// Khi đổi schema, cập nhật file này hoặc dùng `supabase gen types typescript`
+// Types tương ứng với schema db/migrations/0001_init.sql
+// Khi đổi schema, cập nhật file này.
 
 export type Json =
   | string
