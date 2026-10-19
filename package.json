@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "tsx db/migrate.ts",
-    "db:seed": "tsx db/seed.ts"
+    "db:seed": "tsx db/seed.ts",
+    "db:import-vilas": "tsx db/import-vilas-1501.ts"
   },
   "dependencies": {
     "@neondatabase/auth": "^0.6.0-beta",

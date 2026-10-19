@@ -190,6 +190,8 @@ export type Equipment = {
   calibrationPlace?: string; // Nơi thực hiện hiệu chuẩn
   inspectionFreq?: string; // Tần suất kiểm tra/bảo kiểm
   inspectionPlace?: string; // Nơi thực hiện kiểm tra/bảo kiểm
+  purpose?: string; // Dùng cho phép thử
+  quantity?: string; // Số lượng (VD "1 hệ", "1 bộ/nguyên tố")
 };
 
 export const equipments: Equipment[] = [

@@ -71,6 +71,8 @@ const EQUIPMENT_FIELDS: CrudField[] = [
   { name: "serial", label: "Số serial" },
   { name: "manufacturer", label: "Nhà sản xuất" },
   { name: "location", label: "Vị trí" },
+  { name: "quantity", label: "Số lượng" },
+  { name: "purpose", label: "Dùng cho phép thử", full: true },
   { name: "commissionedAt", label: "Ngày vận hành", type: "date" },
   { name: "usageHours", label: "Giờ chạy", type: "number" },
   { name: "lastCalibration", label: "Hiệu chuẩn gần nhất", type: "date" },
@@ -298,7 +300,13 @@ export default async function EquipmentPage({
                             <div className="text-xs text-muted-foreground font-mono">
                               {e.code}
                               {e.model ? ` · ${e.model}` : ""}
+                              {e.quantity ? ` · SL: ${e.quantity}` : ""}
                             </div>
+                            {e.purpose && (
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                Dùng cho: {e.purpose}
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell className="text-sm">
                             <div>{e.manufacturer || "—"}</div>

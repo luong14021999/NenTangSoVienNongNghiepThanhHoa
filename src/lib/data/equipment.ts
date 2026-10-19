@@ -2,7 +2,7 @@ import { createEntityStore, dateOrNull } from "./factory";
 import { equipments, type Equipment } from "@/lib/mock-data";
 
 const SELECT =
-  "id, code, name, model, location, last_calibration, next_calibration, status, usage_hours, serial, manufacturer, commissioned_at, calibration_freq, calibration_place, inspection_freq, inspection_place";
+  "id, code, name, model, location, last_calibration, next_calibration, status, usage_hours, serial, manufacturer, commissioned_at, calibration_freq, calibration_place, inspection_freq, inspection_place, purpose, quantity";
 
 export const equipmentStore = createEntityStore<Equipment>(
   "equipment",
@@ -27,6 +27,8 @@ export const equipmentStore = createEntityStore<Equipment>(
       calibrationPlace: (row.calibration_place as string) ?? "",
       inspectionFreq: (row.inspection_freq as string) ?? "",
       inspectionPlace: (row.inspection_place as string) ?? "",
+      purpose: (row.purpose as string) ?? "",
+      quantity: (row.quantity as string) ?? "",
     }),
     toRow: (e) => {
       const r: Record<string, unknown> = {};
@@ -52,6 +54,8 @@ export const equipmentStore = createEntityStore<Equipment>(
         r.inspection_freq = e.inspectionFreq;
       if (e.inspectionPlace !== undefined)
         r.inspection_place = e.inspectionPlace;
+      if (e.purpose !== undefined) r.purpose = e.purpose;
+      if (e.quantity !== undefined) r.quantity = e.quantity;
       return r;
     },
   },
