@@ -29,24 +29,24 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="org">Cơ quan chủ quản</Label>
-                <Input id="org" defaultValue="Viện Nông Nghiệp Thanh Hóa" />
+                <Input id="org" defaultValue="Viện Nông nghiệp tỉnh Thanh Hóa" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lab">Tên phòng thí nghiệm</Label>
                 <Input
                   id="lab"
-                  defaultValue="PTN Phân tích Môi trường – Nông nghiệp – ATTP"
+                  defaultValue="Phòng phân tích Đất, nước, phân bón và môi trường"
                 />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="iso">Số chứng nhận ISO/IEC 17025</Label>
-                <Input id="iso" defaultValue="VILAS 1234" />
+                <Input id="iso" defaultValue="VILAS 1501" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="addr">Địa chỉ</Label>
                 <Input
                   id="addr"
-                  defaultValue="Viện Nông Nghiệp Thanh Hóa, TP Thanh Hóa"
+                  defaultValue="Viện Nông nghiệp tỉnh Thanh Hóa, TP Thanh Hóa"
                 />
               </div>
               <div className="flex justify-end">

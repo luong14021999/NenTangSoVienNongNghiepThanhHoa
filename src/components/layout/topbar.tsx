@@ -36,7 +36,7 @@ export function TopBar() {
         <div className="w-11 h-11 sm:w-16 sm:h-16 rounded-full bg-white ring-2 ring-white/50 shadow-lg flex items-center justify-center overflow-hidden shrink-0 transition-transform sm:group-hover:scale-105">
           <Image
             src="/logo-vnnth.png"
-            alt="Viện Nông Nghiệp Thanh Hóa"
+            alt="Viện Nông nghiệp tỉnh Thanh Hóa"
             width={64}
             height={64}
             className="w-11 h-11 sm:w-16 sm:h-16 object-contain"
@@ -45,10 +45,10 @@ export function TopBar() {
         </div>
         <div className="leading-tight min-w-0">
           <div className="text-base sm:text-xl font-bold tracking-tight text-white drop-shadow-sm truncate">
-            Viện Nông Nghiệp Thanh Hóa
+            Phòng phân tích Đất, nước, phân bón và môi trường
           </div>
           <div className="hidden sm:block text-xs lg:text-[13px] text-white/70 font-medium mt-0.5 truncate">
-            Hệ thống quản lý phòng thí nghiệm · ISO/IEC 17025:2017
+            Viện Nông nghiệp tỉnh Thanh Hóa · Mã VILAS 1501
           </div>
         </div>
       </Link>

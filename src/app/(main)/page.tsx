@@ -46,7 +46,7 @@ export default function DashboardPage() {
   return (
     <>
       <Header
-        title="Bảng điều khiển – Viện Nông Nghiệp Thanh Hóa"
+        title="Bảng điều khiển – Viện Nông nghiệp tỉnh Thanh Hóa"
         description="Số hóa quy trình nhận mẫu · phân tích · thiết bị · hóa chất theo ISO/IEC 17025"
       />
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 scrollbar-thin">
@@ -54,7 +54,7 @@ export default function DashboardPage() {
           <div className="w-16 h-16 rounded-full bg-white ring-1 ring-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
             <Image
               src="/logo-vnnth.png"
-              alt="Viện Nông Nghiệp Thanh Hóa"
+              alt="Viện Nông nghiệp tỉnh Thanh Hóa"
               width={64}
               height={64}
               className="w-16 h-16 object-contain"
@@ -63,7 +63,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold">
-              PTN Phân tích Môi trường – Nông nghiệp – ATTP
+              Phòng phân tích Đất, nước, phân bón và môi trường – Viện Nông nghiệp tỉnh Thanh Hóa
             </div>
             <div className="text-xs text-muted-foreground mt-0.5">
               Đáp ứng phân tích đất – nước – phân bón – an toàn thực phẩm, giảm
@@ -72,7 +72,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary">ISO/IEC 17025:2017</Badge>
-            <Badge variant="outline">VILAS 1234</Badge>
+            <Badge variant="outline">VILAS 1501</Badge>
           </div>
         </section>
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

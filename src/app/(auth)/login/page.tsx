@@ -14,7 +14,7 @@ import { auth } from "@/lib/auth/server";
 import { LoginForm } from "./login-form";
 
 export const metadata = {
-  title: "Đăng nhập – Viện Nông Nghiệp Thanh Hóa",
+  title: "Đăng nhập – Phòng phân tích Đất, nước, phân bón và môi trường",
 };
 
 export default async function LoginPage() {
@@ -33,7 +33,7 @@ export default async function LoginPage() {
             <div className="w-40 h-40 rounded-full bg-white ring-1 ring-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
               <Image
                 src="/logo-vnnth.png"
-                alt="Viện Nông Nghiệp Thanh Hóa"
+                alt="Viện Nông nghiệp tỉnh Thanh Hóa"
                 width={160}
                 height={160}
                 className="w-40 h-40 object-contain"
@@ -42,10 +42,10 @@ export default async function LoginPage() {
             </div>
             <div className="leading-tight">
               <div className="text-xl font-bold text-foreground">
-                Viện Nông Nghiệp Thanh Hóa
+                Phòng phân tích Đất, nước, phân bón và môi trường
               </div>
               <div className="text-sm text-muted-foreground">
-                Phòng Phân tích và Thí nghiệm
+                Viện Nông nghiệp tỉnh Thanh Hóa
               </div>
             </div>
           </div>
@@ -76,7 +76,7 @@ export default async function LoginPage() {
                 ISO/IEC 17025:2017
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1">
-                VILAS 1234
+                Mã VILAS 1501
               </span>
             </div>
           </div>
@@ -171,7 +171,7 @@ export default async function LoginPage() {
 
         {/* Bottom credit */}
         <div className="absolute bottom-6 left-0 right-0 text-center text-[11px] text-white/50">
-          © {new Date().getFullYear()} Viện Nông Nghiệp Thanh Hóa · Số 271
+          © {new Date().getFullYear()} Viện Nông nghiệp tỉnh Thanh Hóa · Số 271
           Nguyễn Phục, TP Thanh Hóa
         </div>
       </div>

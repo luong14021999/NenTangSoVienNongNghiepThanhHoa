@@ -92,7 +92,7 @@ export function SidebarBrand() {
       <div className="w-9 h-9 rounded-full bg-white ring-1 ring-white/40 flex items-center justify-center shrink-0 overflow-hidden">
         <Image
           src="/logo-vnnth.png"
-          alt="Viện Nông Nghiệp Thanh Hóa"
+          alt="Viện Nông nghiệp tỉnh Thanh Hóa"
           width={36}
           height={36}
           className="w-9 h-9 object-contain"
@@ -101,10 +101,10 @@ export function SidebarBrand() {
       </div>
       <div className="leading-tight min-w-0 flex-1">
         <div className="text-[13px] font-semibold text-white leading-snug">
-          Viện Nông Nghiệp Thanh Hóa
+          Phòng phân tích Đất, nước, phân bón và môi trường
         </div>
         <div className="text-[10.5px] text-sidebar-foreground/60 mt-0.5 leading-snug">
-          PTN Môi trường · Đất · Nước · Phân bón · ATTP
+          Viện Nông nghiệp tỉnh Thanh Hóa · VILAS 1501
         </div>
       </div>
     </div>

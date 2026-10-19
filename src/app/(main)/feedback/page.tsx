@@ -431,7 +431,7 @@ export default async function FeedbackPage({
             <div className="rounded-xl border bg-card p-5 max-w-2xl mx-auto space-y-4 text-sm">
               <div className="text-center border-b pb-3">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Viện Nông Nghiệp Thanh Hóa · Phòng Phân tích và Thí nghiệm
+                  Viện Nông nghiệp tỉnh Thanh Hóa · Phòng phân tích Đất, nước, phân bón và môi trường
                 </div>
                 <div className="text-base font-bold mt-1">
                   Phiếu thu thập ý kiến khách hàng
