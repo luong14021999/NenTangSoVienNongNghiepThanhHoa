@@ -1513,7 +1513,7 @@ export const risks: Risk[] = [
     category: "Khách quan",
     title: "KTV đồng thời nhận tư vấn cho khách hàng gửi mẫu",
     cause: "KTV có công việc tư vấn cá nhân ngoài giờ – có thể nhận tư vấn cho HTX/DN mà PTN đang phân tích mẫu",
-    effect: "Mất tính khách quan, ảnh hưởng uy tín VILAS, KH khiếu nại",
+    effect: "Mất tính khách quan, ảnh hưởng uy tín VILAS 1501, KH khiếu nại",
     likelihood: 2,
     impact: 4,
     controls: "Cam kết khách quan đầu năm; nội quy nội bộ",
@@ -1665,7 +1665,7 @@ export const risks: Risk[] = [
     category: "Dữ liệu & An ninh",
     title: "Truy cập trái phép vào dữ liệu kết quả",
     cause: "Hệ thống LIMS chưa triển khai phân quyền RBAC; nhân viên dùng chung tài khoản",
-    effect: "Rò rỉ thông tin KH; sửa kết quả trái phép; mất uy tín VILAS",
+    effect: "Rò rỉ thông tin KH; sửa kết quả trái phép; mất uy tín VILAS 1501",
     likelihood: 2,
     impact: 5,
     controls: "Mật khẩu BIOS máy chủ; phòng chứa máy chủ khóa",
@@ -1721,7 +1721,7 @@ export const opportunities: Opportunity[] = [
   },
   {
     id: "op2",
-    title: "Mở rộng phạm vi VILAS thêm dư lượng kháng sinh trong sữa & mật ong",
+    title: "Mở rộng phạm vi VILAS 1501 thêm dư lượng kháng sinh trong sữa & mật ong",
     description:
       "Đăng ký mở rộng phạm vi công nhận thêm 4 nhóm kháng sinh; tận dụng HPLC sẵn có",
     expectedBenefit:

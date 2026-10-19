@@ -71,7 +71,7 @@ const stats = [
     accent: "bg-blue-50 text-blue-600",
   },
   {
-    label: "Được công nhận VILAS",
+    label: "Được công nhận VILAS 1501",
     value: vilasCount,
     icon: Award,
     accent: "bg-violet-50 text-violet-600",
@@ -173,7 +173,7 @@ export default function ServicesPage() {
                           {s.vilas && (
                             <Badge variant="success" className="text-[10px]">
                               <Award className="w-2.5 h-2.5" />
-                              VILAS
+                              VILAS 1501
                             </Badge>
                           )}
                         </div>
