@@ -23,6 +23,11 @@ import {
   MessageSquare,
   Briefcase,
   Award,
+  ListChecks,
+  FileStack,
+  OctagonAlert,
+  SearchCheck,
+  Presentation,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -62,6 +67,16 @@ export const navGroups: NavGroup[] = [
       { href: "/environment", label: "Phiếu theo dõi môi trường", icon: Thermometer },
       { href: "/archive", label: "Sổ theo dõi mẫu lưu", icon: Archive },
       { href: "/feedback", label: "Phiếu ý kiến & khiếu nại", icon: MessageSquare },
+    ],
+  },
+  {
+    label: "Hệ thống quản lý ISO 17025",
+    items: [
+      { href: "/iso17025", label: "Tổng quan ISO 17025", icon: ListChecks },
+      { href: "/documents", label: "Kiểm soát tài liệu", icon: FileStack },
+      { href: "/nonconformities", label: "Không phù hợp & CAPA", icon: OctagonAlert },
+      { href: "/internal-audits", label: "Đánh giá nội bộ", icon: SearchCheck },
+      { href: "/management-reviews", label: "Xem xét của lãnh đạo", icon: Presentation },
     ],
   },
   {

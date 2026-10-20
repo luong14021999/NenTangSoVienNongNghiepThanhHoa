@@ -16,6 +16,7 @@ import { EntitySearchInput } from "@/components/crud/search-input";
 
 export const dynamic = "force-dynamic";
 import { Header } from "@/components/layout/header";
+import { daysUntil } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -45,13 +46,6 @@ const statusVariant: Record<
   "Đã hủy": "secondary",
 };
 
-const today = new Date("2026-06-21");
-
-function daysUntil(dateStr: string) {
-  const diff =
-    (new Date(dateStr).getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
-  return Math.round(diff);
-}
 
 function locationIcon(loc: string) {
   if (loc.toLowerCase().includes("đông")) return Snowflake;

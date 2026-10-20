@@ -15,6 +15,7 @@ export type CrudFieldType =
   | "date"
   | "datetime-local"
   | "select"
+  | "textarea" // nhiều dòng, luôn chiếm cả 2 cột
   | "bool"; // select Đạt/Không đạt → boolean
 
 export type CrudField = {
@@ -157,7 +158,7 @@ export function EntityFormDialog({
                 return (
                   <div
                     key={f.name}
-                    className={`space-y-1.5 ${f.full ? "col-span-2" : ""}`}
+                    className={`space-y-1.5 ${f.full || f.type === "textarea" ? "col-span-2" : ""}`}
                   >
                     <Label htmlFor={f.name}>
                       {f.label}
@@ -179,6 +180,16 @@ export function EntityFormDialog({
                           </option>
                         ))}
                       </select>
+                    ) : f.type === "textarea" ? (
+                      <textarea
+                        id={f.name}
+                        name={f.name}
+                        rows={3}
+                        required={f.required}
+                        placeholder={f.placeholder}
+                        defaultValue={dv}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-y"
+                      />
                     ) : (
                       <Input
                         id={f.name}

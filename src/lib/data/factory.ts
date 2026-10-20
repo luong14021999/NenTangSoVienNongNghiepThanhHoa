@@ -35,6 +35,46 @@ export type DbMapping<T> = {
 export const dateOrNull = (v?: string | null) =>
   v && v !== "" ? v : null;
 
+export type ColumnKind = "text" | "number" | "bool" | "date" | "json";
+
+const toSnake = (k: string) => k.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+const emptyOf: Record<ColumnKind, unknown> = {
+  text: "",
+  number: 0,
+  bool: false,
+  date: "",
+  json: [],
+};
+
+/**
+ * Sinh DbMapping từ danh sách cột camelCase → snake_case, cho các entity
+ * mà mỗi field ứng đúng 1 cột cùng tên. `id` luôn được đọc, không bao giờ ghi.
+ */
+export function columnsMapping<T extends { id: string }>(
+  table: string,
+  columns: { [K in Exclude<keyof T, "id">]-?: ColumnKind },
+): DbMapping<T> {
+  const entries = Object.entries(columns) as [string, ColumnKind][];
+  return {
+    table,
+    select: ["id", ...entries.map(([k]) => toSnake(k))].join(", "),
+    toEntity: (row) => {
+      const e: Record<string, unknown> = { id: row.id };
+      for (const [k, kind] of entries) e[k] = row[toSnake(k)] ?? emptyOf[kind];
+      return e as T;
+    },
+    toRow: (entity) => {
+      const r: Record<string, unknown> = {};
+      for (const [k, kind] of entries) {
+        const v = (entity as Record<string, unknown>)[k];
+        if (v === undefined) continue;
+        r[toSnake(k)] = kind === "date" ? dateOrNull(v as string) : v;
+      }
+      return r;
+    },
+  };
+}
+
 /**
  * Truyền cả row dưới dạng 1 tham số JSON rồi để Postgres ép kiểu theo
  * định nghĩa bảng (json_populate_record) → mảng text[], jsonb, date… đều đúng.

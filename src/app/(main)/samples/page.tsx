@@ -7,6 +7,7 @@ import {
   User,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
+import { todayISO } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -100,7 +101,7 @@ export default async function SamplesPage({
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="received">Ngày tiếp nhận</Label>
-                  <Input id="received" type="date" defaultValue="2026-05-20" />
+                  <Input id="received" type="date" defaultValue={todayISO()} />
                 </div>
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label htmlFor="customer">Khách hàng</Label>

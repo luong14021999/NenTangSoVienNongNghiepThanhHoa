@@ -5,6 +5,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
+import { daysUntil } from "@/lib/dates";
 import {
   Card,
   CardContent,
@@ -36,12 +37,6 @@ import { CrudTableCard } from "@/components/crud/crud-table-card";
 
 export const dynamic = "force-dynamic";
 
-function daysUntil(dateStr: string) {
-  const diff =
-    (new Date(dateStr).getTime() - new Date("2026-05-20").getTime()) /
-    (1000 * 60 * 60 * 24);
-  return Math.round(diff);
-}
 
 const PROFILE_FIELDS: CrudField[] = [
   { name: "chemicalCode", label: "Mã hóa chất", required: true, mono: true },

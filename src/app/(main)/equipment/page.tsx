@@ -6,6 +6,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
+import { daysUntil } from "@/lib/dates";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -50,12 +51,6 @@ const statusVariant: Record<
   Ngừng: "destructive",
 };
 
-function daysUntil(dateStr: string) {
-  const diff =
-    (new Date(dateStr).getTime() - new Date("2026-05-20").getTime()) /
-    (1000 * 60 * 60 * 24);
-  return Math.round(diff);
-}
 
 // ===== Field schemas =====
 const EQUIPMENT_FIELDS: CrudField[] = [

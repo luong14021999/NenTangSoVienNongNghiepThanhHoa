@@ -52,3 +52,24 @@ export function deleteRoute<T extends { id: string }>(store: EntityStore<T>) {
     return NextResponse.json({ ok: true });
   };
 }
+
+/** GET (list) + POST (create) cho 1 collection; body được trộn lên `defaults`. */
+export function collectionRoutes<T extends { id: string }>(
+  store: EntityStore<T>,
+  defaults: Omit<T, "id">,
+  validate?: Validator<T>,
+) {
+  return {
+    GET: listRoute(store),
+    POST: createRoute<T>(
+      store,
+      (body) => ({ ...defaults, ...body, id: "" }) as T,
+      validate,
+    ),
+  };
+}
+
+/** PATCH + DELETE cho /[id]. */
+export function itemRoutes<T extends { id: string }>(store: EntityStore<T>) {
+  return { PATCH: patchRoute(store), DELETE: deleteRoute(store) };
+}
