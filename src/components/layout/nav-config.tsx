@@ -28,6 +28,10 @@ import {
   OctagonAlert,
   SearchCheck,
   Presentation,
+  ShieldHalf,
+  UserCheck,
+  Truck,
+  FlaskRound,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -47,6 +51,9 @@ export const navGroups: NavGroup[] = [
       { href: "/equipment", label: "Thiết bị PTN", icon: Wrench },
       { href: "/tools", label: "Dụng cụ – Vật tư", icon: TestTube },
       { href: "/chemicals", label: "Hóa chất", icon: Beaker },
+      { href: "/authorizations", label: "Ủy quyền phép thử", icon: UserCheck },
+      { href: "/commitments", label: "Cam kết khách quan & bảo mật", icon: ShieldHalf },
+      { href: "/suppliers", label: "Nhà cung cấp", icon: Truck },
     ],
   },
   {
@@ -83,6 +90,7 @@ export const navGroups: NavGroup[] = [
     label: "Đảm bảo chất lượng",
     items: [
       { href: "/accreditation", label: "Phạm vi công nhận VILAS", icon: Award },
+      { href: "/method-validations", label: "Xác nhận phương pháp", icon: FlaskRound },
       { href: "/qc", label: "QC Levey-Jennings", icon: ShieldCheck },
       { href: "/risks", label: "Đăng ký rủi ro", icon: AlertOctagon },
       { href: "/decision-rules", label: "Quy tắc quyết định", icon: Scale },

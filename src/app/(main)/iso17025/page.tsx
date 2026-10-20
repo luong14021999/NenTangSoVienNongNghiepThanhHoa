@@ -28,7 +28,15 @@ import { testRequestsStore } from "@/lib/data/test-requests";
 import { samplesStore } from "@/lib/data/samples";
 import { archivedSamplesStore } from "@/lib/data/archived-samples";
 import { feedbackStore } from "@/lib/data/feedback";
-import { accreditedTests } from "@/lib/accreditation";
+import { accreditedTests, testNoOf } from "@/lib/accreditation";
+import {
+  commitmentCoverage,
+  isActiveAuthorization,
+  methodValidationStore,
+  staffCommitmentStore,
+  supplierStore,
+  testAuthorizationStore,
+} from "@/lib/data/competence";
 import { daysUntil, fmtDateVN, todayISO } from "@/lib/dates";
 import { isAuthConfigured } from "@/lib/auth/server";
 
@@ -52,7 +60,7 @@ type Assessment = {
 };
 
 export default async function IsoOverviewPage() {
-  const [docs, ncs, audits, reviews, staff, env, equipment, calibrations, chemicals, requests, samples, archived, feedback] =
+  const [docs, ncs, audits, reviews, staff, env, equipment, calibrations, chemicals, requests, samples, archived, feedback, commitments, auths, suppliers, validations] =
     await Promise.all([
       qmsDocumentStore.list(),
       nonconformityStore.list(),
@@ -67,6 +75,10 @@ export default async function IsoOverviewPage() {
       samplesStore.list(),
       archivedSamplesStore.list(),
       feedbackStore.list(),
+      staffCommitmentStore.list(),
+      testAuthorizationStore.list(),
+      supplierStore.list(),
+      methodValidationStore.list(),
     ]);
 
   const today = todayISO();
@@ -83,11 +95,32 @@ export default async function IsoOverviewPage() {
   const openNc = ncs.filter(isOpenNc).length;
 
   const has = (n: number, ok: string, none: string) => (n > 0 ? ok : none);
+  const cover = staff.map((s) => commitmentCoverage(commitments, s.fullName));
+  const impartialOk = cover.filter((c) => c.impartiality).length;
+  const confidentialOk = cover.filter((c) => c.confidentiality).length;
+  const performedTests = new Set(
+    auths.filter((a) => isActiveAuthorization(a) && a.role === "Thực hiện phép thử").map((a) => testNoOf(a.testLabel)),
+  ).size;
+  const approvedSuppliers = suppliers.filter((s) => s.status === "Được phê duyệt").length;
+  const validatedTests = new Set(validations.filter((v) => v.conclusion === "Đạt").map((v) => testNoOf(v.testLabel))).size;
+  const total = accreditedTests.length;
   const A: Record<string, Assessment> = {
-    "4.1": { status: "sample", evidence: "Rủi ro về tính khách quan có trong sổ rủi ro (dữ liệu mẫu); chưa có cam kết của nhân viên", modules: [{ href: "/risks", label: "Đăng ký rủi ro" }], plan: "Đợt 2–3" },
-    "4.2": { status: "missing", evidence: "Chưa có hồ sơ cam kết bảo mật của nhân viên", modules: [], plan: "Đợt 2" },
+    "4.1": {
+      status: staff.length && impartialOk === staff.length ? "ok" : "records",
+      evidence: `${impartialOk}/${staff.length} nhân viên có cam kết khách quan còn hiệu lực; rủi ro khách quan theo dõi ở sổ rủi ro`,
+      modules: [{ href: "/commitments", label: "Cam kết" }, { href: "/risks", label: "Đăng ký rủi ro" }],
+    },
+    "4.2": {
+      status: staff.length && confidentialOk === staff.length ? "ok" : "records",
+      evidence: `${confidentialOk}/${staff.length} nhân viên có cam kết bảo mật còn hiệu lực`,
+      modules: [{ href: "/commitments", label: "Cam kết" }],
+    },
     "5": { status: "ok", evidence: `Phạm vi hoạt động: ${accreditedTests.length} phép thử VILAS 1501; sơ đồ tổ chức trong Nhân sự`, modules: [{ href: "/accreditation", label: "Phạm vi công nhận" }, { href: "/personnel", label: "Nhân sự" }] },
-    "6.2": { status: "records", evidence: `${staff.length} nhân sự có hồ sơ năng lực, đào tạo; chưa có ủy quyền theo từng phép thử`, modules: [{ href: "/personnel", label: "Nhân sự" }], plan: "Ủy quyền: Đợt 2" },
+    "6.2": {
+      status: performedTests === total ? "ok" : "records",
+      evidence: `${staff.length} nhân sự có hồ sơ năng lực · ${performedTests}/${total} phép thử có người được ủy quyền thực hiện`,
+      modules: [{ href: "/personnel", label: "Nhân sự" }, { href: "/authorizations", label: "Ủy quyền phép thử" }],
+    },
     "6.3": { status: env.length ? "ok" : "records", evidence: has(env.length, `${env.length} lần ghi điều kiện môi trường`, "Chưa có bản ghi điều kiện môi trường"), modules: [{ href: "/environment", label: "Theo dõi môi trường" }] },
     "6.4": {
       status: overdueCal || noCalDate ? "records" : "ok",
@@ -95,9 +128,17 @@ export default async function IsoOverviewPage() {
       modules: [{ href: "/equipment", label: "Thiết bị" }],
     },
     "6.5": { status: calibrations.length && crm ? "ok" : "records", evidence: `${calibrations.length} hồ sơ hiệu chuẩn · ${crm} chất chuẩn / CRM trong danh mục`, modules: [{ href: "/equipment", label: "Hiệu chuẩn thiết bị" }, { href: "/chemicals", label: "Chất chuẩn" }] },
-    "6.6": { status: "missing", evidence: "Chưa có danh sách và hồ sơ đánh giá nhà cung cấp", modules: [], plan: "Đợt 2" },
+    "6.6": {
+      status: approvedSuppliers ? "ok" : "records",
+      evidence: has(suppliers.length, `${suppliers.length} nhà cung cấp · ${approvedSuppliers} được phê duyệt`, "Chưa có nhà cung cấp nào được đánh giá"),
+      modules: [{ href: "/suppliers", label: "Nhà cung cấp" }],
+    },
     "7.1": { status: requests.length ? "ok" : "records", evidence: has(requests.length, `${requests.length} phiếu yêu cầu / hợp đồng`, "Chưa có phiếu yêu cầu"), modules: [{ href: "/test-requests", label: "Phiếu yêu cầu thử nghiệm" }] },
-    "7.2": { status: "records", evidence: `Danh mục ${accreditedTests.length} phương pháp được công nhận; chưa có hồ sơ kiểm tra xác nhận / xác nhận giá trị sử dụng`, modules: [{ href: "/accreditation", label: "Phạm vi công nhận" }], plan: "Hồ sơ xác nhận: Đợt 2" },
+    "7.2": {
+      status: validatedTests === total ? "ok" : "records",
+      evidence: `${validatedTests}/${total} phép thử có hồ sơ kiểm tra xác nhận / xác nhận giá trị sử dụng Đạt`,
+      modules: [{ href: "/method-validations", label: "Xác nhận phương pháp" }, { href: "/accreditation", label: "Phạm vi công nhận" }],
+    },
     "7.3": { status: "sample", evidence: "Có giao diện lấy mẫu hiện trường, quan trắc theo đợt nhưng dữ liệu chưa lưu database", modules: [{ href: "/field", label: "Lấy mẫu hiện trường" }, { href: "/campaigns", label: "Quan trắc theo đợt" }] },
     "7.4": { status: samples.length ? "ok" : "records", evidence: `${samples.length} mẫu tiếp nhận · ${archived.length} mẫu lưu`, modules: [{ href: "/samples", label: "Tiếp nhận mẫu" }, { href: "/archive", label: "Sổ mẫu lưu" }] },
     "7.5": { status: "sample", evidence: "Phiếu diễn biến phân tích có lưu vết sửa đổi nhưng đang dùng dữ liệu mẫu", modules: [{ href: "/result-entry", label: "Nhập kết quả & duyệt" }, { href: "/analysis", label: "Quy trình phân tích" }], plan: "Đợt 3" },

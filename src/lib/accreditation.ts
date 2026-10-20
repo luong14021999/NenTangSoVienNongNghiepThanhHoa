@@ -131,3 +131,15 @@ export const accreditationNotes = [
   "AEMD-HD…: Phương pháp do Phòng thí nghiệm xây dựng",
   "Trường hợp Viện Nông nghiệp Thanh Hóa cung cấp dịch vụ thử nghiệm chất lượng sản phẩm, hàng hoá thì phải đăng ký hoạt động và được cấp giấy chứng nhận đăng ký hoạt động theo quy định của pháp luật trước khi cung cấp dịch vụ này.",
 ];
+
+/** Nhãn ngắn của phép thử, dùng làm giá trị chọn trong form: "#12 · Đất · Xác định hàm lượng Pb … (TCVN 6496B:2009)". */
+export function testLabel(t: AccreditedTest) {
+  const short = t.name.split(":")[0].split(" – ")[0];
+  const method = t.method.replace(/\s*\(Ref:.*\)$/, "");
+  return `#${t.no} · ${t.matrix} · ${short} (${method})`;
+}
+
+export const testLabels = accreditedTests.map(testLabel);
+
+/** Số TT phép thử từ nhãn "#12 · …"; NaN nếu không đọc được. */
+export const testNoOf = (label: string) => Number(/^#(\d+)/.exec(label)?.[1]);
