@@ -23,13 +23,38 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { QCChart, QCPoint, WestgardRule } from "@/lib/mock-data";
+import Link from "next/link";
+import { PT_TYPES, ptRoundStore, qcChartStore, qcPointStore } from "@/lib/data/quality";
+import { staffStore } from "@/lib/data/staff";
+import { CrudTableCard } from "@/components/crud/crud-table-card";
 import {
-  qcCharts,
-  externalQCRounds,
-  type QCChart,
-  type QCPoint,
-  type WestgardRule,
-} from "@/lib/mock-data";
+  EntityFormDialog,
+  type CrudField,
+} from "@/components/crud/entity-form-dialog";
+import { DeleteEntityButton } from "@/components/crud/delete-button";
+import { fmtDateVN, todayISO } from "@/lib/dates";
+
+export const dynamic = "force-dynamic";
+
+const CHART_FIELDS: CrudField[] = [
+  { name: "criterion", label: "Chỉ tiêu", required: true },
+  { name: "matrix", label: "Nền mẫu" },
+  { name: "method", label: "Phương pháp", full: true },
+  { name: "unit", label: "Đơn vị" },
+  { name: "referenceMaterial", label: "Mẫu chuẩn / CRM" },
+  { name: "mean", label: "Giá trị trung bình x̄", type: "number", required: true },
+  { name: "sd", label: "Độ lệch chuẩn SD", type: "number", required: true },
+];
+
+const PT_FIELDS: CrudField[] = [
+  { name: "type", label: "Loại", type: "select", options: PT_TYPES },
+  { name: "criterion", label: "Chỉ tiêu", required: true },
+  { name: "provider", label: "Đơn vị tổ chức", required: true },
+  { name: "round", label: "Vòng / mã chương trình" },
+  { name: "z", label: "Z-score", type: "number", required: true },
+  { name: "closedAt", label: "Ngày kết thúc", type: "date" },
+];
 
 type FlaggedPoint = QCPoint & {
   z: number;
@@ -87,7 +112,7 @@ function LeveyJenningsChart({ chart }: { chart: QCChart }) {
   const yMin = chart.mean - 4 * chart.sd;
   const yMax = chart.mean + 4 * chart.sd;
   const yScale = (v: number) =>
-    PAD.top + ((yMax - v) / (yMax - yMin)) * PLOT_H;
+    PAD.top + ((yMax - v) / (yMax - yMin || 1)) * PLOT_H;
   const xScale = (i: number) =>
     PAD.left + (i / Math.max(enriched.length - 1, 1)) * PLOT_W;
 
@@ -218,13 +243,7 @@ function LeveyJenningsChart({ chart }: { chart: QCChart }) {
   );
 }
 
-const allFlagged = qcCharts.flatMap((c) =>
-  detectViolations(c.points, c.mean, c.sd)
-    .filter((p) => p.flags.length > 0)
-    .map((p) => ({ ...p, chart: c })),
-);
-
-const stats = [
+const statsOf = (qcCharts: QCChart[], allFlagged: unknown[], externalQCRounds: unknown[]) => [
   {
     label: "Chỉ tiêu đang giám sát",
     value: qcCharts.length,
@@ -257,7 +276,36 @@ const verdictVariant = {
   "Không đạt": "destructive",
 } as const;
 
-export default function QCPage() {
+export default async function QCPage() {
+  const [chartRows, pointRows, externalQCRounds, staff] = await Promise.all([
+    qcChartStore.list(),
+    qcPointStore.list(),
+    ptRoundStore.list(),
+    staffStore.list(),
+  ]);
+  const byDate = (a: { date: string }, b: { date: string }) => a.date.localeCompare(b.date);
+  const qcCharts: QCChart[] = chartRows
+    .sort((a, b) => a.criterion.localeCompare(b.criterion, "vi"))
+    .map((c) => ({
+      ...c,
+      points: pointRows.filter((p) => p.chartId === c.id).sort(byDate) as QCPoint[],
+    }));
+  externalQCRounds.sort((a, b) => (b.closedAt || "").localeCompare(a.closedAt || ""));
+  const allFlagged = qcCharts.flatMap((c) =>
+    detectViolations(c.points, c.mean, c.sd)
+      .filter((p) => p.flags.length > 0)
+      .map((p) => ({ ...p, chart: c })),
+  );
+  const stats = statsOf(qcCharts, allFlagged, externalQCRounds);
+  const chartLabel = (c: { criterion: string; matrix: string; method: string }) =>
+    `${c.criterion} trong ${c.matrix}${c.method ? ` · ${c.method}` : ""}`;
+  const POINT_FIELDS: CrudField[] = [
+    { name: "chartId", label: "Biểu đồ kiểm soát", type: "select", required: true, full: true, options: chartRows.map((c) => ({ value: c.id, label: chartLabel(c) })) },
+    { name: "date", label: "Ngày đo", type: "date", required: true, defaultValue: todayISO() },
+    { name: "value", label: "Giá trị đo", type: "number", required: true },
+    { name: "technician", label: "KTV", type: "select", options: staff.map((s) => s.fullName) },
+  ];
+  const recentPoints = [...pointRows].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 20);
   return (
     <>
       <Header
@@ -340,6 +388,24 @@ export default function QCPage() {
           </CardContent>
         </Card>
 
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div className="text-base font-semibold">Biểu đồ kiểm soát Levey-Jennings</div>
+            <div className="text-xs text-muted-foreground">
+              Mỗi lần phân tích mẫu chuẩn / mẫu QC: nhập 1 điểm – quy tắc Westgard tự đánh giá
+            </div>
+          </div>
+          <div className="flex gap-2">
+            {chartRows.length > 0 && (
+              <EntityFormDialog mode="add" endpoint="/api/qc-points" title="Nhập điểm QC" fields={POINT_FIELDS} addLabel="Nhập điểm QC" />
+            )}
+            <EntityFormDialog mode="add" endpoint="/api/qc-charts" title="Thêm biểu đồ kiểm soát" fields={CHART_FIELDS} addLabel="Thêm biểu đồ" />
+          </div>
+        </div>
+        {qcCharts.length === 0 && (
+          <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">Chưa có biểu đồ kiểm soát nào</CardContent></Card>
+        )}
+
         <section className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {qcCharts.map((c) => {
             const enriched = detectViolations(c.points, c.mean, c.sd);
@@ -390,6 +456,17 @@ export default function QCPage() {
                     </span>
                     <span>·</span>
                     <span>n = {c.points.length}</span>
+                    <span className="ml-auto flex gap-1.5">
+                      <EntityFormDialog
+                        mode="add"
+                        endpoint="/api/qc-points"
+                        title={`Nhập điểm QC – ${c.criterion}`}
+                        fields={POINT_FIELDS.map((f) => (f.name === "chartId" ? { ...f, defaultValue: c.id } : f))}
+                        addLabel="Điểm"
+                      />
+                      <EntityFormDialog mode="edit" endpoint="/api/qc-charts" id={c.id} title={`Sửa biểu đồ – ${c.criterion}`} fields={CHART_FIELDS} initial={c} submitLabel="Lưu thay đổi" />
+                      <DeleteEntityButton entity="qc-charts" id={c.id} label={`biểu đồ ${c.criterion} (kèm ${c.points.length} điểm)`} />
+                    </span>
                     {Object.entries(summary).length > 0 && (
                       <>
                         <span>·</span>
@@ -414,7 +491,9 @@ export default function QCPage() {
           <CardHeader>
             <CardTitle>Điểm vi phạm Westgard gần đây</CardTitle>
             <CardDescription>
-              Cần lập biên bản điều tra nguyên nhân và biện pháp khắc phục
+              Cần điều tra nguyên nhân và ghi vào{" "}
+              <Link href="/nonconformities" className="text-primary hover:underline">sổ Không phù hợp &amp; CAPA</Link>{" "}
+              (nguồn: Kiểm soát chất lượng)
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -432,13 +511,20 @@ export default function QCPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  {allFlagged.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-6">
+                        Không có điểm vi phạm
+                      </TableCell>
+                    </TableRow>
+                  )}
                   {allFlagged
                     .sort((a, b) => (a.date < b.date ? 1 : -1))
                     .slice(0, 8)
                     .map((p, i) => (
                       <TableRow key={i}>
                         <TableCell className="text-muted-foreground text-xs">
-                          {p.date}
+                          {fmtDateVN(p.date)}
                         </TableCell>
                         <TableCell>
                           <div className="text-sm font-medium">
@@ -492,14 +578,18 @@ export default function QCPage() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Kiểm soát chất lượng từ bên ngoài</CardTitle>
-            <CardDescription>
-              Thử nghiệm thành thạo (PT) & so sánh liên phòng (ILC) – yêu cầu
-              ISO/IEC 17025 §7.7.2
-            </CardDescription>
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between space-y-0">
+            <div>
+              <CardTitle>Kiểm soát chất lượng từ bên ngoài</CardTitle>
+              <CardDescription>
+                Thử nghiệm thành thạo (PT) & so sánh liên phòng (ILC) – ISO/IEC 17025 §7.7.2 · kết luận tự tính
+                theo ISO 13528: |z| ≤ 2 Đạt, 2 &lt; |z| &lt; 3 Cảnh báo, |z| ≥ 3 Không đạt
+              </CardDescription>
+            </div>
+            <EntityFormDialog mode="add" endpoint="/api/pt-rounds" title="Thêm kết quả PT / so sánh liên phòng" fields={PT_FIELDS} addLabel="Thêm vòng PT" />
           </CardHeader>
           <CardContent>
+            {externalQCRounds.length === 0 && <div className="text-sm text-muted-foreground">Chưa có kết quả PT nào</div>}
             <ul className="space-y-3">
               {externalQCRounds.map((r) => {
                 const Icon =
@@ -532,7 +622,7 @@ export default function QCPage() {
                         <Badge variant="outline">{r.type}</Badge>
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
-                        {r.provider} · Vòng {r.round} · Kết thúc {r.closedAt}
+                        {r.provider} · Vòng {r.round} · Kết thúc {fmtDateVN(r.closedAt)}
                       </div>
                     </div>
                     <div className="text-right">
@@ -549,9 +639,13 @@ export default function QCPage() {
                         {r.z > 0 ? "+" : ""}
                         {r.z.toFixed(1)}
                       </div>
-                      <Badge variant={verdictVariant[r.verdict]}>
+                      <Badge variant={verdictVariant[r.verdict] ?? "secondary"}>
                         {r.verdict}
                       </Badge>
+                      <div className="flex gap-1.5 mt-2 justify-end">
+                        <EntityFormDialog mode="edit" endpoint="/api/pt-rounds" id={r.id} title={`Sửa PT – ${r.criterion}`} fields={PT_FIELDS} initial={r} submitLabel="Lưu thay đổi" />
+                        <DeleteEntityButton entity="pt-rounds" id={r.id} label={`${r.criterion} – ${r.provider}`} />
+                      </div>
                     </div>
                   </li>
                 );
@@ -559,6 +653,30 @@ export default function QCPage() {
             </ul>
           </CardContent>
         </Card>
+        <CrudTableCard
+          title="Nhật ký điểm QC gần nhất"
+          description="20 lần đo gần nhất – sửa / xoá khi nhập sai (thay đổi được ghi nhận trên hệ thống)"
+          endpoint="/api/qc-points"
+          entity="qc-points"
+          editFields={POINT_FIELDS}
+          addNode={null}
+          headers={["Ngày", "Biểu đồ", "Giá trị", "KTV"]}
+          emptyText="Chưa có điểm QC nào"
+          rows={recentPoints.map((p) => {
+            const c = chartRows.find((x) => x.id === p.chartId);
+            return {
+              id: p.id,
+              label: `${c?.criterion ?? "điểm"} ${fmtDateVN(p.date)}`,
+              initial: p,
+              cells: [
+                <span key="d" className="text-xs">{fmtDateVN(p.date)}</span>,
+                <span key="c" className="text-sm">{c ? chartLabel(c) : "—"}</span>,
+                <span key="v" className="font-medium">{p.value} {c?.unit}</span>,
+                <span key="t" className="text-xs">{p.technician}</span>,
+              ],
+            };
+          })}
+        />
       </main>
     </>
   );

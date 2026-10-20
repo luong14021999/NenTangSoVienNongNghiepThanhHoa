@@ -39,6 +39,9 @@ import {
 } from "@/lib/data/competence";
 import { daysUntil, fmtDateVN, todayISO } from "@/lib/dates";
 import { isAuthConfigured } from "@/lib/auth/server";
+import { decisionRuleStore, ptRoundStore, qcChartStore, qcPointStore, riskStore } from "@/lib/data/quality";
+import { listResults } from "@/lib/data/results";
+import { listReports } from "@/lib/data/reports";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Tổng quan ISO/IEC 17025" };
@@ -60,7 +63,7 @@ type Assessment = {
 };
 
 export default async function IsoOverviewPage() {
-  const [docs, ncs, audits, reviews, staff, env, equipment, calibrations, chemicals, requests, samples, archived, feedback, commitments, auths, suppliers, validations] =
+  const [docs, ncs, audits, reviews, staff, env, equipment, calibrations, chemicals, requests, samples, archived, feedback, commitments, auths, suppliers, validations, risks, rules, charts, points, rounds, results, reports] =
     await Promise.all([
       qmsDocumentStore.list(),
       nonconformityStore.list(),
@@ -79,6 +82,13 @@ export default async function IsoOverviewPage() {
       testAuthorizationStore.list(),
       supplierStore.list(),
       methodValidationStore.list(),
+      riskStore.list(),
+      decisionRuleStore.list(),
+      qcChartStore.list(),
+      qcPointStore.list(),
+      ptRoundStore.list(),
+      listResults(),
+      listReports(),
     ]);
 
   const today = todayISO();
@@ -104,6 +114,11 @@ export default async function IsoOverviewPage() {
   const approvedSuppliers = suppliers.filter((s) => s.status === "Được phê duyệt").length;
   const validatedTests = new Set(validations.filter((v) => v.conclusion === "Đạt").map((v) => testNoOf(v.testLabel))).size;
   const total = accreditedTests.length;
+  const approvedResults = results.filter((r) => r.status === "Đã duyệt").length;
+  const withU = results.filter((r) => Number.isFinite(r.uncertainty)).length;
+  const ptYear = rounds.filter((r) => (r.closedAt || "") >= yearAgo).length;
+  const openRisks = risks.filter((r) => r.status === "Mở" || r.status === "Đang xử lý").length;
+  const overdueRiskReview = risks.filter((r) => r.status !== "Đã đóng" && daysUntil(r.reviewAt) < 0).length;
   const A: Record<string, Assessment> = {
     "4.1": {
       status: staff.length && impartialOk === staff.length ? "ok" : "records",
@@ -139,19 +154,39 @@ export default async function IsoOverviewPage() {
       evidence: `${validatedTests}/${total} phép thử có hồ sơ kiểm tra xác nhận / xác nhận giá trị sử dụng Đạt`,
       modules: [{ href: "/method-validations", label: "Xác nhận phương pháp" }, { href: "/accreditation", label: "Phạm vi công nhận" }],
     },
-    "7.3": { status: "sample", evidence: "Có giao diện lấy mẫu hiện trường, quan trắc theo đợt nhưng dữ liệu chưa lưu database", modules: [{ href: "/field", label: "Lấy mẫu hiện trường" }, { href: "/campaigns", label: "Quan trắc theo đợt" }] },
+    "7.3": { status: "sample", evidence: "Có giao diện lấy mẫu hiện trường, quan trắc theo đợt nhưng dữ liệu chưa lưu database", modules: [{ href: "/field", label: "Lấy mẫu hiện trường" }, { href: "/campaigns", label: "Quan trắc theo đợt" }], plan: "Chưa lên kế hoạch" },
     "7.4": { status: samples.length ? "ok" : "records", evidence: `${samples.length} mẫu tiếp nhận · ${archived.length} mẫu lưu`, modules: [{ href: "/samples", label: "Tiếp nhận mẫu" }, { href: "/archive", label: "Sổ mẫu lưu" }] },
-    "7.5": { status: "sample", evidence: "Phiếu diễn biến phân tích có lưu vết sửa đổi nhưng đang dùng dữ liệu mẫu", modules: [{ href: "/result-entry", label: "Nhập kết quả & duyệt" }, { href: "/analysis", label: "Quy trình phân tích" }], plan: "Đợt 3" },
-    "7.6": { status: "sample", evidence: "Độ không đảm bảo đo nằm trong quy tắc quyết định và kết quả phân tích (dữ liệu mẫu)", modules: [{ href: "/decision-rules", label: "Quy tắc quyết định" }], plan: "Đợt 3" },
-    "7.7": { status: "sample", evidence: "Biểu đồ Levey-Jennings, Westgard, PT/so sánh liên phòng (dữ liệu mẫu)", modules: [{ href: "/qc", label: "QC Levey-Jennings" }], plan: "Đợt 3" },
-    "7.8": { status: "sample", evidence: "Trang phiếu kết quả chưa đủ nội dung bắt buộc §7.8.2", modules: [{ href: "/reports", label: "Phiếu kết quả" }], plan: "Đợt 3" },
+    "7.5": {
+      status: results.length ? "ok" : "records",
+      evidence: `${results.length} kết quả có dữ liệu gốc, duyệt 3 cấp và lưu vết sửa đổi · ${approvedResults} đã phê duyệt`,
+      modules: [{ href: "/result-entry", label: "Nhập kết quả & duyệt" }],
+    },
+    "7.6": {
+      status: results.length && withU === results.length ? "ok" : "records",
+      evidence: `${withU}/${results.length} kết quả có độ không đảm bảo đo U · ${rules.length} quy tắc quyết định có U`,
+      modules: [{ href: "/result-entry", label: "Kết quả" }, { href: "/decision-rules", label: "Quy tắc quyết định" }],
+    },
+    "7.7": {
+      status: charts.length && ptYear ? "ok" : "records",
+      evidence: `${charts.length} biểu đồ kiểm soát · ${points.length} điểm QC · ${ptYear} vòng PT/so sánh liên phòng trong 12 tháng`,
+      modules: [{ href: "/qc", label: "QC Levey-Jennings" }],
+    },
+    "7.8": {
+      status: reports.length ? "ok" : "records",
+      evidence: `${reports.filter((r) => r.status === "Đã phát hành").length} phiếu kết quả hiệu lực · ${reports.filter((r) => r.revision > 0).length} phiếu sửa đổi`,
+      modules: [{ href: "/reports", label: "Phiếu kết quả" }, { href: "/decision-rules", label: "Quy tắc quyết định" }],
+    },
     "7.9": { status: "ok", evidence: `${feedback.length} phiếu ý kiến · ${complaints} khiếu nại được theo dõi`, modules: [{ href: "/feedback", label: "Ý kiến & khiếu nại" }] },
     "7.10": { status: "ok", evidence: `${ncs.length} công việc không phù hợp đã ghi nhận · ${openNc} đang mở`, modules: [{ href: "/nonconformities", label: "Không phù hợp & CAPA" }] },
     "7.11": { status: isAuthConfigured() ? "records" : "missing", evidence: isAuthConfigured() ? "Bắt buộc đăng nhập cho trang và API; database Neon có sao lưu; chưa phân quyền theo vai trò" : "Chưa bật đăng nhập", modules: [{ href: "/settings", label: "Cấu hình" }], plan: "Phân quyền vai trò: Đợt 4" },
     "8.2": { status: manual ? "ok" : "records", evidence: manual ? "Có Sổ tay chất lượng hiệu lực" : "Chưa đăng ký Sổ tay chất lượng trong danh mục tài liệu", modules: [{ href: "/documents?type=S%E1%BB%95+tay+ch%E1%BA%A5t+l%C6%B0%E1%BB%A3ng", label: "Kiểm soát tài liệu" }] },
     "8.3": { status: docs.length && !docsOverdue ? "ok" : "records", evidence: `${activeDocs.length} tài liệu hiệu lực · ${docsOverdue} quá hạn soát xét`, modules: [{ href: "/documents", label: "Kiểm soát tài liệu" }] },
-    "8.4": { status: "records", evidence: "Hồ sơ lưu trên database Neon (Singapore); một số module còn dùng dữ liệu mẫu", modules: [], plan: "Đợt 3" },
-    "8.5": { status: "sample", evidence: "Sổ đăng ký rủi ro & cơ hội đang dùng dữ liệu mẫu", modules: [{ href: "/risks", label: "Đăng ký rủi ro" }], plan: "Đợt 3" },
+    "8.4": { status: "records", evidence: "Hồ sơ lưu trên database Neon (Singapore), kết quả/phiếu đã duyệt không xoá được; lấy mẫu hiện trường & quan trắc theo đợt chưa lưu database", modules: [] },
+    "8.5": {
+      status: risks.length && !overdueRiskReview ? "ok" : "records",
+      evidence: `${risks.length} rủi ro đã đăng ký · ${openRisks} đang mở · ${overdueRiskReview} quá hạn xem xét lại`,
+      modules: [{ href: "/risks", label: "Đăng ký rủi ro & cơ hội" }],
+    },
     "8.6": { status: feedback.length ? "ok" : "records", evidence: `${feedback.length} phiếu ý kiến khách hàng · cải tiến theo dõi qua CAPA`, modules: [{ href: "/feedback", label: "Ý kiến khách hàng" }, { href: "/nonconformities", label: "CAPA" }] },
     "8.7": { status: ncs.length ? "ok" : "records", evidence: `${ncs.filter((n) => n.status === "Đã đóng").length} hành động khắc phục đã đóng · ${openNc} đang mở`, modules: [{ href: "/nonconformities", label: "Không phù hợp & CAPA" }] },
     "8.8": {

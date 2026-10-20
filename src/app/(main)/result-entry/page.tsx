@@ -1,5 +1,5 @@
+import Link from "next/link";
 import {
-  ClipboardEdit,
   Sigma,
   Scale,
   CheckCircle2,
@@ -7,18 +7,13 @@ import {
   AlertTriangle,
   ShieldCheck,
   FileSignature,
-  Paperclip,
-  Clock,
   Pencil,
-  Send,
   RotateCcw,
   History,
   ArrowRight,
-  CircleDot,
   Lock,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -28,25 +23,31 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  EntityFormDialog,
+  type CrudField,
+} from "@/components/crud/entity-form-dialog";
+import { DeleteEntityButton } from "@/components/crud/delete-button";
+import { StatGrid } from "@/components/qms/stat-grid";
+import { WorkflowActions } from "@/components/results/workflow-actions";
+import type { Conclusion, ResultStatus } from "@/lib/mock-data";
 import {
-  analysisResults,
-  type AnalysisResult,
-  type ResultStatus,
-  type Conclusion,
-} from "@/lib/mock-data";
+  EDITABLE,
+  RESULT_STATUSES,
+  listAudit,
+  listResults,
+  type ResultRow,
+} from "@/lib/data/results";
+import { samplesStore } from "@/lib/data/samples";
+import { equipmentStore } from "@/lib/data/equipment";
+import { chemicalsStore } from "@/lib/data/chemicals";
+import { decisionRuleStore } from "@/lib/data/quality";
+import { testLabels, testNoOf } from "@/lib/accreditation";
+import { fmtDateVN } from "@/lib/dates";
 
-const statusVariant: Record<
-  ResultStatus,
-  "secondary" | "default" | "warning" | "success" | "destructive"
-> = {
+export const dynamic = "force-dynamic";
+export const metadata = { title: "Nhập kết quả & duyệt" };
+
+const statusVariant: Record<ResultStatus, "secondary" | "default" | "warning" | "success" | "destructive"> = {
   "Đang nhập": "secondary",
   "Chờ QA/QC": "warning",
   "Chờ Trưởng phòng": "default",
@@ -54,80 +55,17 @@ const statusVariant: Record<
   "Trả lại sửa": "destructive",
 };
 
-const conclusionMeta: Record<
-  Conclusion,
-  {
-    variant: "secondary" | "default" | "warning" | "success" | "destructive";
-    icon: typeof CheckCircle2;
-    color: string;
-  }
-> = {
-  Đạt: {
-    variant: "success",
-    icon: CheckCircle2,
-    color: "text-emerald-700 bg-emerald-50 border-emerald-200",
-  },
-  "Không đạt": {
-    variant: "destructive",
-    icon: XCircle,
-    color: "text-rose-700 bg-rose-50 border-rose-200",
-  },
-  "Vô định": {
-    variant: "warning",
-    icon: AlertTriangle,
-    color: "text-amber-700 bg-amber-50 border-amber-200",
-  },
-  "Báo cáo giá trị": {
-    variant: "default",
-    icon: Sigma,
-    color: "text-blue-700 bg-blue-50 border-blue-200",
-  },
+const conclusionMeta: Record<Conclusion, { icon: typeof CheckCircle2; color: string; variant: "success" | "destructive" | "warning" | "default" }> = {
+  "Đạt": { icon: CheckCircle2, color: "text-emerald-700 bg-emerald-50 border-emerald-200", variant: "success" },
+  "Không đạt": { icon: XCircle, color: "text-rose-700 bg-rose-50 border-rose-200", variant: "destructive" },
+  "Vô định": { icon: AlertTriangle, color: "text-amber-700 bg-amber-50 border-amber-200", variant: "warning" },
+  "Báo cáo giá trị": { icon: Sigma, color: "text-blue-700 bg-blue-50 border-blue-200", variant: "default" },
 };
 
-const featured = analysisResults[0];
+const fin = (v: number) => Number.isFinite(v);
+const num = (v: number, suffix = "") => (fin(v) ? `${v}${suffix}` : "—");
 
-const counts = analysisResults.reduce<Record<ResultStatus, number>>(
-  (acc, r) => {
-    acc[r.status] = (acc[r.status] || 0) + 1;
-    return acc;
-  },
-  {
-    "Đang nhập": 0,
-    "Chờ QA/QC": 0,
-    "Chờ Trưởng phòng": 0,
-    "Đã duyệt": 0,
-    "Trả lại sửa": 0,
-  },
-);
-
-const stats = [
-  {
-    label: "Đang nhập",
-    value: counts["Đang nhập"],
-    icon: Pencil,
-    accent: "bg-emerald-50 text-emerald-700",
-  },
-  {
-    label: "Chờ QA/QC",
-    value: counts["Chờ QA/QC"],
-    icon: ShieldCheck,
-    accent: "bg-amber-50 text-amber-600",
-  },
-  {
-    label: "Đã duyệt",
-    value: counts["Đã duyệt"],
-    icon: FileSignature,
-    accent: "bg-blue-50 text-blue-600",
-  },
-  {
-    label: "Trả lại sửa",
-    value: counts["Trả lại sửa"],
-    icon: RotateCcw,
-    accent: "bg-rose-50 text-rose-600",
-  },
-];
-
-function ApprovalSteps({ result }: { result: AnalysisResult }) {
+function ApprovalSteps({ result }: { result: ResultRow }) {
   return (
     <ol className="grid grid-cols-1 md:grid-cols-3 gap-3">
       {result.approvals.map((a, i) => {
@@ -138,32 +76,16 @@ function ApprovalSteps({ result }: { result: AnalysisResult }) {
           <li
             key={a.step}
             className={`relative p-3 rounded-md border ${
-              done
-                ? "border-emerald-200 bg-emerald-50/40"
-                : rejected
-                  ? "border-rose-200 bg-rose-50/40"
-                  : waiting
-                    ? "border-dashed bg-card"
-                    : "bg-card"
+              done ? "border-emerald-200 bg-emerald-50/40" : rejected ? "border-rose-200 bg-rose-50/40" : waiting ? "border-dashed bg-card" : "bg-card"
             }`}
           >
             <div className="flex items-center gap-2">
               <div
                 className={`w-7 h-7 rounded-md flex items-center justify-center font-semibold text-xs ${
-                  done
-                    ? "bg-emerald-500 text-white"
-                    : rejected
-                      ? "bg-rose-500 text-white"
-                      : "bg-muted text-muted-foreground"
+                  done ? "bg-emerald-500 text-white" : rejected ? "bg-rose-500 text-white" : "bg-muted text-muted-foreground"
                 }`}
               >
-                {done ? (
-                  <CheckCircle2 className="w-4 h-4" />
-                ) : rejected ? (
-                  <RotateCcw className="w-4 h-4" />
-                ) : (
-                  i + 1
-                )}
+                {done ? <CheckCircle2 className="w-4 h-4" /> : rejected ? <RotateCcw className="w-4 h-4" /> : i + 1}
               </div>
               <div className="text-sm font-medium">{a.step}</div>
             </div>
@@ -173,22 +95,12 @@ function ApprovalSteps({ result }: { result: AnalysisResult }) {
               ) : (
                 <>
                   <div className="font-medium">{a.actor}</div>
-                  <div className="text-muted-foreground text-[11px]">
-                    {a.role}
-                  </div>
-                  {a.signedAt && (
-                    <div className="text-[11px] text-muted-foreground mt-0.5">
-                      Ký lúc {a.signedAt}
-                    </div>
-                  )}
+                  <div className="text-muted-foreground text-[11px]">{a.role}</div>
+                  {a.signedAt && <div className="text-[11px] text-muted-foreground mt-0.5">Ký lúc {a.signedAt}</div>}
                 </>
               )}
             </div>
-            {a.comment && (
-              <div className="mt-2 text-[11px] text-foreground/80 italic line-clamp-3">
-                "{a.comment}"
-              </div>
-            )}
+            {a.comment && <div className="mt-2 text-[11px] text-foreground/80 italic line-clamp-3">&ldquo;{a.comment}&rdquo;</div>}
             {i < result.approvals.length - 1 && (
               <ArrowRight className="hidden md:block absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
             )}
@@ -199,640 +111,335 @@ function ApprovalSteps({ result }: { result: AnalysisResult }) {
   );
 }
 
-function DecisionZone({ result }: { result: AnalysisResult }) {
-  if (result.decisionRuleType.startsWith("Simple")) {
-    return (
-      <div className="rounded-md border bg-blue-50/40 border-blue-200 p-3 text-sm">
-        <div className="font-medium text-blue-700">Simple acceptance</div>
-        <div className="text-xs text-blue-900/70 mt-1">
-          Trả kết quả {result.mean} ± {result.uncertainty} {result.unit}. KH dùng
-          tham chiếu khuyến cáo, không kết luận đạt/không đạt.
-        </div>
-      </div>
-    );
-  }
-  const measured = result.mean;
-  const u = result.uncertainty;
+function DecisionZone({ result }: { result: ResultRow }) {
   const lo = result.acceptanceUpper;
   const hi = result.rejectionUpper;
   const lim = result.decisionLimit;
+  const measured = result.mean;
+  const u = fin(result.uncertainty) ? result.uncertainty : 0;
+  if (!fin(lo) || !fin(hi) || !fin(lim) || !fin(measured) || hi <= lo) {
+    return (
+      <div className="rounded-md border bg-blue-50/40 border-blue-200 p-3 text-xs text-blue-900/80">
+        {result.conclusionExplanation || "Báo cáo giá trị đo"}
+        {fin(lim) && ` · Giới hạn ${lim} ${result.unit}`}
+      </div>
+    );
+  }
   const W = 600;
   const H = 90;
   const PAD = { left: 30, right: 30, top: 14, bottom: 30 };
   const PLOT_W = W - PAD.left - PAD.right;
   const PLOT_H = 26;
-  const xMin = 0;
-  const xMax = hi + (hi - lo) * 0.4;
-  const xScale = (v: number) =>
-    PAD.left + ((v - xMin) / (xMax - xMin)) * PLOT_W;
-
+  const xMin = Math.max(0, Math.min(measured - u, lo) - (hi - lo) * 0.6);
+  const xMax = Math.max(measured + u, hi) + (hi - lo) * 0.6;
+  const x = (v: number) => PAD.left + ((Math.min(Math.max(v, xMin), xMax) - xMin) / (xMax - xMin)) * PLOT_W;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img">
-      <rect
-        x={PAD.left}
-        y={PAD.top}
-        width={xScale(lo) - PAD.left}
-        height={PLOT_H}
-        fill="#d1fae5"
-      />
-      <rect
-        x={xScale(lo)}
-        y={PAD.top}
-        width={xScale(hi) - xScale(lo)}
-        height={PLOT_H}
-        fill="#fef3c7"
-      />
-      <rect
-        x={xScale(hi)}
-        y={PAD.top}
-        width={PAD.left + PLOT_W - xScale(hi)}
-        height={PLOT_H}
-        fill="#fee2e2"
-      />
-      <line
-        x1={xScale(lim)}
-        x2={xScale(lim)}
-        y1={PAD.top - 4}
-        y2={PAD.top + PLOT_H + 4}
-        stroke="#0f172a"
-        strokeWidth="1.5"
-      />
-      <text
-        x={xScale(lim)}
-        y={PAD.top - 6}
-        textAnchor="middle"
-        fontSize="9"
-        fontWeight="600"
-        fill="#0f172a"
-      >
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Vùng quyết định">
+      <rect x={PAD.left} y={PAD.top} width={x(lo) - PAD.left} height={PLOT_H} fill="#d1fae5" />
+      <rect x={x(lo)} y={PAD.top} width={x(hi) - x(lo)} height={PLOT_H} fill="#fef3c7" />
+      <rect x={x(hi)} y={PAD.top} width={PAD.left + PLOT_W - x(hi)} height={PLOT_H} fill="#fee2e2" />
+      <line x1={x(lim)} x2={x(lim)} y1={PAD.top - 4} y2={PAD.top + PLOT_H + 4} stroke="#0f172a" strokeWidth="1.5" />
+      <text x={x(lim)} y={PAD.top - 6} textAnchor="middle" fontSize="9" fontWeight="600" fill="#0f172a">
         Giới hạn {lim} {result.unit}
       </text>
-      <line
-        x1={xScale(measured)}
-        x2={xScale(measured)}
-        y1={PAD.top + PLOT_H + 4}
-        y2={PAD.top + PLOT_H + 16}
-        stroke="#1d8048"
-        strokeWidth="2"
-      />
-      <line
-        x1={xScale(measured - u)}
-        x2={xScale(measured + u)}
-        y1={PAD.top + PLOT_H + 14}
-        y2={PAD.top + PLOT_H + 14}
-        stroke="#1d8048"
-        strokeWidth="2"
-      />
-      <circle
-        cx={xScale(measured)}
-        cy={PAD.top + PLOT_H + 14}
-        r="3.5"
-        fill="#1d8048"
-      />
-      <text
-        x={xScale(measured)}
-        y={PAD.top + PLOT_H + 27}
-        textAnchor="middle"
-        fontSize="9"
-        fontWeight="600"
-        fill="#1d8048"
-      >
+      <line x1={x(measured - u)} x2={x(measured + u)} y1={PAD.top + PLOT_H + 14} y2={PAD.top + PLOT_H + 14} stroke="#1d8048" strokeWidth="2" />
+      <circle cx={x(measured)} cy={PAD.top + PLOT_H + 14} r="3.5" fill="#1d8048" />
+      <text x={x(measured)} y={PAD.top + PLOT_H + 27} textAnchor="middle" fontSize="9" fontWeight="600" fill="#1d8048">
         x̄ ± U = {measured} ± {u}
       </text>
-      <text
-        x={(PAD.left + xScale(lo)) / 2}
-        y={PAD.top + PLOT_H / 2 + 3}
-        textAnchor="middle"
-        fontSize="9"
-        fontWeight="600"
-        fill="#047857"
-      >
-        ĐẠT
-      </text>
-      <text
-        x={(xScale(lo) + xScale(hi)) / 2}
-        y={PAD.top + PLOT_H / 2 + 3}
-        textAnchor="middle"
-        fontSize="9"
-        fontWeight="600"
-        fill="#b45309"
-      >
-        VÔ ĐỊNH
-      </text>
-      <text
-        x={(xScale(hi) + PAD.left + PLOT_W) / 2}
-        y={PAD.top + PLOT_H / 2 + 3}
-        textAnchor="middle"
-        fontSize="9"
-        fontWeight="600"
-        fill="#b91c1c"
-      >
-        KHÔNG ĐẠT
-      </text>
+      <text x={(PAD.left + x(lo)) / 2} y={PAD.top + PLOT_H / 2 + 3} textAnchor="middle" fontSize="9" fontWeight="600" fill="#047857">ĐẠT</text>
+      <text x={(x(lo) + x(hi)) / 2} y={PAD.top + PLOT_H / 2 + 3} textAnchor="middle" fontSize="9" fontWeight="600" fill="#b45309">VÔ ĐỊNH</text>
+      <text x={(x(hi) + PAD.left + PLOT_W) / 2} y={PAD.top + PLOT_H / 2 + 3} textAnchor="middle" fontSize="9" fontWeight="600" fill="#b91c1c">KHÔNG ĐẠT</text>
     </svg>
   );
 }
 
-function ResultDetail({ result }: { result: AnalysisResult }) {
-  const concl = conclusionMeta[result.conclusion];
+function ResultDetail({ result }: { result: ResultRow }) {
+  const concl = conclusionMeta[result.conclusion] ?? conclusionMeta["Báo cáo giá trị"];
+  const recoveryOk = result.matrixSpikeRecovery >= 90 && result.matrixSpikeRecovery <= 110;
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <div className="lg:col-span-2 p-3 rounded-lg border bg-card">
-          <div className="text-[11px] uppercase font-semibold text-muted-foreground mb-2">
-            Thông tin chỉ tiêu × mẫu
-          </div>
+          <div className="text-[11px] uppercase font-semibold text-muted-foreground mb-2">Thông tin chỉ tiêu × mẫu</div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-2 text-xs">
-            <div>
-              <div className="text-muted-foreground">Mã KQ</div>
-              <div className="font-mono font-medium">{result.resultCode}</div>
-            </div>
-            <div>
-              <div className="text-muted-foreground">Mã mẫu</div>
-              <div className="font-mono font-medium">{result.sampleCode}</div>
-            </div>
-            <div>
-              <div className="text-muted-foreground">KH</div>
-              <div className="font-medium truncate">{result.customerName}</div>
-            </div>
-            <div className="col-span-2">
-              <div className="text-muted-foreground">Chỉ tiêu × Nền</div>
-              <div className="font-medium">
-                {result.criterion} – {result.matrix}
-              </div>
-            </div>
-            <div>
-              <div className="text-muted-foreground">KTV</div>
-              <div className="font-medium">{result.technician}</div>
-            </div>
-            <div className="col-span-2">
-              <div className="text-muted-foreground">Phương pháp</div>
-              <div className="font-medium">{result.method}</div>
-            </div>
+            <div><div className="text-muted-foreground">Mã KQ</div><div className="font-mono font-medium">{result.resultCode}</div></div>
+            <div><div className="text-muted-foreground">Mã mẫu</div><div className="font-mono font-medium">{result.sampleCode}</div></div>
+            <div><div className="text-muted-foreground">Khách hàng</div><div className="font-medium truncate">{result.customerName || "—"}</div></div>
+            <div className="col-span-2"><div className="text-muted-foreground">Chỉ tiêu × nền</div><div className="font-medium">{result.criterion} – {result.matrix}</div></div>
+            <div><div className="text-muted-foreground">KTV</div><div className="font-medium">{result.technician}</div></div>
+            <div className="col-span-2"><div className="text-muted-foreground">Phương pháp</div><div className="font-medium">{result.method}</div></div>
             <div>
               <div className="text-muted-foreground">Thiết bị</div>
-              <div className="font-medium">{result.instrument.code}</div>
-              <div className="text-[10px] text-muted-foreground">
-                {result.instrument.name}
-              </div>
+              <div className="font-medium">{result.instrument.code || "—"}</div>
+              <div className="text-[10px] text-muted-foreground">{result.instrument.name}</div>
             </div>
-            <div className="col-span-2 sm:col-span-3">
-              <div className="text-muted-foreground">Mẫu chuẩn QC</div>
-              <div className="text-foreground/90">{result.referenceMaterial}</div>
-            </div>
+            <div className="col-span-2 sm:col-span-3"><div className="text-muted-foreground">Mẫu chuẩn QC</div><div>{result.referenceMaterial || "—"}</div></div>
           </div>
         </div>
-        <div
-          className={`p-4 rounded-lg border space-y-2 ${concl.color}`}
-        >
+        <div className={`p-4 rounded-lg border space-y-2 ${concl.color}`}>
           <div className="flex items-center gap-2">
             <concl.icon className="w-5 h-5" />
-            <span className="text-xs font-semibold uppercase tracking-wider">
-              Kết luận
-            </span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Kết luận</span>
           </div>
           <div className="text-2xl font-bold">{result.conclusion}</div>
-          <div className="text-xs leading-relaxed">
-            {result.conclusionExplanation}
-          </div>
+          <div className="text-xs leading-relaxed">{result.conclusionExplanation}</div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <div className="lg:col-span-2 p-3 rounded-lg border bg-card">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-[11px] uppercase font-semibold text-muted-foreground">
-              Phép lặp & thống kê
-            </div>
-            <Badge variant="outline">
-              n = {result.replicates.length}
-            </Badge>
+            <div className="text-[11px] uppercase font-semibold text-muted-foreground">Phép lặp & thống kê</div>
+            <Badge variant="outline">n = {result.replicates.length}</Badge>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-3">
             {result.replicates.map((r) => (
-              <div
-                key={r.id}
-                className="rounded-md border bg-muted/30 px-2 py-1.5 text-center"
-              >
-                <div className="text-[10px] text-muted-foreground">
-                  Lần {r.id}
-                </div>
-                <div className="text-sm font-semibold tabular-nums">
-                  {r.value}
-                </div>
+              <div key={r.id} className="rounded-md border bg-muted/30 px-2 py-1.5 text-center">
+                <div className="text-[10px] text-muted-foreground">Lần {r.id}</div>
+                <div className="text-sm font-semibold tabular-nums">{r.value}</div>
               </div>
             ))}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-            <div className="rounded-md border bg-card p-2">
-              <div className="text-muted-foreground">x̄</div>
-              <div className="font-semibold text-sm">
-                {result.mean} {result.unit}
-              </div>
-            </div>
-            <div className="rounded-md border bg-card p-2">
-              <div className="text-muted-foreground">SD</div>
-              <div className="font-semibold text-sm">{result.sd}</div>
-            </div>
-            <div className="rounded-md border bg-card p-2">
-              <div className="text-muted-foreground">RSD</div>
-              <div className="font-semibold text-sm">{result.rsd}%</div>
-            </div>
-            <div className="rounded-md border bg-primary/5 border-primary/30 p-2">
-              <div className="text-muted-foreground">U (k=2)</div>
-              <div className="font-semibold text-sm text-primary">
-                ±{result.uncertainty}
-              </div>
-            </div>
+            <div className="rounded-md border p-2"><div className="text-muted-foreground">x̄</div><div className="font-semibold text-sm">{num(result.mean)} {result.unit}</div></div>
+            <div className="rounded-md border p-2"><div className="text-muted-foreground">SD</div><div className="font-semibold text-sm">{num(result.sd)}</div></div>
+            <div className="rounded-md border p-2"><div className="text-muted-foreground">RSD</div><div className="font-semibold text-sm">{num(result.rsd, "%")}</div></div>
+            <div className="rounded-md border bg-primary/5 border-primary/30 p-2"><div className="text-muted-foreground">U (k=2)</div><div className="font-semibold text-sm text-primary">{fin(result.uncertainty) ? `±${result.uncertainty}` : "—"}</div></div>
           </div>
         </div>
         <div className="p-3 rounded-lg border bg-card">
-          <div className="text-[11px] uppercase font-semibold text-muted-foreground mb-2">
-            Kiểm soát QA/QC
-          </div>
+          <div className="text-[11px] uppercase font-semibold text-muted-foreground mb-2">Kiểm soát QA/QC</div>
           <ul className="space-y-2 text-xs">
             <li className="flex items-center justify-between">
-              <span className="text-muted-foreground">CRM recovery</span>
-              <span
-                className={`font-semibold ${
-                  result.matrixSpikeRecovery >= 90 &&
-                  result.matrixSpikeRecovery <= 110
-                    ? "text-emerald-700"
-                    : "text-rose-700"
-                }`}
-              >
-                {result.matrixSpikeRecovery}%
-              </span>
+              <span className="text-muted-foreground">Độ thu hồi (CRM / spike)</span>
+              <span className={`font-semibold ${!fin(result.matrixSpikeRecovery) ? "" : recoveryOk ? "text-emerald-700" : "text-rose-700"}`}>{num(result.matrixSpikeRecovery, "%")}</span>
             </li>
             <li className="flex items-center justify-between">
               <span className="text-muted-foreground">Mẫu trắng</span>
-              <span className="font-semibold">
-                {result.blankBlankValue} {result.unit}
-              </span>
+              <span className="font-semibold">{num(result.blankBlankValue)} {fin(result.blankBlankValue) ? result.unit : ""}</span>
             </li>
             <li className="flex items-center justify-between">
               <span className="text-muted-foreground">RSD ≤ 5%</span>
-              <Badge
-                variant={result.rsd < 5 ? "success" : "destructive"}
-                className="text-[10px]"
-              >
-                {result.rsd < 5 ? "Đạt" : "Vượt"}
-              </Badge>
-            </li>
-            <li className="flex items-center justify-between">
-              <span className="text-muted-foreground">Levey-Jennings</span>
-              <Badge variant="success" className="text-[10px]">
-                Trong kiểm soát
-              </Badge>
+              {fin(result.rsd) ? (
+                <Badge variant={result.rsd <= 5 ? "success" : "destructive"} className="text-[10px]">{result.rsd <= 5 ? "Đạt" : "Vượt"}</Badge>
+              ) : "—"}
             </li>
           </ul>
+          <Link href="/qc" className="mt-3 inline-block text-[11px] text-primary hover:underline">Xem biểu đồ Levey-Jennings →</Link>
         </div>
       </div>
 
       <div className="p-4 rounded-lg border bg-card space-y-2">
         <div className="flex items-center gap-2 text-[11px] uppercase font-semibold text-muted-foreground">
           <Scale className="w-3.5 h-3.5" />
-          Áp dụng quy tắc quyết định
+          Áp dụng quy tắc quyết định (§7.8.6)
         </div>
-        <div className="text-sm">
-          <span className="font-medium">{result.decisionRuleType}</span>
-          {result.decisionRuleId !== "—" && (
-            <span className="text-muted-foreground ml-2 font-mono text-xs">
-              (DR-{result.decisionRuleId})
-            </span>
-          )}
-        </div>
+        <div className="text-sm font-medium">{result.decisionRuleType || "Không công bố sự phù hợp"}</div>
         <DecisionZone result={result} />
       </div>
     </div>
   );
 }
 
-const queueResults = analysisResults.filter((r) => r.status !== "Đã duyệt");
+export default async function ResultEntryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; id?: string }>;
+}) {
+  const { status = "", id = "" } = await searchParams;
+  const [results, samples, equipment, chemicals, rules] = await Promise.all([
+    listResults(),
+    samplesStore.list(),
+    equipmentStore.list(),
+    chemicalsStore.list(),
+    decisionRuleStore.list(),
+  ]);
 
-export default function ResultEntryPage() {
+  const queue = results.filter((r) => (status ? r.status === status : r.status !== "Đã duyệt"));
+  const selected = results.find((r) => r.id === id) ?? queue[0] ?? results[0];
+  const audit = selected ? await listAudit(selected.id) : [];
+
+  const RESULT_FIELDS: CrudField[] = [
+    { name: "sampleCode", label: "Mẫu", type: "select", required: true, full: true, options: samples.map((s) => ({ value: s.code, label: `${s.code} · ${s.customer} · ${s.type}` })) },
+    { name: "testLabel", label: "Phép thử (danh mục VILAS 1501)", type: "select", required: true, full: true, options: testLabels },
+    { name: "replicates", label: "Giá trị các phép lặp (cách nhau bằng dấu ;)", required: true, full: true, placeholder: "VD: 0,232; 0,241; 0,238" },
+    { name: "unit", label: "Đơn vị", placeholder: "mg/kg" },
+    { name: "uncertainty", label: "U mở rộng (k = 2)", placeholder: "VD: 0,02" },
+    { name: "instrumentCode", label: "Thiết bị", type: "select", full: true, options: [{ value: "", label: "—" }, ...equipment.map((e) => ({ value: e.code, label: `${e.code} · ${e.name}` }))] },
+    { name: "referenceMaterial", label: "Mẫu chuẩn / CRM", type: "select", full: true, options: ["", ...chemicals.filter((c) => c.isReference).map((c) => c.name)] },
+    { name: "matrixSpikeRecovery", label: "Độ thu hồi (%)", placeholder: "VD: 98,5" },
+    { name: "blankValue", label: "Mẫu trắng", placeholder: "VD: 0,002" },
+    { name: "decisionRuleId", label: "Quy tắc quyết định", type: "select", full: true, options: [{ value: "", label: "Không công bố sự phù hợp – báo cáo giá trị" }, ...rules.map((r) => ({ value: r.id, label: `${r.criterion} trong ${r.matrix} – ${r.ruleType.split(" (")[0]} (giới hạn ${r.limit} ${r.unit})` }))] },
+  ];
+  const editInitial = (r: ResultRow) => ({
+    sampleCode: r.sampleCode,
+    testLabel: testLabels.find((l) => testNoOf(l) === testNoOf(r.criterion)) ?? "",
+    replicates: r.replicates.map((x) => String(x.value).replace(".", ",")).join("; "),
+    unit: r.unit,
+    uncertainty: fin(r.uncertainty) ? String(r.uncertainty).replace(".", ",") : "",
+    instrumentCode: r.instrument.code,
+    referenceMaterial: r.referenceMaterial,
+    matrixSpikeRecovery: fin(r.matrixSpikeRecovery) ? String(r.matrixSpikeRecovery).replace(".", ",") : "",
+    blankValue: fin(r.blankBlankValue) ? String(r.blankBlankValue).replace(".", ",") : "",
+    decisionRuleId: r.decisionRuleId,
+  });
+
+  const count = (s: ResultStatus) => results.filter((r) => r.status === s).length;
+  const tabs = [{ key: "", label: "Hàng đợi", n: results.filter((r) => r.status !== "Đã duyệt").length }, ...RESULT_STATUSES.map((s) => ({ key: s, label: s, n: count(s) }))];
+  const qs = (o: Record<string, string>) => `/result-entry?${new URLSearchParams(Object.fromEntries(Object.entries(o).filter(([, v]) => v)))}`;
+
   return (
     <>
       <Header
         title="Nhập kết quả & duyệt"
-        description="Phiếu diễn biến phân tích · Workflow 3 cấp KTV → QA/QC → Trưởng phòng · §7.5 + §7.8.6"
+        description="Phiếu diễn biến phân tích · duyệt 3 cấp KTV → QA/QC → Trưởng phòng · lưu vết mọi thay đổi (§7.5, §7.8.1, §7.11)"
       />
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 scrollbar-thin">
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {stats.map((s) => (
-            <Card key={s.label}>
-              <CardContent className="p-5 flex items-start justify-between">
-                <div>
-                  <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                    {s.label}
-                  </div>
-                  <div className="text-3xl font-semibold mt-1.5">{s.value}</div>
-                </div>
-                <div
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center ${s.accent}`}
-                >
-                  <s.icon className="w-5 h-5" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </section>
+        <StatGrid
+          stats={[
+            { label: "Đang nhập", value: count("Đang nhập"), icon: Pencil, accent: "bg-emerald-50 text-emerald-700" },
+            { label: "Chờ QA/QC", value: count("Chờ QA/QC"), icon: ShieldCheck, accent: "bg-amber-50 text-amber-600" },
+            { label: "Chờ Trưởng phòng", value: count("Chờ Trưởng phòng"), icon: FileSignature, accent: "bg-blue-50 text-blue-600" },
+            { label: "Trả lại sửa", value: count("Trả lại sửa"), icon: RotateCcw, accent: "bg-rose-50 text-rose-600" },
+          ]}
+        />
 
         <Card>
-          <CardHeader>
-            <CardTitle>Hàng đợi cần xử lý</CardTitle>
-            <CardDescription>
-              Chỉ tiêu × mẫu đang chờ KTV, QA/QC hoặc Trưởng phòng thao tác
-            </CardDescription>
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between space-y-0">
+            <div>
+              <CardTitle>Kết quả phân tích</CardTitle>
+              <CardDescription>Chọn 1 dòng để xem chi tiết, thao tác duyệt và lưu vết</CardDescription>
+            </div>
+            <EntityFormDialog
+              mode="add"
+              endpoint="/api/analysis-results"
+              title="Nhập kết quả phân tích"
+              description="x̄, SD, RSD và kết luận được tính tự động; KTV = tài khoản đang đăng nhập"
+              fields={RESULT_FIELDS}
+              addLabel="Nhập kết quả"
+            />
           </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="all">
-              <TabsList>
-                <TabsTrigger value="all">Tất cả</TabsTrigger>
-                <TabsTrigger value="qa">Chờ QA/QC</TabsTrigger>
-                <TabsTrigger value="manager">Chờ Trưởng phòng</TabsTrigger>
-                <TabsTrigger value="rejected">Trả lại</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <div className="mt-4 rounded-lg border">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40">
-                    <TableHead>Mã KQ</TableHead>
-                    <TableHead>Mẫu</TableHead>
-                    <TableHead>Chỉ tiêu</TableHead>
-                    <TableHead>Kết quả</TableHead>
-                    <TableHead>Kết luận</TableHead>
-                    <TableHead>Trạng thái</TableHead>
-                    <TableHead>Đang chờ</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {analysisResults.map((r) => {
-                    const concl = conclusionMeta[r.conclusion];
-                    const waitingStep = r.approvals.find(
-                      (a) => a.decision === "Chờ",
-                    );
-                    return (
-                      <TableRow key={r.id}>
-                        <TableCell className="font-mono text-xs">
-                          {r.resultCode}
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-mono text-xs">
-                            {r.sampleCode}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground truncate max-w-[180px]">
-                            {r.customerName}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          <div className="font-medium">{r.criterion}</div>
-                          <div className="text-muted-foreground">
-                            {r.method}
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {r.mean} ± {r.uncertainty} {r.unit}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={concl.variant}>
-                            <concl.icon className="w-3 h-3" />
-                            {r.conclusion}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={statusVariant[r.status]}>
-                            {r.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {waitingStep ? waitingStep.step : "—"}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap gap-1.5">
+              {tabs.map((t) => (
+                <Link
+                  key={t.key || "queue"}
+                  href={qs({ status: t.key })}
+                  className={`h-8 px-3 inline-flex items-center rounded-full border text-xs font-medium ${
+                    status === t.key ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-accent"
+                  }`}
+                >
+                  {t.label} <span className="ml-1.5 opacity-70">{t.n}</span>
+                </Link>
+              ))}
+            </div>
+            <div className="rounded-lg border overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-xs text-muted-foreground">
+                  <tr className="text-left">
+                    <th className="px-3 py-2 font-medium">Mã KQ</th>
+                    <th className="px-3 py-2 font-medium">Mẫu / khách hàng</th>
+                    <th className="px-3 py-2 font-medium">Chỉ tiêu</th>
+                    <th className="px-3 py-2 font-medium">x̄ ± U</th>
+                    <th className="px-3 py-2 font-medium">Kết luận</th>
+                    <th className="px-3 py-2 font-medium">KTV</th>
+                    <th className="px-3 py-2 font-medium">Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {queue.length === 0 && (
+                    <tr><td colSpan={7} className="px-3 py-8 text-center text-muted-foreground">Không có kết quả nào</td></tr>
+                  )}
+                  {queue.map((r) => (
+                    <tr key={r.id} className={r.id === selected?.id ? "bg-primary/[0.06]" : "hover:bg-muted/30"}>
+                      <td className="px-3 py-2">
+                        <Link href={qs({ status, id: r.id })} className="font-mono text-xs font-semibold text-primary hover:underline">{r.resultCode}</Link>
+                      </td>
+                      <td className="px-3 py-2 text-xs">
+                        <div className="font-mono">{r.sampleCode}</div>
+                        <div className="text-muted-foreground truncate max-w-[200px]">{r.customerName}</div>
+                      </td>
+                      <td className="px-3 py-2 text-xs max-w-[240px]">
+                        <div className="line-clamp-2">{r.criterion}</div>
+                        <div className="text-muted-foreground">{r.matrix}</div>
+                      </td>
+                      <td className="px-3 py-2 text-xs whitespace-nowrap">{num(r.mean)}{fin(r.uncertainty) ? ` ± ${r.uncertainty}` : ""} {r.unit}</td>
+                      <td className="px-3 py-2"><Badge variant={conclusionMeta[r.conclusion]?.variant ?? "default"}>{r.conclusion}</Badge></td>
+                      <td className="px-3 py-2 text-xs whitespace-nowrap">{r.technician}</td>
+                      <td className="px-3 py-2"><Badge variant={statusVariant[r.status] ?? "secondary"}>{r.status}</Badge></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between flex-wrap gap-2">
+        {selected && (
+          <Card>
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between space-y-0">
               <div>
-                <CardTitle>Phiếu kết quả: {featured.resultCode}</CardTitle>
+                <CardTitle className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono">{selected.resultCode}</span>
+                  <Badge variant={statusVariant[selected.status] ?? "secondary"}>{selected.status}</Badge>
+                </CardTitle>
                 <CardDescription>
-                  {featured.sampleCode} · {featured.criterion} ·{" "}
-                  {featured.customerName}
+                  Bắt đầu {fmtDateVN(selected.startedAt)}
+                  {selected.finishedAt && ` · phê duyệt ${fmtDateVN(selected.finishedAt)}`}
                 </CardDescription>
               </div>
-              <Badge variant={statusVariant[featured.status]}>
-                <Lock className="w-3 h-3" />
-                {featured.status}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <div className="text-[11px] font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-2">
-                <ClipboardEdit className="w-3.5 h-3.5" />
-                Trạng thái workflow 3 cấp
-              </div>
-              <ApprovalSteps result={featured} />
-            </div>
-
-            <ResultDetail result={featured} />
-
-            <div>
-              <div className="text-[11px] font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-2">
-                <Paperclip className="w-3.5 h-3.5" />
-                Dữ liệu thô đính kèm (raw data)
-              </div>
-              <ul className="space-y-2">
-                {featured.rawFiles.map((f) => (
-                  <li
-                    key={f.name}
-                    className="flex items-center gap-3 p-3 rounded-md border bg-card"
-                  >
-                    <div className="w-9 h-9 rounded-md bg-primary/10 text-primary flex items-center justify-center">
-                      <Paperclip className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">
-                        {f.name}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
-                        <span>{f.kind}</span>
-                        <span>{f.size}</span>
-                        <span>tải lên {f.uploadedAt}</span>
-                        <span>{f.uploadedBy}</span>
-                        <span className="font-mono">{f.hash}</span>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2 flex items-start gap-2">
-                <Lock className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                Mỗi file gắn checksum SHA-256 lưu vĩnh viễn – không cho phép sửa
-                sau khi đóng phiếu (§7.5.2 – Hồ sơ kỹ thuật).
-              </div>
-            </div>
-
-            <div>
-              <div className="text-[11px] font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-2">
-                <History className="w-3.5 h-3.5" />
-                Phiếu diễn biến phân tích (audit trail)
-              </div>
-              <ol className="relative border-l-2 border-muted ml-2 space-y-3">
-                {featured.auditTrail.map((e, i) => (
-                  <li key={i} className="ml-4 relative">
-                    <span className="absolute -left-[1.4rem] top-1 w-3 h-3 rounded-full bg-primary border-2 border-card" />
-                    <div className="flex items-baseline gap-2 flex-wrap">
-                      <span className="text-xs text-muted-foreground font-mono">
-                        {e.at}
-                      </span>
-                      <span className="text-xs font-medium">{e.actor}</span>
-                      <span className="text-xs text-muted-foreground">
-                        — {e.action}
-                      </span>
-                    </div>
-                    {e.detail && (
-                      <div className="text-xs text-foreground/80 mt-0.5">
-                        {e.detail}
-                      </div>
-                    )}
-                    {e.oldValue !== undefined && e.newValue !== undefined && (
-                      <div className="text-[11px] mt-1 flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-rose-700 line-through">
-                          {e.oldValue}
-                        </span>
-                        <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                        <span className="font-mono text-emerald-700">
-                          {e.newValue}
-                        </span>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ol>
-              <div className="mt-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2 flex items-start gap-2">
-                <Lock className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                Mọi thao tác đều ghi audit log – không xóa được. Đáp ứng yêu
-                cầu §7.5 (Hồ sơ kỹ thuật) + §8.4 (Kiểm soát hồ sơ).
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {queueResults.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Demo thao tác nhập / duyệt</CardTitle>
-              <CardDescription>
-                Mockup UI từ góc nhìn từng vai trò trong workflow
-              </CardDescription>
+              {EDITABLE.includes(selected.status) ? (
+                <div className="flex gap-1.5">
+                  <EntityFormDialog
+                    mode="edit"
+                    endpoint="/api/analysis-results"
+                    id={selected.id}
+                    title={`Sửa kết quả ${selected.resultCode}`}
+                    description="Mỗi trường thay đổi được ghi vào lưu vết (giá trị cũ → mới, người sửa, thời điểm)"
+                    fields={RESULT_FIELDS}
+                    initial={editInitial(selected)}
+                    submitLabel="Lưu thay đổi"
+                  />
+                  {selected.status === "Đang nhập" && selected.approvals.every((a) => a.decision === "Chờ") && (
+                    <DeleteEntityButton entity="analysis-results" id={selected.id} label={selected.resultCode} />
+                  )}
+                </div>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Lock className="w-3.5 h-3.5" /> Đã khóa – chỉ sửa được khi bị trả lại
+                </span>
+              )}
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                <div className="p-4 rounded-lg border bg-card space-y-3">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <Pencil className="w-4 h-4 text-primary" />
-                    Vai trò: KTV nhập kết quả
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Nhập số liệu phép lặp, đính kèm raw file, ghi ghi chú
-                  </div>
-                  <ul className="text-xs space-y-1.5">
-                    <li className="flex items-center gap-2">
-                      <CircleDot className="w-3 h-3 text-primary" />
-                      Form numeric: ô input cho từng phép lặp
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CircleDot className="w-3 h-3 text-primary" />
-                      Auto tính x̄, SD, RSD, U khi nhập đủ
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CircleDot className="w-3 h-3 text-primary" />
-                      Upload CSV/PDF + hash SHA-256
-                    </li>
-                  </ul>
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-                    <Button variant="outline" size="sm">
-                      Lưu nháp
-                    </Button>
-                    <Button size="sm">
-                      <Send />
-                      Nộp QA/QC
-                    </Button>
-                  </div>
-                </div>
-                <div className="p-4 rounded-lg border bg-card space-y-3">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <ShieldCheck className="w-4 h-4 text-amber-600" />
-                    Vai trò: QA/QC kiểm tra
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Đối chiếu Westgard, recovery, mẫu trắng, ký xác nhận
-                  </div>
-                  <ul className="text-xs space-y-1.5">
-                    <li className="flex items-center gap-2">
-                      <CircleDot className="w-3 h-3 text-amber-600" />
-                      Auto link Levey-Jennings + vi phạm Westgard
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CircleDot className="w-3 h-3 text-amber-600" />
-                      So sánh với CRM recovery 90–110%
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CircleDot className="w-3 h-3 text-amber-600" />
-                      Có thể trả lại sửa (rollback workflow)
-                    </li>
-                  </ul>
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-                    <Button variant="outline" size="sm">
-                      <RotateCcw />
-                      Trả lại
-                    </Button>
-                    <Button size="sm">
-                      <CheckCircle2 />
-                      Duyệt
-                    </Button>
-                  </div>
-                </div>
-                <div className="p-4 rounded-lg border bg-card space-y-3">
-                  <div className="flex items-center gap-2 text-sm font-medium">
-                    <FileSignature className="w-4 h-4 text-blue-600" />
-                    Vai trò: Trưởng phòng duyệt
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Duyệt cuối + ký số phát hành phiếu KQ
-                  </div>
-                  <ul className="text-xs space-y-1.5">
-                    <li className="flex items-center gap-2">
-                      <CircleDot className="w-3 h-3 text-blue-600" />
-                      Đọc tổng hợp + ghi chú QA/QC
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CircleDot className="w-3 h-3 text-blue-600" />
-                      Ký số USB token / HSM
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CircleDot className="w-3 h-3 text-blue-600" />
-                      Tự đẩy sang /reports phát hành KH
-                    </li>
-                  </ul>
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-                    <Button variant="outline" size="sm">
-                      <Clock />
-                      Xem sau
-                    </Button>
-                    <Button size="sm">
-                      <FileSignature />
-                      Ký số & duyệt
-                    </Button>
+            <CardContent className="space-y-5">
+              <ApprovalSteps result={selected} />
+              <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4">
+                <ResultDetail result={selected} />
+                <div className="space-y-4">
+                  <WorkflowActions id={selected.id} status={selected.status} />
+                  {selected.status === "Đã duyệt" && (
+                    <Link href={`/reports?sample=${encodeURIComponent(selected.sampleCode)}`} className="block p-4 rounded-lg border bg-emerald-50/50 border-emerald-200 text-sm text-emerald-800 hover:bg-emerald-50">
+                      Kết quả đã phê duyệt – lập phiếu kết quả cho mẫu {selected.sampleCode} →
+                    </Link>
+                  )}
+                  <div className="p-4 rounded-lg border bg-card">
+                    <div className="flex items-center gap-2 text-sm font-semibold mb-2">
+                      <History className="w-4 h-4" /> Lưu vết ({audit.length})
+                    </div>
+                    <ol className="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
+                      {audit.map((e) => (
+                        <li key={e.id} className="text-xs border-l-2 border-primary/30 pl-2.5">
+                          <div className="font-medium">{e.action}{e.field && ` · ${e.field}`}</div>
+                          {(e.oldValue || e.newValue) && (
+                            <div className="font-mono text-[11px]">
+                              <span className="text-rose-700 line-through">{e.oldValue || "∅"}</span> → <span className="text-emerald-700">{e.newValue || "∅"}</span>
+                            </div>
+                          )}
+                          {e.detail && <div className="text-muted-foreground">{e.detail}</div>}
+                          <div className="text-[11px] text-muted-foreground">{e.actor} · {new Date(e.at).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</div>
+                        </li>
+                      ))}
+                    </ol>
                   </div>
                 </div>
               </div>

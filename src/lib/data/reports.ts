@@ -1,0 +1,151 @@
+// Phiếu kết quả thử nghiệm (ISO/IEC 17025:2017 §7.8): phát hành từ kết quả đã phê duyệt,
+// lưu bản chụp nội dung (§8.4), sửa đổi bằng phiếu thay thế (§7.8.8).
+import { dbQuery, isDbConfigured } from "@/lib/db";
+import { labInfo } from "@/lib/accreditation";
+import { customersStore } from "./customers";
+import { samplesStore } from "./samples";
+import { listResults } from "./results";
+
+export type ReportLine = {
+  resultCode: string;
+  criterion: string;
+  accredited: boolean;
+  method: string;
+  unit: string;
+  mean: number | null;
+  uncertainty: number | null;
+  decisionRuleType: string;
+  decisionLimit: number | null;
+  conclusion: string;
+  conclusionExplanation: string;
+  technician: string;
+  startedAt: string;
+  finishedAt: string;
+  approvedBy: string;
+};
+
+export type ReportSnapshot = {
+  lab: { name: string; organization: string; address: string; phone: string; email: string; vilas: string; standard: string };
+  customer: { name: string; address: string; contact: string; phone: string };
+  sample: { code: string; type: string; receivedAt: string };
+  lines: ReportLine[];
+  performedFrom: string;
+  performedTo: string;
+};
+
+export type TestReport = {
+  id: string;
+  code: string;
+  sampleCode: string;
+  revision: number;
+  replacesCode: string;
+  status: "Đã phát hành" | "Đã thay thế";
+  issuedAt: string;
+  issuedBy: string;
+  note: string;
+  snapshot: ReportSnapshot;
+};
+
+const COLS = "id, code, sample_code, revision, replaces_code, status, issued_at, issued_by, note, snapshot";
+
+const toReport = (r: Record<string, unknown>): TestReport => ({
+  id: r.id as string,
+  code: r.code as string,
+  sampleCode: (r.sample_code as string) ?? "",
+  revision: Number(r.revision ?? 0),
+  replacesCode: (r.replaces_code as string) ?? "",
+  status: ((r.status as string) || "Đã phát hành") as TestReport["status"],
+  issuedAt: (r.issued_at as string) ?? "",
+  issuedBy: (r.issued_by as string) ?? "",
+  note: (r.note as string) ?? "",
+  snapshot: r.snapshot as ReportSnapshot,
+});
+
+export async function listReports(): Promise<TestReport[]> {
+  if (!isDbConfigured()) return [];
+  return (await dbQuery(`select ${COLS} from public.test_reports order by issued_at desc`)).map(toReport);
+}
+
+export async function getReport(id: string): Promise<TestReport | null> {
+  const [row] = await dbQuery(`select ${COLS} from public.test_reports where id = $1`, [id]);
+  return row ? toReport(row) : null;
+}
+
+/** Nội dung phiếu từ các kết quả đã phê duyệt của mẫu. */
+export async function buildSnapshot(sampleCode: string): Promise<ReportSnapshot | null> {
+  const [results, samples, customers] = await Promise.all([listResults(), samplesStore.list(), customersStore.list()]);
+  const approved = results
+    .filter((r) => r.sampleCode === sampleCode && r.status === "Đã duyệt")
+    .sort((a, b) => a.criterion.localeCompare(b.criterion, "vi", { numeric: true }));
+  if (!approved.length) return null;
+  const sample = samples.find((s) => s.code === sampleCode);
+  const customer = customers.find((c) => c.name === (sample?.customer ?? approved[0].customerName));
+  const fin = (v: number) => (Number.isFinite(v) ? v : null);
+  const dates = approved.flatMap((r) => [r.startedAt, r.finishedAt ?? ""]).filter(Boolean).sort();
+  return {
+    lab: {
+      name: labInfo.accreditedName,
+      organization: labInfo.organization,
+      address: labInfo.address,
+      phone: labInfo.phone,
+      email: labInfo.email,
+      vilas: labInfo.vilasCode,
+      standard: labInfo.standard,
+    },
+    customer: {
+      name: customer?.name ?? sample?.customer ?? approved[0].customerName,
+      address: customer?.address ?? "",
+      contact: customer?.contact ?? "",
+      phone: customer?.phone ?? "",
+    },
+    sample: { code: sampleCode, type: sample?.type ?? approved[0].matrix, receivedAt: sample?.receivedAt ?? "" },
+    lines: approved.map((r) => ({
+      resultCode: r.resultCode,
+      criterion: r.criterion.replace(/^#\d+\s*/, ""),
+      accredited: /^#\d+/.test(r.criterion),
+      method: r.method,
+      unit: r.unit,
+      mean: fin(r.mean),
+      uncertainty: fin(r.uncertainty),
+      decisionRuleType: r.decisionRuleType,
+      decisionLimit: fin(r.decisionLimit),
+      conclusion: r.conclusion,
+      conclusionExplanation: r.conclusionExplanation,
+      technician: r.technician,
+      startedAt: r.startedAt,
+      finishedAt: r.finishedAt ?? "",
+      approvedBy: r.approvals.find((a) => a.step === "Trưởng phòng duyệt")?.actor ?? "",
+    })),
+    performedFrom: dates[0] ?? "",
+    performedTo: dates.at(-1) ?? "",
+  };
+}
+
+/** Phát hành phiếu; nếu mẫu đã có phiếu hiệu lực → phiếu mới là bản sửa đổi thay thế. */
+export async function issueReport(sampleCode: string, issuedBy: string, note: string) {
+  const snapshot = await buildSnapshot(sampleCode);
+  if (!snapshot) return { error: "Mẫu chưa có kết quả nào được Trưởng phòng phê duyệt" } as const;
+
+  const [prev] = await dbQuery(
+    `select code, revision from public.test_reports where sample_code = $1 and status = 'Đã phát hành'
+     order by revision desc limit 1`,
+    [sampleCode],
+  );
+  const year = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric" }).format(new Date());
+  const prefix = `PKQ-VNNTH-${year}-`;
+  const [seq] = await dbQuery(
+    `select coalesce(max(substring(code from $2)::int), 0) as n from public.test_reports where code like $1`,
+    [`${prefix}%`, `^${prefix}(\\d+)$`],
+  );
+  const code = `${prefix}${String(Number(seq?.n ?? 0) + 1).padStart(5, "0")}`;
+
+  if (prev) {
+    await dbQuery(`update public.test_reports set status = 'Đã thay thế' where code = $1`, [prev.code]);
+  }
+  const [row] = await dbQuery(
+    `insert into public.test_reports (code, sample_code, revision, replaces_code, issued_by, note, snapshot)
+     values ($1, $2, $3, $4, $5, $6, $7::jsonb) returning ${COLS}`,
+    [code, sampleCode, prev ? Number(prev.revision) + 1 : 0, prev?.code ?? null, issuedBy, note || null, JSON.stringify(snapshot)],
+  );
+  return { report: toReport(row) } as const;
+}

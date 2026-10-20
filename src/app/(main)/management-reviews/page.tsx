@@ -29,7 +29,7 @@ import { feedbackStore } from "@/lib/data/feedback";
 import { staffStore } from "@/lib/data/staff";
 import { equipmentStore } from "@/lib/data/equipment";
 import { samplesStore } from "@/lib/data/samples";
-import { externalQCRounds, risks } from "@/lib/mock-data";
+import { ptRoundStore, riskStore } from "@/lib/data/quality";
 import { accreditedTests, labInfo } from "@/lib/accreditation";
 import { managementReviewInputs } from "@/lib/iso17025";
 import { daysUntil, fmtDateVN, todayISO } from "@/lib/dates";
@@ -58,7 +58,7 @@ const statusVariant: Record<ManagementReview["status"], "default" | "warning" | 
 type InputRow = { key: string; label: string; value: string; href?: string; sample?: boolean };
 
 export default async function ManagementReviewsPage() {
-  const [reviews, docs, ncs, audits, feedback, staff, equipment, samples] = await Promise.all([
+  const [reviews, docs, ncs, audits, feedback, staff, equipment, samples, risks, externalQCRounds] = await Promise.all([
     managementReviewStore.list(),
     qmsDocumentStore.list(),
     nonconformityStore.list(),
@@ -67,6 +67,8 @@ export default async function ManagementReviewsPage() {
     staffStore.list(),
     equipmentStore.list(),
     samplesStore.list(),
+    riskStore.list(),
+    ptRoundStore.list(),
   ]);
   reviews.sort((a, b) => (b.meetingAt || "").localeCompare(a.meetingAt || ""));
 
@@ -95,7 +97,7 @@ export default async function ManagementReviewsPage() {
   const complaintsOpen = complaints.filter((f) => f.complaintStatus !== "Đã đóng").length;
   const effective = ncs.filter((n) => n.status === "Đã đóng" && inYear(n.closedAt) && n.effectiveness.trim()).length;
   const overdueCal = equipment.filter((e) => daysUntil(e.nextCalibration) < 0).length;
-  const openRisks = risks.filter((r) => r.status !== "Đã giảm thiểu").length;
+  const openRisks = risks.filter((r) => r.status === "Mở" || r.status === "Đang xử lý").length;
   const qcYear = externalQCRounds.filter((r) => inYear(r.closedAt));
   const trainings = staff.reduce(
     (n, s) => n + s.trainings.filter((t) => t.year === Number(today.slice(0, 4))).length,
@@ -119,8 +121,8 @@ export default async function ManagementReviewsPage() {
     j: { value: `${complaints.length} khiếu nại · ${complaintsOpen} chưa đóng`, href: "/feedback" },
     k: { value: `${effective} hành động khắc phục đã đóng có đánh giá hiệu lực`, href: "/nonconformities" },
     l: { value: `${staff.length} nhân sự · ${equipment.length} thiết bị · ${overdueCal} thiết bị quá hạn hiệu chuẩn`, href: "/equipment" },
-    m: { value: `${risks.length} rủi ro đã nhận diện · ${openRisks} chưa giảm thiểu`, href: "/risks", sample: true },
-    n: { value: `${qcYear.length} vòng PT / so sánh liên phòng · ${qcYear.filter((r) => r.verdict !== "Đạt").length} không đạt/cảnh báo`, href: "/qc", sample: true },
+    m: { value: `${risks.length} rủi ro đã nhận diện · ${openRisks} đang mở / đang xử lý`, href: "/risks" },
+    n: { value: `${qcYear.length} vòng PT / so sánh liên phòng · ${qcYear.filter((r) => r.verdict !== "Đạt").length} không đạt/cảnh báo`, href: "/qc" },
     o: { value: `${trainings} lượt đào tạo trong năm ${today.slice(0, 4)}`, href: "/personnel" },
   };
   const inputs: InputRow[] = managementReviewInputs.map((i) => ({ ...i, ...values[i.key] }));

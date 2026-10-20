@@ -22,7 +22,8 @@ export type CrudField = {
   name: string;
   label: string;
   type?: CrudFieldType;
-  options?: string[];
+  /** Chuỗi = vừa là giá trị vừa là nhãn; {value,label} khi cần lưu mã khác nhãn hiển thị. */
+  options?: (string | { value: string; label: string })[];
   required?: boolean;
   placeholder?: string;
   mono?: boolean;
@@ -174,11 +175,14 @@ export function EntityFormDialog({
                         {(f.type === "bool"
                           ? [BOOL_TRUE, BOOL_FALSE]
                           : (f.options ?? [])
-                        ).map((o) => (
-                          <option key={o} value={o}>
-                            {o}
-                          </option>
-                        ))}
+                        ).map((o) => {
+                          const opt = typeof o === "string" ? { value: o, label: o } : o;
+                          return (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          );
+                        })}
                       </select>
                     ) : f.type === "textarea" ? (
                       <textarea

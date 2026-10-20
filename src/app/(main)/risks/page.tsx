@@ -1,15 +1,6 @@
-import {
-  AlertOctagon,
-  ShieldCheck,
-  TrendingUp,
-  ListChecks,
-  Filter,
-  Search,
-  Plus,
-  Sparkles,
-} from "lucide-react";
+import Link from "next/link";
+import { AlertOctagon, ShieldCheck, TrendingUp, ListChecks, Sparkles } from "lucide-react";
 import { Header } from "@/components/layout/header";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -18,16 +9,56 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CrudTableCard } from "@/components/crud/crud-table-card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { risks, opportunities, type Risk } from "@/lib/mock-data";
+  EntityFormDialog,
+  type CrudField,
+} from "@/components/crud/entity-form-dialog";
+import { DeleteEntityButton } from "@/components/crud/delete-button";
+import { EntitySearchInput } from "@/components/crud/search-input";
+import { StatGrid } from "@/components/qms/stat-grid";
+import {
+  OPPORTUNITY_STATUSES,
+  RISK_CATEGORIES,
+  RISK_STATUSES,
+  RISK_TREATMENTS,
+  opportunityStore,
+  riskStore,
+} from "@/lib/data/quality";
+import type { Risk } from "@/lib/mock-data";
+import { daysUntil, fmtDateVN } from "@/lib/dates";
+
+export const dynamic = "force-dynamic";
+export const metadata = { title: "Đăng ký rủi ro & cơ hội" };
+
+const SCALE = ["1", "2", "3", "4", "5"];
+
+const RISK_FIELDS: CrudField[] = [
+  { name: "code", label: "Mã rủi ro", required: true, mono: true, placeholder: "VD: RR-11" },
+  { name: "category", label: "Phân loại", type: "select", options: RISK_CATEGORIES },
+  { name: "title", label: "Rủi ro", required: true, full: true },
+  { name: "cause", label: "Nguyên nhân", type: "textarea" },
+  { name: "effect", label: "Hậu quả", type: "textarea" },
+  { name: "likelihood", label: "Khả năng xảy ra L (1–5)", type: "select", options: SCALE },
+  { name: "impact", label: "Mức nghiêm trọng I (1–5)", type: "select", options: SCALE },
+  { name: "controls", label: "Biện pháp kiểm soát hiện có", type: "textarea" },
+  { name: "treatment", label: "Hướng xử lý", type: "select", options: RISK_TREATMENTS },
+  { name: "owner", label: "Phụ trách" },
+  { name: "action", label: "Hành động xử lý", type: "textarea" },
+  { name: "residualLikelihood", label: "L tồn dư", type: "select", options: SCALE },
+  { name: "residualImpact", label: "I tồn dư", type: "select", options: SCALE },
+  { name: "reviewAt", label: "Ngày xem xét lại", type: "date" },
+  { name: "status", label: "Trạng thái", type: "select", options: RISK_STATUSES },
+  { name: "isoClause", label: "Điều khoản ISO 17025", placeholder: "VD: §4.1" },
+];
+
+const OPP_FIELDS: CrudField[] = [
+  { name: "title", label: "Cơ hội cải tiến", required: true, full: true },
+  { name: "description", label: "Mô tả", type: "textarea" },
+  { name: "expectedBenefit", label: "Lợi ích kỳ vọng", full: true },
+  { name: "owner", label: "Phụ trách" },
+  { name: "status", label: "Trạng thái", type: "select", options: OPPORTUNITY_STATUSES },
+];
 
 function levelOf(score: number) {
   if (score >= 16) return { label: "Rất cao", color: "bg-rose-100 text-rose-700 border-rose-300", swatch: "bg-rose-500", variant: "destructive" as const };
@@ -37,7 +68,7 @@ function levelOf(score: number) {
 }
 
 const statusVariant = {
-  Mở: "destructive",
+  "Mở": "destructive",
   "Đang xử lý": "warning",
   "Đã giảm thiểu": "secondary",
   "Đã đóng": "success",
@@ -49,143 +80,78 @@ const opStatusVariant = {
   "Đã đạt": "success",
 } as const;
 
-function scoreOf(r: Risk) {
-  return r.likelihood * r.impact;
-}
+const scoreOf = (r: Risk) => r.likelihood * r.impact;
+const residualOf = (r: Risk) => r.residualLikelihood * r.residualImpact;
+const isOpen = (r: Risk) => r.status === "Mở" || r.status === "Đang xử lý";
 
-function residualOf(r: Risk) {
-  return r.residualLikelihood * r.residualImpact;
-}
-
-const totalScores = risks.map(scoreOf);
-const highRiskCount = totalScores.filter((s) => s >= 10).length;
-const openCount = risks.filter(
-  (r) => r.status === "Mở" || r.status === "Đang xử lý",
-).length;
-const mitigatedCount = risks.filter(
-  (r) => r.status === "Đã giảm thiểu" || r.status === "Đã đóng",
-).length;
-
-const stats = [
-  {
-    label: "Tổng rủi ro đã đăng ký",
-    value: risks.length,
-    icon: ListChecks,
-    accent: "bg-emerald-50 text-emerald-700",
-  },
-  {
-    label: "Mức Cao / Rất cao",
-    value: highRiskCount,
-    icon: AlertOctagon,
-    accent: "bg-rose-50 text-rose-600",
-  },
-  {
-    label: "Đang xử lý / Mở",
-    value: openCount,
-    icon: TrendingUp,
-    accent: "bg-amber-50 text-amber-600",
-  },
-  {
-    label: "Đã giảm thiểu / đóng",
-    value: mitigatedCount,
-    icon: ShieldCheck,
-    accent: "bg-blue-50 text-blue-600",
-  },
+const FILTERS = [
+  { key: "", label: "Tất cả", test: () => true },
+  { key: "high", label: "Cao / Rất cao", test: (r: Risk) => scoreOf(r) >= 10 },
+  { key: "open", label: "Mở / Đang xử lý", test: isOpen },
+  { key: "closed", label: "Đã giảm thiểu / đóng", test: (r: Risk) => !isOpen(r) },
 ];
 
-function RiskMatrix() {
-  const grid = Array.from({ length: 5 }, (_, i) =>
-    Array.from({ length: 5 }, (_, j) => {
-      const likelihood = j + 1;
-      const impact = 5 - i;
-      const score = likelihood * impact;
-      const list = risks.filter(
-        (r) => r.likelihood === likelihood && r.impact === impact,
-      );
-      return { likelihood, impact, score, list };
-    }),
-  );
+function RiskMatrix({ risks }: { risks: Risk[] }) {
   return (
     <div className="overflow-x-auto">
       <div className="inline-grid grid-cols-[auto_repeat(5,minmax(64px,1fr))] gap-1.5 text-xs">
         <div />
         {[1, 2, 3, 4, 5].map((l) => (
-          <div
-            key={`l-${l}`}
-            className="text-center text-[11px] text-muted-foreground font-medium"
-          >
+          <div key={`l-${l}`} className="text-center text-[11px] text-muted-foreground font-medium">
             L{l}
           </div>
         ))}
-        {grid.map((row, i) => (
-          <Row key={i} row={row} impact={5 - i} />
-        ))}
+        {[5, 4, 3, 2, 1].flatMap((impact) => [
+          <div key={`i-${impact}`} className="text-[11px] text-muted-foreground font-medium flex items-center justify-end pr-2">
+            I{impact}
+          </div>,
+          ...[1, 2, 3, 4, 5].map((likelihood) => {
+            const score = likelihood * impact;
+            const lv = levelOf(score);
+            const n = risks.filter((r) => r.likelihood === likelihood && r.impact === impact).length;
+            return (
+              <div
+                key={`${likelihood}-${impact}`}
+                className={`rounded-md border ${lv.color} min-h-[56px] p-1.5 flex flex-col items-center justify-center text-center`}
+                title={`L${likelihood} × I${impact} = ${score} (${lv.label})`}
+              >
+                <div className="text-[10px] opacity-70">{score}</div>
+                <div className="text-base font-semibold leading-none mt-0.5">{n || ""}</div>
+              </div>
+            );
+          }),
+        ])}
         <div className="col-span-6 mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
           <span>Trục dọc: Mức nghiêm trọng (I) · Trục ngang: Khả năng xảy ra (L)</span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-emerald-500" /> Thấp 1–4
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-amber-400" /> TB 5–9
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-orange-500" /> Cao 10–15
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-rose-500" /> Rất cao 16–25
-          </span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-emerald-500" /> Thấp 1–4</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-400" /> TB 5–9</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-orange-500" /> Cao 10–15</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-rose-500" /> Rất cao 16–25</span>
         </div>
       </div>
     </div>
   );
 }
 
-function Row({
-  row,
-  impact,
+export default async function RisksPage({
+  searchParams,
 }: {
-  row: ReturnType<typeof riskMatrixCell>[];
-  impact: number;
+  searchParams: Promise<{ q?: string; f?: string }>;
 }) {
-  return (
-    <>
-      <div className="text-[11px] text-muted-foreground font-medium flex items-center justify-end pr-2">
-        I{impact}
-      </div>
-      {row.map((cell) => {
-        const lv = levelOf(cell.score);
-        return (
-          <div
-            key={`${cell.likelihood}-${cell.impact}`}
-            className={`relative rounded-md border ${lv.color} min-h-[56px] p-1.5 flex flex-col items-center justify-center text-center`}
-            title={`L${cell.likelihood} × I${cell.impact} = ${cell.score} (${lv.label})`}
-          >
-            <div className="text-[10px] opacity-70">{cell.score}</div>
-            <div className="text-base font-semibold leading-none mt-0.5">
-              {cell.list.length || ""}
-            </div>
-          </div>
-        );
-      })}
-    </>
+  const { q = "", f = "" } = await searchParams;
+  const [risks, opportunities] = await Promise.all([riskStore.list(), opportunityStore.list()]);
+  risks.sort((a, b) => a.code.localeCompare(b.code, "vi", { numeric: true }));
+
+  const filter = FILTERS.find((x) => x.key === f) ?? FILTERS[0];
+  const query = q.trim().toLowerCase();
+  const rows = risks.filter(
+    (r) => filter.test(r) && (!query || `${r.code} ${r.title} ${r.owner} ${r.category}`.toLowerCase().includes(query)),
   );
-}
+  const reviewSoon = risks
+    .filter((r) => r.status !== "Đã đóng" && daysUntil(r.reviewAt) <= 30)
+    .sort((a, b) => (a.reviewAt || "").localeCompare(b.reviewAt || ""))
+    .slice(0, 6);
 
-function riskMatrixCell() {
-  return {
-    likelihood: 0,
-    impact: 0,
-    score: 0,
-    list: [] as Risk[],
-  };
-}
-
-const reviewSoon = [...risks]
-  .filter((r) => r.status !== "Đã đóng")
-  .sort((a, b) => (a.reviewAt < b.reviewAt ? -1 : 1))
-  .slice(0, 5);
-
-export default function RisksPage() {
   return (
     <>
       <Header
@@ -193,69 +159,47 @@ export default function RisksPage() {
         description="ISO/IEC 17025:2017 §8.5 – nhận diện, đánh giá và xử lý rủi ro cho hoạt động PTN"
       />
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 scrollbar-thin">
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {stats.map((s) => (
-            <Card key={s.label}>
-              <CardContent className="p-5 flex items-start justify-between">
-                <div>
-                  <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                    {s.label}
-                  </div>
-                  <div className="text-3xl font-semibold mt-1.5">{s.value}</div>
-                </div>
-                <div
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center ${s.accent}`}
-                >
-                  <s.icon className="w-5 h-5" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </section>
+        <StatGrid
+          stats={[
+            { label: "Tổng rủi ro đã đăng ký", value: risks.length, icon: ListChecks, accent: "bg-emerald-50 text-emerald-700" },
+            { label: "Mức Cao / Rất cao", value: risks.filter((r) => scoreOf(r) >= 10).length, icon: AlertOctagon, accent: "bg-rose-50 text-rose-600" },
+            { label: "Đang xử lý / Mở", value: risks.filter(isOpen).length, icon: TrendingUp, accent: "bg-amber-50 text-amber-600" },
+            { label: "Đã giảm thiểu / đóng", value: risks.filter((r) => !isOpen(r)).length, icon: ShieldCheck, accent: "bg-blue-50 text-blue-600" },
+          ]}
+        />
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Ma trận rủi ro 5×5</CardTitle>
-              <CardDescription>
-                Phân bố rủi ro theo Khả năng × Mức nghiêm trọng – số trong ô là
-                số lượng rủi ro hiện có
-              </CardDescription>
+              <CardDescription>Phân bố rủi ro theo Khả năng × Mức nghiêm trọng – số trong ô là số lượng rủi ro</CardDescription>
             </CardHeader>
             <CardContent>
-              <RiskMatrix />
+              <RiskMatrix risks={risks} />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
               <CardTitle>Cần xem xét trong 30 ngày</CardTitle>
-              <CardDescription>
-                Sắp đến hạn rà soát biện pháp kiểm soát
-              </CardDescription>
+              <CardDescription>Quá hạn hoặc sắp đến hạn rà soát biện pháp kiểm soát</CardDescription>
             </CardHeader>
             <CardContent>
+              {reviewSoon.length === 0 && <div className="text-sm text-muted-foreground">Không có rủi ro nào đến hạn xem xét</div>}
               <ul className="space-y-3">
                 {reviewSoon.map((r) => {
                   const lv = levelOf(scoreOf(r));
+                  const days = daysUntil(r.reviewAt);
                   return (
-                    <li
-                      key={r.id}
-                      className="flex items-start gap-3 p-3 rounded-md border bg-card"
-                    >
-                      <span
-                        className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${lv.swatch}`}
-                      />
+                    <li key={r.id} className="flex items-start gap-3 p-3 rounded-md border bg-card">
+                      <span className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${lv.swatch}`} />
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium line-clamp-2">
-                          {r.title}
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-0.5">
-                          {r.code} · {r.owner}
-                        </div>
+                        <div className="text-sm font-medium line-clamp-2">{r.title}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">{r.code} · {r.owner}</div>
                       </div>
-                      <div className="text-xs text-muted-foreground text-right shrink-0">
-                        {r.reviewAt}
+                      <div className={`text-xs text-right shrink-0 ${days < 0 ? "text-rose-600 font-medium" : "text-muted-foreground"}`}>
+                        {fmtDateVN(r.reviewAt)}
+                        {days < 0 && <div>quá {-days} ngày</div>}
                       </div>
                     </li>
                   );
@@ -265,154 +209,100 @@ export default function RisksPage() {
           </Card>
         </section>
 
-        <Card>
-          <CardHeader className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between space-y-0">
-            <div>
-              <CardTitle>Danh mục rủi ro</CardTitle>
-              <CardDescription>
-                Mỗi rủi ro gắn điều khoản ISO/IEC 17025:2017 và biện pháp xử lý
-              </CardDescription>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 rounded-md border border-input bg-background px-2.5 h-9 text-sm w-full sm:w-56">
-                <Search className="w-4 h-4 text-muted-foreground" />
-                <input
-                  className="bg-transparent outline-none flex-1"
-                  placeholder="Tìm mã, tiêu đề..."
-                />
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter />
-                Lọc
-              </Button>
-              <Button size="sm">
-                <Plus />
-                Thêm rủi ro
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="all">
-              <TabsList>
-                <TabsTrigger value="all">Tất cả</TabsTrigger>
-                <TabsTrigger value="high">Cao / Rất cao</TabsTrigger>
-                <TabsTrigger value="open">Mở / Đang xử lý</TabsTrigger>
-                <TabsTrigger value="closed">Đã giảm thiểu / đóng</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <div className="mt-4 rounded-lg border">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40">
-                    <TableHead>Mã</TableHead>
-                    <TableHead>Rủi ro</TableHead>
-                    <TableHead>Phân loại</TableHead>
-                    <TableHead>L × I = Điểm</TableHead>
-                    <TableHead>Mức</TableHead>
-                    <TableHead>Xử lý</TableHead>
-                    <TableHead>Phụ trách</TableHead>
-                    <TableHead>Tồn dư</TableHead>
-                    <TableHead>Trạng thái</TableHead>
-                    <TableHead>§ISO</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {risks.map((r) => {
-                    const score = scoreOf(r);
-                    const residual = residualOf(r);
-                    const lv = levelOf(score);
-                    const residualLv = levelOf(residual);
-                    return (
-                      <TableRow key={r.id}>
-                        <TableCell className="font-mono text-xs">
-                          {r.code}
-                        </TableCell>
-                        <TableCell className="max-w-[280px]">
-                          <div className="font-medium text-sm line-clamp-2">
-                            {r.title}
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                            {r.action}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className="text-xs">
-                            {r.category}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {r.likelihood} × {r.impact} ={" "}
-                          <span className="font-semibold">{score}</span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={lv.variant}>{lv.label}</Badge>
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          {r.treatment}
-                        </TableCell>
-                        <TableCell className="text-xs">{r.owner}</TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {r.residualLikelihood} × {r.residualImpact} ={" "}
-                          <span className="font-semibold">{residual}</span>
-                          <div className="mt-0.5">
-                            <Badge variant={residualLv.variant}>
-                              {residualLv.label}
-                            </Badge>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={statusVariant[r.status]}>
-                            {r.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {r.isoClause}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex flex-wrap items-center gap-2">
+          {FILTERS.map((x) => (
+            <Link
+              key={x.key || "all"}
+              href={`/risks?${new URLSearchParams({ ...(q && { q }), ...(x.key && { f: x.key }) })}`}
+              className={`h-8 px-3 inline-flex items-center rounded-full border text-xs font-medium ${
+                f === x.key ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-accent"
+              }`}
+            >
+              {x.label} <span className="ml-1.5 opacity-70">{risks.filter(x.test).length}</span>
+            </Link>
+          ))}
+          <div className="ml-auto w-full sm:w-auto">
+            <EntitySearchInput basePath="/risks" placeholder="Tìm mã, tiêu đề, phụ trách…" />
+          </div>
+        </div>
+
+        <CrudTableCard
+          title="Danh mục rủi ro"
+          description="Mỗi rủi ro gắn điều khoản ISO/IEC 17025:2017, biện pháp xử lý và mức tồn dư sau xử lý"
+          endpoint="/api/risks"
+          entity="risks"
+          editFields={RISK_FIELDS}
+          addNode={<EntityFormDialog mode="add" endpoint="/api/risks" title="Thêm rủi ro" fields={RISK_FIELDS} addLabel="Thêm rủi ro" />}
+          headers={["Mã", "Rủi ro", "Phân loại", "L × I", "Xử lý / phụ trách", "Tồn dư", "Trạng thái"]}
+          emptyText={query || f ? "Không có rủi ro phù hợp" : "Chưa có rủi ro nào"}
+          rows={rows.map((r) => {
+            const lv = levelOf(scoreOf(r));
+            const rl = levelOf(residualOf(r));
+            return {
+              id: r.id,
+              label: r.code,
+              initial: r,
+              cells: [
+                <div key="c">
+                  <div className="font-mono text-xs font-semibold">{r.code}</div>
+                  {r.isoClause && <div className="text-[11px] text-muted-foreground">{r.isoClause}</div>}
+                </div>,
+                <div key="t" className="max-w-[300px]">
+                  <div className="font-medium text-sm line-clamp-2">{r.title}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{r.action}</div>
+                </div>,
+                <Badge key="k" variant="secondary" className="text-xs">{r.category}</Badge>,
+                <div key="s" className="font-mono text-xs">
+                  {r.likelihood} × {r.impact} = <span className="font-semibold">{scoreOf(r)}</span>
+                  <div className="mt-0.5"><Badge variant={lv.variant}>{lv.label}</Badge></div>
+                </div>,
+                <div key="o" className="text-xs">
+                  <div>{r.treatment}</div>
+                  <div className="text-muted-foreground">{r.owner}</div>
+                </div>,
+                <div key="r" className="font-mono text-xs">
+                  {r.residualLikelihood} × {r.residualImpact} = <span className="font-semibold">{residualOf(r)}</span>
+                  <div className="mt-0.5"><Badge variant={rl.variant}>{rl.label}</Badge></div>
+                </div>,
+                <Badge key="st" variant={statusVariant[r.status] ?? "secondary"}>{r.status}</Badge>,
+              ],
+            };
+          })}
+        />
 
         <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <CardTitle>Cơ hội cải tiến</CardTitle>
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between space-y-0">
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <CardTitle>Cơ hội cải tiến</CardTitle>
+              </div>
+              <CardDescription>ISO/IEC 17025:2017 §8.5 yêu cầu xác định cả cơ hội bên cạnh rủi ro</CardDescription>
             </div>
-            <CardDescription>
-              ISO 17025:2017 §8.5 yêu cầu xác định cả cơ hội bên cạnh rủi ro
-            </CardDescription>
+            <EntityFormDialog mode="add" endpoint="/api/opportunities" title="Thêm cơ hội cải tiến" fields={OPP_FIELDS} addLabel="Thêm cơ hội" />
           </CardHeader>
           <CardContent>
+            {opportunities.length === 0 && <div className="text-sm text-muted-foreground">Chưa có cơ hội cải tiến nào</div>}
             <ul className="space-y-3">
               {opportunities.map((o) => (
-                <li
-                  key={o.id}
-                  className="p-3 rounded-md border bg-card space-y-2"
-                >
+                <li key={o.id} className="p-3 rounded-md border bg-card space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <div className="text-sm font-medium">{o.title}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {o.description}
-                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{o.description}</div>
                     </div>
-                    <Badge variant={opStatusVariant[o.status]}>
-                      {o.status}
-                    </Badge>
+                    <Badge variant={opStatusVariant[o.status] ?? "secondary"}>{o.status}</Badge>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                    <span className="text-muted-foreground">
-                      Lợi ích kỳ vọng:
-                    </span>
-                    <span className="text-foreground">{o.expectedBenefit}</span>
+                    <span className="text-muted-foreground">Lợi ích kỳ vọng:</span>
+                    <span>{o.expectedBenefit || "—"}</span>
                     <span className="text-muted-foreground">·</span>
                     <span className="text-muted-foreground">Phụ trách:</span>
-                    <span>{o.owner}</span>
+                    <span>{o.owner || "—"}</span>
+                    <span className="ml-auto flex gap-1.5">
+                      <EntityFormDialog mode="edit" endpoint="/api/opportunities" id={o.id} title="Sửa cơ hội cải tiến" fields={OPP_FIELDS} initial={o} submitLabel="Lưu thay đổi" />
+                      <DeleteEntityButton entity="opportunities" id={o.id} label={o.title} />
+                    </span>
                   </div>
                 </li>
               ))}

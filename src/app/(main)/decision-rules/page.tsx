@@ -4,13 +4,9 @@ import {
   XCircle,
   HelpCircle,
   FileSignature,
-  Plus,
-  Filter,
-  Search,
   Handshake,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -19,7 +15,33 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { decisionRules, type DecisionRule } from "@/lib/mock-data";
+import type { DecisionRule } from "@/lib/mock-data";
+import { LIMIT_DIRECTIONS, RULE_TYPES, decisionRuleStore } from "@/lib/data/quality";
+import {
+  EntityFormDialog,
+  type CrudField,
+} from "@/components/crud/entity-form-dialog";
+import { DeleteEntityButton } from "@/components/crud/delete-button";
+import { EntitySearchInput } from "@/components/crud/search-input";
+import { fmtDateVN, todayISO } from "@/lib/dates";
+
+export const dynamic = "force-dynamic";
+
+const FIELDS: CrudField[] = [
+  { name: "criterion", label: "Chỉ tiêu", required: true, placeholder: "VD: Pb tổng" },
+  { name: "matrix", label: "Đối tượng (matrix)", placeholder: "VD: Đất" },
+  { name: "method", label: "Phương pháp", full: true, placeholder: "VD: TCVN 6496B:2009" },
+  { name: "unit", label: "Đơn vị", placeholder: "mg/kg" },
+  { name: "ruleType", label: "Loại quy tắc", type: "select", options: RULE_TYPES },
+  { name: "limitDirection", label: "Kiểu giới hạn", type: "select", options: LIMIT_DIRECTIONS.map((d) => ({ value: d, label: d === "max" ? "Giới hạn trên (≤)" : d === "min" ? "Giới hạn dưới (≥)" : "Khoảng (min – max)" })) },
+  { name: "limit", label: "Giới hạn (trên / giá trị)", type: "number", required: true },
+  { name: "limitMin", label: "Giới hạn dưới (chỉ khi là khoảng)" },
+  { name: "uncertainty", label: "U mở rộng (k = 2)", type: "number" },
+  { name: "limitSource", label: "Nguồn giới hạn (QCVN, hợp đồng…)", full: true },
+  { name: "notes", label: "Ghi chú", type: "textarea" },
+  { name: "approvedBy", label: "Người phê duyệt" },
+  { name: "approvedAt", label: "Ngày phê duyệt", type: "date", defaultValue: todayISO() },
+];
 
 function ruleVariant(t: DecisionRule["ruleType"]) {
   if (t === "Simple acceptance (không guard band)") return "secondary";
@@ -257,7 +279,7 @@ function ZoneVisualization({ rule }: { rule: DecisionRule }) {
   );
 }
 
-const stats = [
+const statsOf = (decisionRules: DecisionRule[]) => [
   {
     label: "Quy tắc đã phê duyệt",
     value: decisionRules.length,
@@ -284,7 +306,18 @@ const stats = [
   },
 ];
 
-export default function DecisionRulesPage() {
+export default async function DecisionRulesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q = "" } = await searchParams;
+  const all = await decisionRuleStore.list();
+  const query = q.trim().toLowerCase();
+  const decisionRules = all.filter(
+    (r) => !query || `${r.criterion} ${r.matrix} ${r.method} ${r.limitSource}`.toLowerCase().includes(query),
+  );
+  const stats = statsOf(all);
   return (
     <>
       <Header
@@ -377,24 +410,23 @@ export default function DecisionRulesPage() {
               </CardDescription>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 rounded-md border border-input bg-background px-2.5 h-9 text-sm w-full sm:w-56">
-                <Search className="w-4 h-4 text-muted-foreground" />
-                <input
-                  className="bg-transparent outline-none flex-1"
-                  placeholder="Tìm chỉ tiêu, matrix..."
-                />
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter />
-                Lọc
-              </Button>
-              <Button size="sm">
-                <Plus />
-                Thêm quy tắc
-              </Button>
+              <EntitySearchInput basePath="/decision-rules" placeholder="Tìm chỉ tiêu, matrix…" />
+              <EntityFormDialog
+                mode="add"
+                endpoint="/api/decision-rules"
+                title="Thêm quy tắc quyết định"
+                description="Ngưỡng vùng chấp nhận / bác bỏ được tính tự động theo guard band w = U"
+                fields={FIELDS}
+                addLabel="Thêm quy tắc"
+              />
             </div>
           </CardHeader>
           <CardContent>
+            {decisionRules.length === 0 && (
+              <div className="text-sm text-muted-foreground py-6 text-center">
+                {query ? "Không có quy tắc phù hợp" : "Chưa có quy tắc quyết định nào"}
+              </div>
+            )}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
               {decisionRules.map((r) => (
                 <div
@@ -421,7 +453,7 @@ export default function DecisionRulesPage() {
                       <div className="font-medium">
                         {r.limitDirection === "range" && r.limitMin !== undefined
                           ? `${r.limitMin} – ${r.limit} ${r.unit}`
-                          : `≤ ${r.limit} ${r.unit}`}
+                          : `${r.limitDirection === "min" ? "≥" : "≤"} ${r.limit} ${r.unit}`}
                       </div>
                     </div>
                     <div>
@@ -446,8 +478,18 @@ export default function DecisionRulesPage() {
                     <span className="text-muted-foreground">
                       Phê duyệt: <span className="text-foreground">{r.approvedBy}</span>
                     </span>
-                    <span className="text-muted-foreground">
-                      {r.approvedAt}
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground mr-1">{fmtDateVN(r.approvedAt)}</span>
+                      <EntityFormDialog
+                        mode="edit"
+                        endpoint="/api/decision-rules"
+                        id={r.id}
+                        title={`Sửa quy tắc – ${r.criterion}`}
+                        fields={FIELDS}
+                        initial={{ ...r, limitMin: r.limitMin ?? "" }}
+                        submitLabel="Lưu thay đổi"
+                      />
+                      <DeleteEntityButton entity="decision-rules" id={r.id} label={`${r.criterion} trong ${r.matrix}`} />
                     </span>
                   </div>
                 </div>
