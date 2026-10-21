@@ -6,6 +6,8 @@ export type Role = (typeof ROLES)[number];
 
 export const PERMISSIONS = {
   "admin.users": { label: "Quản lý tài khoản & phân quyền", roles: ["Quản trị"] },
+  "admin.system": { label: "Cấu hình hệ thống, khóa API, tích hợp LGSP/NDXP, sao lưu", roles: ["Quản trị"] },
+  "write.mdm": { label: "Danh mục dùng chung (MDM)", roles: ["Quản trị", "QA/QC", "Trưởng phòng"] },
   "results.enter": { label: "Nhập / sửa / nộp kết quả phân tích", roles: ["KTV", "Trưởng phòng"] },
   "results.qa": { label: "QA/QC duyệt hoặc trả lại kết quả", roles: ["QA/QC", "Trưởng phòng"] },
   "results.approve": { label: "Phê duyệt kết quả (ký điện tử)", roles: ["Trưởng phòng"] },
@@ -44,6 +46,8 @@ const ENTITY_PERMISSION: Record<string, Permission> = {
   "uncertainty-budgets": "write.quality",
   "sample-events": "write.reception",
   assignments: "work.assign",
+  "mdm-items": "write.mdm",
+  "api-clients": "admin.system",
   nonconformities: "write.any",
   "system-incidents": "write.any",
 };

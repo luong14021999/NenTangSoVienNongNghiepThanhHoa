@@ -39,6 +39,10 @@ const SCOPE: { prefix: string; fn: string; req: string }[] = [
   { prefix: "TC-TF", fn: "Định dạng nhập biến, thành phần ngân sách, điểm chuẩn; kiểm tra công thức", req: "M2.4" },
   { prefix: "TC-CR", fn: "Tính kết quả toàn chuỗi: đường chuẩn → công thức → thống kê → U (đối chiếu tính độc lập)", req: "M2.4 · §7.5 · §7.6" },
   { prefix: "TC-BC", fn: "Mã vạch Code 128-B trên nhãn mẫu: mã kiểm tra, ký tự ngoài bảng mã", req: "M2.1 · §7.4.2" },
+  { prefix: "TC-MF", fn: "Xác thực 2 lớp TOTP (RFC 4226 / 6238), chống dùng lại mã", req: "M1.1 · M1.7" },
+  { prefix: "TC-SC", fn: "Mã hóa AES-256-GCM khóa bí mật, cookie ký HMAC", req: "M1.1 · M1.7" },
+  { prefix: "TC-AK", fn: "Khóa API: định dạng, mã băm, phạm vi, giới hạn tần suất", req: "M1.3" },
+  { prefix: "TC-FC", fn: "Dự báo Holt, chọn tham số, ngày hết tồn kho", req: "M1.6" },
   { prefix: "TC-SA", fn: "Thống kê: tháng theo giờ VN, TAT, trung vị, doanh thu + VAT", req: "M2.7" },
 ];
 

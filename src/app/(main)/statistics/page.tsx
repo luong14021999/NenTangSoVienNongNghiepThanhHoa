@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { StatGrid } from "@/components/qms/stat-grid";
+import { Bars } from "@/components/qms/bar-chart";
 import { samplesStore } from "@/lib/data/samples";
 import { listReports } from "@/lib/data/reports";
 import { testRequestsStore } from "@/lib/data/test-requests";
@@ -19,21 +20,6 @@ export const metadata = { title: "Thống kê" };
 
 const vnd = (n: number) => new Intl.NumberFormat("vi-VN").format(Math.round(n));
 const REVENUE_STATUSES = new Set(["KH chấp nhận", "Đã ký HĐ", "Đã nhận mẫu"]);
-
-function Bars({ months, values, fmt = String }: { months: string[]; values: number[]; fmt?: (n: number) => string }) {
-  const max = Math.max(1, ...values);
-  return (
-    <div className="flex items-end gap-2 h-44">
-      {months.map((m, i) => (
-        <div key={m} className="flex-1 min-w-0 flex flex-col items-center gap-1 h-full justify-end">
-          <span className="text-[10px] text-muted-foreground truncate max-w-full">{values[i] ? fmt(values[i]) : ""}</span>
-          <div className="w-full rounded-t bg-primary/80" style={{ height: `${(values[i] / max) * 100}%`, minHeight: values[i] ? 2 : 0 }} />
-          <span className="text-[10px] text-muted-foreground">{m.slice(5)}/{m.slice(2, 4)}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default async function StatisticsPage() {
   const [samples, reports, requests] = await Promise.all([samplesStore.list(), listReports(), testRequestsStore.list()]);

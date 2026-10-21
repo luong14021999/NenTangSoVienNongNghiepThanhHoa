@@ -18,6 +18,12 @@ export type ChangeEntry = {
 
 /** Nhãn tiếng Việt của các collection, dùng trên trang nhật ký. */
 export const ENTITY_LABELS: Record<string, string> = {
+  "mdm-items": "Danh mục dùng chung",
+  "api-clients": "Khóa API",
+  integration: "Tích hợp LGSP/NDXP",
+  settings: "Cấu hình hệ thống",
+  mfa: "Xác thực 2 lớp",
+  backup: "Sao lưu",
   customers: "Khách hàng",
   staff: "Nhân sự",
   equipment: "Thiết bị",

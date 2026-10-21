@@ -11,6 +11,13 @@ import {
   Users,
   TestTube,
   Users2,
+  Gauge,
+  Database,
+  Network,
+  Warehouse,
+  TrendingUp,
+  ShieldAlert,
+  HeartPulse,
   UserCog,
   NotebookPen,
   BarChart3,
@@ -52,7 +59,10 @@ export type NavGroup = { label: string; items: NavItem[] };
 export const navGroups: NavGroup[] = [
   {
     label: "Tổng quan",
-    items: [{ href: "/", label: "Bảng điều khiển", icon: LayoutDashboard }],
+    items: [
+      { href: "/", label: "Bảng điều khiển", icon: LayoutDashboard },
+      { href: "/executive", label: "Bảng điều hành", icon: Gauge },
+    ],
   },
   {
     label: "Nguồn lực",
@@ -121,6 +131,17 @@ export const navGroups: NavGroup[] = [
       { href: "/customers", label: "Khách hàng", icon: Users2 },
       { href: "/statistics", label: "Thống kê", icon: BarChart3 },
       { href: "/services", label: "Dịch vụ & Tư vấn", icon: Briefcase },
+    ],
+  },
+  {
+    label: "Nền tảng dùng chung (M1)",
+    items: [
+      { href: "/master-data", label: "Danh mục dùng chung", icon: Database },
+      { href: "/integration", label: "Tích hợp & API (LGSP/NDXP)", icon: Network },
+      { href: "/data-warehouse", label: "Kho dữ liệu", icon: Warehouse },
+      { href: "/forecast", label: "Phân tích & dự báo", icon: TrendingUp },
+      { href: "/security", label: "An toàn thông tin", icon: ShieldAlert },
+      { href: "/system", label: "Giám sát & sao lưu", icon: HeartPulse },
     ],
   },
   {

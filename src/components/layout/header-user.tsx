@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, Loader2 } from "lucide-react";
-import { authClient } from "@/lib/auth/client";
+import { signOutAll } from "@/components/security/sign-out-link";
 
 export function HeaderUser() {
   const router = useRouter();
@@ -12,7 +12,7 @@ export function HeaderUser() {
 
   async function onLogout() {
     setSigningOut(true);
-    await authClient.signOut();
+    await signOutAll();
     setSigningOut(false);
     startTransition(() => {
       router.replace("/login");
