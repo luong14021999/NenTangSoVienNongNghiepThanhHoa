@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
-import { auth } from "@/lib/platform/auth/server";
+import { auth, getSessionSafe } from "@/lib/platform/auth/server";
 import { MfaPanel } from "@/components/platform/mfa-panel";
 import { SignOutLink } from "@/components/platform/sign-out-link";
 
@@ -10,7 +10,7 @@ export const metadata = { title: "Xác thực 2 lớp" };
 
 export default async function MfaPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   if (auth) {
-    const { data } = await auth.getSession();
+    const { data } = await getSessionSafe();
     if (!data?.user) redirect("/login");
   }
   const { next = "/" } = await searchParams;

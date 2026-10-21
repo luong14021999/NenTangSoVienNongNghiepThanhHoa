@@ -1,7 +1,7 @@
 // Kiểm soát truy cập theo vai trò phía server (§7.11.3) + xác thực lại khi ký điện tử (M2.6).
 import { NextResponse } from "next/server";
 import { dbQuery, isDbConfigured } from "@/lib/platform/db";
-import { auth, currentActor } from "@/lib/platform/auth/server";
+import { auth, currentActor, getSessionSafe } from "@/lib/platform/auth/server";
 import { PERMISSIONS, roleAllows, type Permission, type Role } from "@/lib/platform/permissions";
 
 export type UserRole = {
@@ -85,7 +85,7 @@ export const SIGN_WINDOW_MINUTES = 5;
  */
 export async function requireFreshAuth(): Promise<NextResponse | null> {
   if (!auth) return null;
-  const { data } = await auth.getSession();
+  const { data } = await getSessionSafe();
   const created = data?.session?.createdAt ? new Date(data.session.createdAt).getTime() : 0;
   if (!created || Date.now() - created > SIGN_WINDOW_MINUTES * 60_000) {
     return NextResponse.json(

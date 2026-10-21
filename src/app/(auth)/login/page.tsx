@@ -10,8 +10,10 @@ import {
   Award,
 } from "lucide-react";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/platform/auth/server";
+import { auth, getSessionSafe } from "@/lib/platform/auth/server";
 import { LoginForm } from "./login-form";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Đăng nhập – Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa",
@@ -20,7 +22,7 @@ export const metadata = {
 export default async function LoginPage() {
   // Đã đăng nhập → về trang chủ.
   if (auth) {
-    const { data: session } = await auth.getSession();
+    const { data: session } = await getSessionSafe();
     if (session?.user) redirect("/");
   }
 
