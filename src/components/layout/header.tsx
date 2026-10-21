@@ -1,5 +1,9 @@
+"use client";
+
 import { Bell, Search } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { moduleOf } from "@/components/layout/nav-config";
 
 type HeaderProps = {
   title: string;
@@ -7,6 +11,7 @@ type HeaderProps = {
 };
 
 export function Header({ title, description }: HeaderProps) {
+  const searchHint = moduleOf(usePathname())?.searchHint ?? "Tìm kiếm...";
   return (
     <header className="h-14 sm:h-16 shrink-0 border-b border-border bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/60 px-3 sm:px-6 flex items-center gap-3 sm:gap-4">
       <div className="min-w-0 flex-1">
@@ -22,7 +27,7 @@ export function Header({ title, description }: HeaderProps) {
           <Search className="w-4 h-4" />
           <input
             className="bg-transparent outline-none flex-1 placeholder:text-muted-foreground"
-            placeholder="Tìm mẫu, khách hàng, mã chỉ tiêu..."
+            placeholder={searchHint}
           />
           <kbd className="text-[10px] border rounded px-1 py-0.5 text-muted-foreground/70">
             Ctrl K

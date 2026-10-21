@@ -82,14 +82,28 @@ import {
   MapPinned,
   Map as MapIcon,
   Newspaper,
+  Microscope,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon };
 export type NavGroup = { label: string; items: NavItem[] };
-/** Phân hệ của nền tảng: mỗi phân hệ gồm nhiều nhóm menu. */
-export type NavModule = { code: string; name: string; groups: NavGroup[] };
+/** Khóa giao diện: chọn bộ màu `[data-module]` trong globals.css. */
+export type ModuleKey = "m1" | "m2" | "m3-1" | "m3-2" | "m4";
+/** Phân hệ của nền tảng: mỗi phân hệ gồm nhiều nhóm menu và có bản sắc giao diện riêng. */
+export type NavModule = {
+  code: string;
+  name: string;
+  /** Bộ màu riêng của phần mềm. */
+  key: ModuleKey;
+  icon: LucideIcon;
+  /** Một dòng mô tả hiện dưới tên phần mềm ở thanh trên. */
+  tagline: string;
+  /** Gợi ý trong ô tìm kiếm ở đầu mỗi trang. */
+  searchHint: string;
+  groups: NavGroup[];
+};
 
 /** Trang chủ: chọn phần mềm (không có sidebar). */
 export const navHome: NavItem[] = [{ href: "/", label: "Trang chủ – các phần mềm", icon: LayoutDashboard }];
@@ -98,6 +112,10 @@ export const navModules: NavModule[] = [
   {
     code: "M1",
     name: "Nền tảng dùng chung",
+    key: "m1",
+    icon: Boxes,
+    tagline: "Hạ tầng, dữ liệu dùng chung & điều hành",
+    searchHint: "Tìm danh mục, khóa API, sự cố...",
     groups: [
       {
         label: "Tổng quan",
@@ -134,6 +152,10 @@ export const navModules: NavModule[] = [
   {
     code: "M2",
     name: "Phòng thí nghiệm (LIMS)",
+    key: "m2",
+    icon: FlaskConical,
+    tagline: "Phòng phân tích Đất, nước, phân bón và môi trường · Mã VILAS 1501",
+    searchHint: "Tìm mẫu, khách hàng, mã chỉ tiêu...",
     groups: [
       {
         label: "Tổng quan",
@@ -204,6 +226,10 @@ export const navModules: NavModule[] = [
   {
     code: "M4",
     name: "Nghiên cứu – dịch vụ – tra cứu KH&CN",
+    key: "m4",
+    icon: Handshake,
+    tagline: "Dịch vụ, hợp đồng & tri thức khoa học công nghệ",
+    searchHint: "Tìm khách hàng, báo giá, hợp đồng...",
     groups: [
       {
         label: "Tổng quan",
@@ -261,10 +287,17 @@ export const navModules: NavModule[] = [
   {
     code: "M3.1",
     name: "Nuôi cấy mô & truy xuất",
+    key: "m3-1",
+    icon: Microscope,
+    tagline: "Nhân giống in vitro & truy xuất nguồn gốc cây giống",
+    searchHint: "Tìm mẻ cấy, cây mẹ, lô cây giống...",
     groups: [
       {
         label: "Tổng quan",
-        items: [{ href: "/tissue-stats", label: "Thống kê tỷ lệ nhiễm", icon: BarChart3 }],
+        items: [
+          { href: "/tissue-overview", label: "Dây chuyền nuôi cấy", icon: LayoutDashboard },
+          { href: "/tissue-stats", label: "Thống kê tỷ lệ nhiễm", icon: BarChart3 },
+        ],
       },
       {
         label: "Nguồn giống & vật liệu",
@@ -315,7 +348,15 @@ export const navModules: NavModule[] = [
   {
     code: "M3.2",
     name: "Giống cây trồng, vật nuôi, thủy sản",
+    key: "m3-2",
+    icon: Sprout,
+    tagline: "Lý lịch giống, nguồn gen & sản xuất giống",
+    searchHint: "Tìm giống, nguồn gen, khảo nghiệm...",
     groups: [
+      {
+        label: "Tổng quan",
+        items: [{ href: "/breed-overview", label: "Tổng quan giống", icon: LayoutDashboard }],
+      },
       {
         label: "Danh mục & hồ sơ giống",
         items: [
@@ -467,8 +508,13 @@ export function SidebarNav({
       {current && (
         <>
           <div className="flex items-center gap-2 px-2 pb-3 mb-1 border-b border-sidebar-border">
-            <span className="text-[10px] font-bold font-mono rounded bg-white/15 text-white px-1.5 py-0.5">{current.code}</span>
-            <span className="flex-1 text-[13px] font-semibold text-white">{current.name}</span>
+            <span className="w-9 h-9 rounded-lg bg-sidebar-accent text-white flex items-center justify-center shrink-0 shadow-sm">
+              <current.icon className="w-5 h-5" />
+            </span>
+            <span className="flex-1 min-w-0 leading-tight">
+              <span className="block text-[10px] font-bold font-mono text-sidebar-foreground/60">{current.code}</span>
+              <span className="block text-[13px] font-semibold text-white">{current.name}</span>
+            </span>
           </div>
           {current.groups.map((group) => (
             <div key={group.label} className="mt-3 mb-3 pl-1">

@@ -67,6 +67,10 @@
   --sidebar-accent: 145 50% 34%;
   --sidebar-accent-foreground: 0 0% 100%;
   --sidebar-border: 147 45% 21%;
+  /* Dải màu thanh trên (mặc định: xanh lá của Viện, dùng ở trang chủ). */
+  --brand-from: 145 62% 30%;
+  --brand-via: 150 55% 23%;
+  --brand-to: 155 60% 16%;
 }
 
 .dark {
@@ -93,6 +97,142 @@
   --border: 150 25% 16%;
   --input: 150 25% 16%;
   --ring: 142 65% 45%;
+}
+
+/* ===== Bản sắc giao diện theo từng phần mềm (khóa ở nav-config.tsx) ===== */
+/* M1 · Nền tảng dùng chung: xanh dương, cảm giác hạ tầng – điều hành */
+[data-module="m1"] {
+  --primary: 217 68% 42%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 217 68% 42%;
+  --secondary: 217 40% 96%;
+  --secondary-foreground: 217 45% 18%;
+  --muted: 217 30% 96.5%;
+  --muted-foreground: 217 12% 40%;
+  --accent: 217 40% 94%;
+  --accent-foreground: 217 45% 18%;
+  --border: 217 22% 88%;
+  --input: 217 22% 88%;
+  --sidebar: 222 42% 20%;
+  --sidebar-foreground: 222 35% 92%;
+  --sidebar-accent: 217 60% 34%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 222 40% 15%;
+  --brand-from: 212 75% 40%;
+  --brand-via: 220 62% 28%;
+  --brand-to: 226 60% 17%;
+}
+.dark [data-module="m1"], .dark[data-module="m1"] {
+  --primary: 217 68% 62%;
+  --ring: 217 68% 62%;
+}
+
+/* M2 · LIMS: xanh ngọc, phòng thí nghiệm */
+[data-module="m2"] {
+  --primary: 172 65% 30%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 172 65% 30%;
+  --secondary: 172 40% 96%;
+  --secondary-foreground: 172 45% 18%;
+  --muted: 172 30% 96.5%;
+  --muted-foreground: 172 12% 40%;
+  --accent: 172 40% 94%;
+  --accent-foreground: 172 45% 18%;
+  --border: 172 22% 88%;
+  --input: 172 22% 88%;
+  --sidebar: 178 42% 20%;
+  --sidebar-foreground: 178 35% 92%;
+  --sidebar-accent: 172 60% 34%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 178 40% 15%;
+  --brand-from: 165 70% 30%;
+  --brand-via: 172 65% 22%;
+  --brand-to: 180 65% 15%;
+}
+.dark [data-module="m2"], .dark[data-module="m2"] {
+  --primary: 172 65% 45%;
+  --ring: 172 65% 45%;
+}
+
+/* M3.1 · Nuôi cấy mô: tím, phòng nuôi in vitro */
+[data-module="m3-1"] {
+  --primary: 266 52% 50%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 266 52% 50%;
+  --secondary: 266 40% 96%;
+  --secondary-foreground: 266 45% 18%;
+  --muted: 266 30% 96.5%;
+  --muted-foreground: 266 12% 40%;
+  --accent: 266 40% 94%;
+  --accent-foreground: 266 45% 18%;
+  --border: 266 22% 88%;
+  --input: 266 22% 88%;
+  --sidebar: 268 42% 20%;
+  --sidebar-foreground: 268 35% 92%;
+  --sidebar-accent: 266 52% 34%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 268 40% 15%;
+  --brand-from: 262 58% 46%;
+  --brand-via: 268 52% 33%;
+  --brand-to: 274 55% 20%;
+}
+.dark [data-module="m3-1"], .dark[data-module="m3-1"] {
+  --primary: 266 52% 68%;
+  --ring: 266 52% 68%;
+}
+
+/* M3.2 · Giống: xanh non, đồng ruộng */
+[data-module="m3-2"] {
+  --primary: 95 55% 30%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 95 55% 30%;
+  --secondary: 95 40% 96%;
+  --secondary-foreground: 95 45% 18%;
+  --muted: 95 30% 96.5%;
+  --muted-foreground: 95 12% 40%;
+  --accent: 95 40% 94%;
+  --accent-foreground: 95 45% 18%;
+  --border: 95 22% 88%;
+  --input: 95 22% 88%;
+  --sidebar: 105 42% 20%;
+  --sidebar-foreground: 105 35% 92%;
+  --sidebar-accent: 95 55% 34%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 105 40% 15%;
+  --brand-from: 88 60% 34%;
+  --brand-via: 98 55% 24%;
+  --brand-to: 110 55% 15%;
+}
+.dark [data-module="m3-2"], .dark[data-module="m3-2"] {
+  --primary: 95 55% 48%;
+  --ring: 95 55% 48%;
+}
+
+/* M4 · Dịch vụ – KH&CN: cam, giao dịch – khách hàng */
+[data-module="m4"] {
+  --primary: 24 88% 40%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 24 88% 40%;
+  --secondary: 24 40% 96%;
+  --secondary-foreground: 24 45% 18%;
+  --muted: 24 30% 96.5%;
+  --muted-foreground: 24 12% 40%;
+  --accent: 24 40% 94%;
+  --accent-foreground: 24 45% 18%;
+  --border: 24 22% 88%;
+  --input: 24 22% 88%;
+  --sidebar: 18 42% 20%;
+  --sidebar-foreground: 18 35% 92%;
+  --sidebar-accent: 24 60% 34%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 18 40% 15%;
+  --brand-from: 32 92% 46%;
+  --brand-via: 22 85% 38%;
+  --brand-to: 14 75% 24%;
+}
+.dark [data-module="m4"], .dark[data-module="m4"] {
+  --primary: 24 88% 56%;
+  --ring: 24 88% 56%;
 }
 
 @layer base {

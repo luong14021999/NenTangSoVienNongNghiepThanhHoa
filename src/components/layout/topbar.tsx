@@ -7,24 +7,17 @@ import { MobileSidebar } from "@/components/layout/mobile-sidebar";
 import { usePathname } from "next/navigation";
 import { moduleOf } from "@/components/layout/nav-config";
 
-/** Dòng phụ theo phân hệ: tên phòng phân tích chỉ hiện trong M2. */
-function subtitleFor(pathname: string) {
-  const m = moduleOf(pathname);
-  if (m?.code === "M2") return "M2 · Phòng phân tích Đất, nước, phân bón và môi trường · Mã VILAS 1501";
-  if (m) return `${m.code} · ${m.name}`;
-  return "Một tài khoản cho tất cả phân hệ";
-}
-
 export function TopBar() {
   const pathname = usePathname();
-  const subtitle = subtitleFor(pathname);
-  const hasSidebar = !!moduleOf(pathname);
+  const mod = moduleOf(pathname);
+  const hasSidebar = !!mod;
+  const ModIcon = mod?.icon;
   return (
     <header
       className="relative h-16 sm:h-20 shrink-0 text-white pl-2 pr-2 sm:pr-5 lg:pl-5 lg:pr-7 flex items-center gap-2 sm:gap-3 lg:gap-4 shadow-md"
       style={{
         background:
-          "linear-gradient(120deg, hsl(145 62% 30%) 0%, hsl(150 55% 23%) 55%, hsl(155 60% 16%) 100%)",
+          "linear-gradient(120deg, hsl(var(--brand-from)) 0%, hsl(var(--brand-via)) 55%, hsl(var(--brand-to)) 100%)",
       }}
     >
       {/* subtle decorative overlay */}
@@ -58,14 +51,32 @@ export function TopBar() {
             priority
           />
         </div>
-        <div className="leading-tight min-w-0">
-          <div className="text-base sm:text-xl font-bold tracking-tight text-white drop-shadow-sm truncate">
-            Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa
+        {mod && ModIcon ? (
+          <>
+            <div className="hidden sm:flex w-11 h-11 rounded-xl bg-white/15 ring-1 ring-white/30 items-center justify-center shrink-0">
+              <ModIcon className="w-6 h-6 text-white" />
+            </div>
+            <div className="leading-tight min-w-0">
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/65 truncate">
+                <span className="font-mono rounded bg-white/15 px-1.5 py-px text-white">{mod.code}</span>
+                <span className="truncate">Viện Nông nghiệp tỉnh Thanh Hóa</span>
+              </div>
+              <div className="text-base sm:text-xl font-bold tracking-tight text-white drop-shadow-sm truncate sm:mt-0.5">
+                {mod.name}
+              </div>
+              <div className="hidden md:block text-xs text-white/70 font-medium mt-0.5 truncate">{mod.tagline}</div>
+            </div>
+          </>
+        ) : (
+          <div className="leading-tight min-w-0">
+            <div className="text-base sm:text-xl font-bold tracking-tight text-white drop-shadow-sm truncate">
+              Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa
+            </div>
+            <div className="hidden sm:block text-xs lg:text-[13px] text-white/70 font-medium mt-0.5 truncate">
+              Một tài khoản cho tất cả phân hệ
+            </div>
           </div>
-          <div className="hidden sm:block text-xs lg:text-[13px] text-white/70 font-medium mt-0.5 truncate">
-            {subtitle}
-          </div>
-        </div>
+        )}
       </Link>
 
       {/* Logout */}
