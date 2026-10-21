@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa
 
-## Getting Started
+Một ứng dụng Next.js (App Router) chia theo phân hệ – một mã nguồn, một cơ sở dữ liệu (Neon PostgreSQL), một lần đăng nhập.
 
-First, run the development server:
+| Phân hệ | Nội dung | Trạng thái |
+|---|---|---|
+| M1 | Nền tảng dùng chung: xác thực 2 lớp, danh mục dùng chung, API v1 + LGSP/NDXP, kho dữ liệu, điều hành, dự báo, an toàn thông tin, giám sát & sao lưu | Đang vận hành |
+| M2 | LIMS – Phòng phân tích Đất, nước, phân bón và môi trường (VILAS 1501, ISO/IEC 17025) | Đang vận hành |
+| M4 | Dịch vụ KH&CN, khách hàng, báo giá, hợp đồng, thanh toán | Đang xây dựng |
+| M3.1 | Nuôi cấy mô & truy xuất nguồn gốc | Kế hoạch |
+| M3.2 | Giống cây trồng, vật nuôi, thủy sản | Kế hoạch |
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Cấu trúc thư mục
+
+```
+src/
+  proxy.ts                     đăng nhập bắt buộc + cổng xác thực 2 lớp
+  app/
+    (auth)/                    /login, /mfa
+    (main)/                    giao diện có menu (layout chung)
+      page.tsx                 trang chủ – chọn phân hệ
+      (m1-nen-tang)/           trang M1
+      (m2-lims)/               trang M2 (bảng điều khiển PTN: /lims)
+      (m4-dich-vu)/            trang M4
+    (print)/(m2-lims)/         trang in: phiếu kết quả, nhãn mẫu, xác minh QR
+    api/
+      auth/                    Neon Auth
+      (m1)/ (m2)/ (m4)/        API nội bộ theo phân hệ
+      (m1)/v1/                 API cho hệ thống bên ngoài (khóa API)
+  components/
+    ui/ layout/ crud/ common/  dùng chung
+    platform/                  M1 (xác thực 2 lớp, khóa API, ký điện tử, phân quyền…)
+    m2/ m4/                    riêng từng phân hệ
+  lib/
+    platform/                  db, auth, phân quyền, chữ ký, nhật ký, bảo mật, tích hợp, kho dữ liệu, dự báo
+    modules/m2/                nghiệp vụ LIMS (dữ liệu, công thức tính, quy tắc phát hành…)
+    modules/m4/                nghiệp vụ M4
+    mock-data.ts               dữ liệu mẫu / kiểu dùng chung
+db/
+  migrations/                  SQL theo thứ tự (npm run db:migrate)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Thư mục dạng `(tên)` là *route group*: chỉ để tổ chức mã, **không** xuất hiện trong URL (VD `src/app/(main)/(m2-lims)/samples` → `/samples`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Lệnh thường dùng
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev                         # chạy local http://localhost:3000
+npm test                            # kiểm thử (vitest)
+npm run db:migrate                  # áp dụng migration chưa chạy
+npx tsx db/seed-mdm.ts              # khởi tạo danh mục dùng chung
+npm run validate -- --by "Họ tên"   # lưu lần xác nhận phần mềm (ISO 17025 §7.11.2)
+```
 
-## Learn More
+## Biến môi trường
 
-To learn more about Next.js, take a look at the following resources:
+| Biến | Bắt buộc | Mục đích |
+|---|---|---|
+| `DATABASE_URL` | ✓ | Neon PostgreSQL |
+| `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET` | ✓ | Đăng nhập (Neon Auth) |
+| `MFA_SECRET` | nên có | Khóa mã hóa bí mật xác thực 2 lớp (mặc định dùng `NEON_AUTH_COOKIE_SECRET`) |
+| `CRON_SECRET` | nên có | Xác thực tác vụ định kỳ `/api/cron/health` (Vercel Cron) |
+| `LGSP_BASE_URL`, `LGSP_TOKEN`, `LGSP_AGENCY_CODE` | khi có tài khoản | Kết nối LGSP thật (thiếu → chế độ mô phỏng) |
+| `NDXP_BASE_URL`, `NDXP_TOKEN`, `NDXP_AGENCY_CODE` | khi có tài khoản | Kết nối NDXP thật (thiếu → chế độ mô phỏng) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Triển khai: Vercel (vùng Singapore) – mỗi lần push lên `main` tự triển khai.

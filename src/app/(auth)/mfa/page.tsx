@@ -1,9 +1,9 @@
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
-import { auth } from "@/lib/auth/server";
-import { MfaPanel } from "@/components/security/mfa-panel";
-import { SignOutLink } from "@/components/security/sign-out-link";
+import { auth } from "@/lib/platform/auth/server";
+import { MfaPanel } from "@/components/platform/mfa-panel";
+import { SignOutLink } from "@/components/platform/sign-out-link";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Xác thực 2 lớp" };

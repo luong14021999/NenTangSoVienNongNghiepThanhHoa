@@ -13,9 +13,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Phòng phân tích Đất, nước, phân bón và môi trường – Viện Nông nghiệp tỉnh Thanh Hóa",
+  title: "Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa",
   description:
-    "Hệ thống quản lý phòng thí nghiệm phân tích môi trường – đất – nước – phân bón – an toàn thực phẩm, vận hành theo ISO/IEC 17025",
+    "Nền tảng số dùng chung của Viện: phòng thí nghiệm (LIMS, VILAS 1501), dịch vụ KH&CN, nuôi cấy mô, giống cây trồng – một tài khoản cho tất cả phân hệ",
   manifest: "/manifest.json",
   icons: {
     icon: "/logo-vnnth.png",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "LIMS VNNTH",
+    title: "VNN Thanh Hóa",
   },
 };
 

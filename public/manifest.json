@@ -1,6 +1,6 @@
 {
-  "name": "LIMS Viện Nông nghiệp tỉnh Thanh Hóa",
-  "short_name": "LIMS VNNTH",
+  "name": "Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa",
+  "short_name": "VNN Thanh Hóa",
   "description": "Quản lý phòng thí nghiệm – Lấy mẫu hiện trường offline-first cho cán bộ thực địa",
   "start_url": "/field",
   "scope": "/",

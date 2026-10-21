@@ -4,8 +4,8 @@ import { config } from "dotenv";
 config({ path: ".env.local" });
 
 async function main() {
-  const { dbQuery } = await import("@/lib/db");
-  const { accreditedTests, matrixEn } = await import("@/lib/accreditation");
+  const { dbQuery } = await import("@/lib/platform/db");
+  const { accreditedTests, matrixEn } = await import("@/lib/modules/m2/accreditation");
 
   const catalogs = [
     { code: "PHEP_THU", name: "Phép thử được công nhận", description: "59 phép thử VILAS 1501 – dùng chung cho LIMS, báo giá, cổng dịch vụ", owner: "Phòng phân tích", source: "QĐ 1510/QĐ-VPCNCLQG ngày 09/06/2026" },

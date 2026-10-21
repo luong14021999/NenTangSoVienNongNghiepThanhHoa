@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, Loader2 } from "lucide-react";
-import { signOutAll } from "@/components/security/sign-out-link";
+import { signOutAll } from "@/components/platform/sign-out-link";
 
 export function HeaderUser() {
   const router = useRouter();

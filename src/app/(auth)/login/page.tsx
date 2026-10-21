@@ -10,11 +10,11 @@ import {
   Award,
 } from "lucide-react";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth/server";
+import { auth } from "@/lib/platform/auth/server";
 import { LoginForm } from "./login-form";
 
 export const metadata = {
-  title: "Đăng nhập – Phòng phân tích Đất, nước, phân bón và môi trường",
+  title: "Đăng nhập – Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa",
 };
 
 export default async function LoginPage() {
@@ -42,10 +42,10 @@ export default async function LoginPage() {
             </div>
             <div className="leading-tight">
               <div className="text-xl font-bold text-foreground">
-                Phòng phân tích Đất, nước, phân bón và môi trường
+                Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa
               </div>
               <div className="text-sm text-muted-foreground">
-                Viện Nông nghiệp tỉnh Thanh Hóa
+                Một tài khoản cho tất cả phân hệ
               </div>
             </div>
           </div>
@@ -56,7 +56,7 @@ export default async function LoginPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Chưa có tài khoản?{" "}
             <span className="text-primary font-medium">
-              Liên hệ trưởng phòng để được cấp
+              Liên hệ quản trị hệ thống để được cấp
             </span>
           </p>
 
@@ -137,33 +137,33 @@ export default async function LoginPage() {
             <Sprout className="w-8 h-8" />
           </div>
           <h2 className="text-3xl xl:text-4xl font-bold leading-tight">
-            Hệ thống quản lý
+            Nền tảng số
             <br />
-            phòng thí nghiệm
+            Viện Nông nghiệp
           </h2>
           <p className="mt-4 text-white/80 text-sm max-w-md leading-relaxed">
-            Số hóa tiếp nhận mẫu · phân tích · thiết bị · hóa chất theo
-            ISO/IEC&nbsp;17025:2017 – phục vụ phân tích đất, nước, phân bón,
-            an toàn thực phẩm.
+            Phòng thí nghiệm VILAS&nbsp;1501 theo ISO/IEC&nbsp;17025:2017 · dịch vụ
+            khoa học &amp; công nghệ · nuôi cấy mô · giống cây trồng, vật nuôi,
+            thủy sản – dữ liệu dùng chung, một lần đăng nhập.
           </p>
 
           <div className="mt-10 grid grid-cols-3 gap-6 text-center max-w-md">
             <div>
-              <div className="text-2xl xl:text-3xl font-bold">24</div>
+              <div className="text-2xl xl:text-3xl font-bold">5</div>
               <div className="text-[11px] uppercase tracking-wider text-white/70 mt-1">
-                Bảng dữ liệu
+                Phân hệ
               </div>
             </div>
             <div>
-              <div className="text-2xl xl:text-3xl font-bold">18</div>
+              <div className="text-2xl xl:text-3xl font-bold">59</div>
               <div className="text-[11px] uppercase tracking-wider text-white/70 mt-1">
-                Dịch vụ
+                Phép thử VILAS
               </div>
             </div>
             <div>
-              <div className="text-2xl xl:text-3xl font-bold">6</div>
+              <div className="text-2xl xl:text-3xl font-bold">1</div>
               <div className="text-[11px] uppercase tracking-wider text-white/70 mt-1">
-                Phiếu chính thức
+                Tài khoản dùng chung
               </div>
             </div>
           </div>

@@ -4,8 +4,19 @@ import Link from "next/link";
 import Image from "next/image";
 import { HeaderUser } from "@/components/layout/header-user";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
+import { usePathname } from "next/navigation";
+import { moduleOf } from "@/components/layout/nav-config";
+
+/** Dòng phụ theo phân hệ: tên phòng phân tích chỉ hiện trong M2. */
+function subtitleFor(pathname: string) {
+  const m = moduleOf(pathname);
+  if (m?.code === "M2") return "M2 · Phòng phân tích Đất, nước, phân bón và môi trường · Mã VILAS 1501";
+  if (m) return `${m.code} · ${m.name}`;
+  return "Một tài khoản cho tất cả phân hệ";
+}
 
 export function TopBar() {
+  const subtitle = subtitleFor(usePathname());
   return (
     <header
       className="relative h-16 sm:h-20 shrink-0 text-white pl-2 pr-2 sm:pr-5 lg:pl-5 lg:pr-7 flex items-center gap-2 sm:gap-3 lg:gap-4 shadow-md"
@@ -45,10 +56,10 @@ export function TopBar() {
         </div>
         <div className="leading-tight min-w-0">
           <div className="text-base sm:text-xl font-bold tracking-tight text-white drop-shadow-sm truncate">
-            Phòng phân tích Đất, nước, phân bón và môi trường
+            Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa
           </div>
           <div className="hidden sm:block text-xs lg:text-[13px] text-white/70 font-medium mt-0.5 truncate">
-            Viện Nông nghiệp tỉnh Thanh Hóa · Mã VILAS 1501
+            {subtitle}
           </div>
         </div>
       </Link>

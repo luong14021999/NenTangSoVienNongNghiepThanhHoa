@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { auth } from "@/lib/auth/server";
-import { mfaGate } from "@/lib/security/mfa-gate";
+import { auth } from "@/lib/platform/auth/server";
+import { mfaGate } from "@/lib/platform/security/mfa-gate";
 
 // Neon Auth: chưa đăng nhập → redirect /login (trang /login luôn được mở).
 const requireAuth = auth?.middleware({ loginUrl: "/login" });

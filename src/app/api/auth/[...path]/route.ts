@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth/server";
+import { auth } from "@/lib/platform/auth/server";
 
 const notConfigured = async () =>
   NextResponse.json({ error: "Neon Auth chưa được cấu hình" }, { status: 503 });

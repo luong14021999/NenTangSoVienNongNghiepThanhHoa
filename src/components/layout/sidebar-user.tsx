@@ -3,8 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut, Loader2, User as UserIcon } from "lucide-react";
-import { authClient } from "@/lib/auth/client";
-import { signOutAll } from "@/components/security/sign-out-link";
+import { authClient } from "@/lib/platform/auth/client";
+import { signOutAll } from "@/components/platform/sign-out-link";
 
 export function SidebarUser() {
   const router = useRouter();

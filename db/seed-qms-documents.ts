@@ -4,7 +4,7 @@
 // Chạy: npm run db:seed-documents  (bỏ qua mã đã có → không ghi đè, chạy lại an toàn)
 import { config } from "dotenv";
 import { neon } from "@neondatabase/serverless";
-import { accreditedTests } from "../src/lib/accreditation";
+import { accreditedTests } from "../src/lib/modules/m2/accreditation";
 config({ path: ".env.local" });
 
 const url = process.env.DATABASE_URL;

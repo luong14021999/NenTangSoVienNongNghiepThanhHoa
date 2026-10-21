@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
-import { authClient } from "@/lib/auth/client";
+import { authClient } from "@/lib/platform/auth/client";
 
 export function LoginForm() {
   const router = useRouter();
