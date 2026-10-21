@@ -32,7 +32,7 @@ export function PortalInbox({ items, total, slaDays }: { items: InboxItem[]; tot
             </p>
           </div>
         </div>
-        <Link href="/service-requests" className="shrink-0 text-xs font-medium text-primary hover:underline">Tất cả</Link>
+        <Link href="/request-inbox" className="shrink-0 text-xs font-medium text-primary hover:underline">Tất cả</Link>
       </header>
       <ul className="divide-y divide-border">
         {items.map((r) => {
@@ -63,7 +63,7 @@ export function PortalInbox({ items, total, slaDays }: { items: InboxItem[]; tot
                   </span>
                   <span className="truncate text-[10px] text-muted-foreground">{r.targetUnit}</span>
                   <Link
-                    href={`/service-requests?q=${encodeURIComponent(r.code)}`}
+                    href={`/request-inbox?box=all&id=${r.id}`}
                     className="ml-auto inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label={`Phản hồi yêu cầu ${r.code}`}
                   >

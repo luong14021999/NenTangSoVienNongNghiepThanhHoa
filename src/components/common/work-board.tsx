@@ -1,28 +1,28 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { FlaskConical, Sprout } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export type Tone = "red" | "amber" | "green" | "muted";
 
-export type BenchCard = {
+export type WorkCard = {
   id: string;
   code: string;
   href: string;
   title: string;
   facts: string[];
-  /** Tỷ lệ nhiễm của mẻ (null = chưa có số bình). */
-  contamination?: { label: string; tone: Tone } | null;
+  /** Dòng chỉ số tô màu (VD tỷ lệ nhiễm, giá trị còn nợ). */
+  metric?: { label: string; tone: Tone } | null;
   due?: { label: string; tone: Tone };
   actions?: ReactNode;
 };
 
-export type BenchColumn = {
+export type WorkColumn = {
   key: string;
   name: string;
   hint: string;
   summary: string;
-  group: "invitro" | "nursery";
-  cards: BenchCard[];
+  icon: LucideIcon;
+  cards: WorkCard[];
   emptyText: string;
 };
 
@@ -39,7 +39,7 @@ const toneEdge: Record<Tone, string> = {
   muted: "border-l-border",
 };
 
-function Card({ card }: { card: BenchCard }) {
+function Card({ card }: { card: WorkCard }) {
   return (
     <li className={`rounded-xl border border-l-4 ${toneEdge[card.due?.tone ?? "muted"]} bg-card p-3 shadow-sm`}>
       <div className="flex items-start justify-between gap-2">
@@ -48,18 +48,18 @@ function Card({ card }: { card: BenchCard }) {
       </div>
       <div className="truncate text-sm font-medium" title={card.title}>{card.title || "Chưa rõ giống"}</div>
       <div className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{card.facts.filter(Boolean).join(" · ")}</div>
-      {card.contamination && <div className={`mt-1 text-[11px] ${toneText[card.contamination.tone]}`}>{card.contamination.label}</div>}
+      {card.metric && <div className={`mt-1 text-[11px] ${toneText[card.metric.tone]}`}>{card.metric.label}</div>}
       {card.actions && <div className="mt-2 flex flex-wrap gap-1.5">{card.actions}</div>}
     </li>
   );
 }
 
-/** Bàn cấy: mỗi cột một giai đoạn, thẻ có nút thao tác trực tiếp (cấy chuyển, ra ngôi, ghi nhiễm, phân loại). */
-export function BenchBoard({ columns }: { columns: BenchColumn[] }) {
+/** Bảng làm việc dạng Kanban: mỗi cột một bước, thẻ có nút thao tác trực tiếp (VD bàn cấy M3.1, bảng giao dịch M4). */
+export function WorkBoard({ columns }: { columns: WorkColumn[] }) {
   return (
     <ol className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin snap-x">
       {columns.map((c) => {
-        const Icon = c.group === "invitro" ? FlaskConical : Sprout;
+        const Icon = c.icon;
         return (
           <li key={c.key} className="flex w-[17rem] shrink-0 snap-start flex-col rounded-2xl border border-primary/15 bg-primary/[0.05] p-3">
             <div className="flex items-center gap-2">

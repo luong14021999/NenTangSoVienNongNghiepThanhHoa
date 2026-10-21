@@ -1,10 +1,10 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowRightLeft, Bug, ClipboardCheck, Sprout, Truck } from "lucide-react";
+import { ArrowRightLeft, Bug, ClipboardCheck, FlaskConical, Sprout, Truck } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { EntityFormDialog, type CrudField } from "@/components/crud/entity-form-dialog";
-import { BenchBoard, type BenchCard, type BenchColumn, type Tone } from "@/components/m3/bench/bench-board";
+import { WorkBoard, type WorkCard, type WorkColumn, type Tone } from "@/components/common/work-board";
 import {
   CULTURE_STAGES,
   LOT_GRADES,
@@ -47,7 +47,7 @@ const STAGE_HINT: Record<string, string> = {
 const vn = (x: number) => (Number(x) || 0).toLocaleString("vi-VN");
 const sum = <T,>(xs: T[], f: (x: T) => number) => xs.reduce((s, x) => s + (Number(f(x)) || 0), 0);
 
-function due(days: number, prefix: string): BenchCard["due"] {
+function due(days: number, prefix: string): WorkCard["due"] {
   if (!Number.isFinite(days)) return undefined;
   if (days < 0) return { label: `${prefix} quá ${-days} ngày`, tone: "red" };
   if (days === 0) return { label: `${prefix} hôm nay`, tone: "amber" };
@@ -136,14 +136,14 @@ export default async function TissueBenchPage({ searchParams }: { searchParams: 
     { name: "readyAt", label: "Ngày đủ tiêu chuẩn", type: "date" },
   ];
 
-  const contaminationOf = (b: CultureBatch): BenchCard["contamination"] => {
+  const contaminationOf = (b: CultureBatch): WorkCard["metric"] => {
     const rate = contaminationRate(b);
     if (rate == null) return null;
     const tone: Tone = rate > threshold && b.vessels >= MIN_VESSELS_FOR_CONCLUSION ? "red" : rate > threshold ? "amber" : "green";
     return { label: `Nhiễm ${vn(b.contaminated)}/${vn(b.vessels)} bình · ${fmtPct(rate)}${tone === "red" ? ` > ngưỡng ${threshold}%` : ""}`, tone };
   };
 
-  const batchCard = (b: CultureBatch): BenchCard => {
+  const batchCard = (b: CultureBatch): WorkCard => {
     const canAcclimatize = b.stage === "Ra rễ" || b.stage === "Ra ngôi";
     const target = b.stage === "Khởi đầu" ? nextStage(b.stage) : b.stage;
     return {
@@ -160,7 +160,7 @@ export default async function TissueBenchPage({ searchParams }: { searchParams: 
         b.operator,
         orderById.get(b.orderId) ? `đơn ${orderById.get(b.orderId)!.code}` : "",
       ],
-      contamination: contaminationOf(b),
+      metric: contaminationOf(b),
       due: due(daysUntil(b.nextTransferAt), "cấy chuyển"),
       actions: (
         <>
@@ -210,7 +210,7 @@ export default async function TissueBenchPage({ searchParams }: { searchParams: 
   const openOrderOptions = refOptions(orders.filter((o) => o.status !== "Hủy" && o.status !== "Hoàn thành"), (o) => `${o.code} · ${o.species} ${o.variety}`);
   const customerOptions = refOptions(customers, (c) => `${c.code} · ${c.name}`);
   const soldOf = (lotId: string) => sum(sales.filter((s) => s.lotId === lotId), (s) => s.quantity);
-  const lotCard = (l: SeedlingLot, ready: boolean): BenchCard => {
+  const lotCard = (l: SeedlingLot, ready: boolean): WorkCard => {
     const left = Math.max(0, (l.survived || 0) - soldOf(l.id));
     return {
       id: l.id,
@@ -267,14 +267,14 @@ export default async function TissueBenchPage({ searchParams }: { searchParams: 
   const byDue = (a: { d: string }, b: { d: string }) => (a.d || "9999").localeCompare(b.d || "9999");
   const stageNames = [...CULTURE_STAGES, ...new Set(growing.map((b) => b.stage).filter((s) => s && !(CULTURE_STAGES as readonly string[]).includes(s)))];
 
-  const columns: BenchColumn[] = stageNames.map((name) => {
+  const columns: WorkColumn[] = stageNames.map((name) => {
     const list = growing.filter((b) => b.stage === name).map((b) => ({ b, d: b.nextTransferAt })).sort(byDue).map((x) => x.b);
     return {
       key: name,
       name,
       hint: STAGE_HINT[name] ?? "Giai đoạn nuôi cấy",
       summary: `${vn(sum(list, (b) => b.vessels))} bình · ${vn(sum(list, (b) => b.plantlets))} chồi/cây`,
-      group: "invitro",
+      icon: FlaskConical,
       cards: list.map(batchCard),
       emptyText: "Không có mẻ",
     };
@@ -283,8 +283,8 @@ export default async function TissueBenchPage({ searchParams }: { searchParams: 
     const nursery = lots.filter((l) => l.status === "Vườn ươm" && (!dueOnly || isDue(l.readyAt))).map((l) => ({ l, d: l.readyAt })).sort(byDue).map((x) => x.l);
     const ready = dueOnly ? [] : lots.filter((l) => l.status === "Đủ tiêu chuẩn xuất" && (l.survived || 0) - soldOf(l.id) > 0);
     columns.push(
-      { key: "nursery", name: "Vườn ươm", hint: "Huấn luyện cây, chờ đánh giá", summary: `${vn(sum(nursery, (l) => l.survived))} cây sống`, group: "nursery", cards: nursery.map((l) => lotCard(l, false)), emptyText: "Không có lô" },
-      { key: "ready", name: "Đủ tiêu chuẩn xuất", hint: "Đã phân loại, chờ giao", summary: `${vn(sum(ready, (l) => (l.survived || 0) - soldOf(l.id)))} cây còn lại`, group: "nursery", cards: ready.map((l) => lotCard(l, true)), emptyText: "Chưa có lô" },
+      { key: "nursery", name: "Vườn ươm", hint: "Huấn luyện cây, chờ đánh giá", summary: `${vn(sum(nursery, (l) => l.survived))} cây sống`, icon: Sprout, cards: nursery.map((l) => lotCard(l, false)), emptyText: "Không có lô" },
+      { key: "ready", name: "Đủ tiêu chuẩn xuất", hint: "Đã phân loại, chờ giao", summary: `${vn(sum(ready, (l) => (l.survived || 0) - soldOf(l.id)))} cây còn lại`, icon: Sprout, cards: ready.map((l) => lotCard(l, true)), emptyText: "Chưa có lô" },
     );
   }
 
@@ -326,7 +326,7 @@ export default async function TissueBenchPage({ searchParams }: { searchParams: 
             <EntityFormDialog mode="add" endpoint="/api/culture-batches" title="Vào mẫu – mẻ khởi đầu" fields={newBatchFields} initial={{ stage: "Khởi đầu", startedAt: today, nextTransferAt: addDays(today, 28) }} addLabel="Vào mẫu mới" />
           </div>
         </div>
-        <BenchBoard columns={columns} />
+        <WorkBoard columns={columns} />
         <p className="text-[11px] text-muted-foreground">
           Viền đỏ: quá hạn · vàng: đến hạn trong {SOON} ngày. Nhiễm đỏ khi vượt ngưỡng {threshold}% với từ {MIN_VESSELS_FOR_CONCLUSION} bình trở lên. Danh sách đầy đủ: <Link href="/culture-batches" className="text-primary hover:underline">Mẻ cấy</Link> · <Link href="/seedling-lots" className="text-primary hover:underline">Lô cây giống</Link>.
         </p>

@@ -16,6 +16,9 @@ import {
   TestTube,
   Users2,
   Gauge,
+  ChartGantt,
+  SquareKanban,
+  MailOpen,
   Database,
   Network,
   Warehouse,
@@ -236,13 +239,15 @@ export const navModules: NavModule[] = [
         label: "Tổng quan",
         items: [
           { href: "/m4-overview", label: "Tổng quan dịch vụ", icon: Gauge },
+          { href: "/deal-board", label: "Bảng giao dịch", icon: SquareKanban },
           { href: "/revenue", label: "Báo cáo doanh thu", icon: BarChart3 },
         ],
       },
       {
         label: "Cổng dịch vụ trực tuyến",
         items: [
-          { href: "/service-requests", label: "Yêu cầu dịch vụ", icon: Inbox },
+          { href: "/request-inbox", label: "Hộp thư yêu cầu", icon: MailOpen },
+          { href: "/service-requests", label: "Danh sách yêu cầu", icon: Inbox },
           { href: "/price-list", label: "Bảng giá & định mức", icon: Tags },
           { href: "/public-content", label: "Nội dung công khai", icon: Globe },
         ],
@@ -250,6 +255,7 @@ export const navModules: NavModule[] = [
       {
         label: "Nhiệm vụ KH&CN",
         items: [
+          { href: "/research-gantt", label: "Tiến độ nhiệm vụ", icon: ChartGantt },
           { href: "/research-tasks", label: "Nhiệm vụ (đề tài, dự án)", icon: FlaskRound },
           { href: "/provincial-projects", label: "Đề tài tỉnh & chống trùng lặp", icon: Library },
           { href: "/field-trials", label: "Thí nghiệm đồng ruộng", icon: Sprout },

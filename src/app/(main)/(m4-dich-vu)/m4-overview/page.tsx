@@ -93,7 +93,7 @@ export default async function M4OverviewPage() {
       title: "Yêu cầu mới",
       hint: "chưa định giá",
       icon: Inbox,
-      href: "/service-requests",
+      href: "/request-inbox",
       count: newRequests.length,
       total: null,
       totalLabel: `${newRequests.reduce((s, r) => s + (Number(r.sampleCount) || 0), 0)} mẫu dự kiến`,
@@ -104,7 +104,7 @@ export default async function M4OverviewPage() {
       deals: newRequests
         .map<Deal>((r) => ({
           id: r.id,
-          href: `/service-requests?q=${encodeURIComponent(r.code)}`,
+          href: `/request-inbox?box=all&id=${r.id}`,
           code: r.code,
           customer: r.orgName || r.contactName,
           service: r.kind,
@@ -344,7 +344,7 @@ export default async function M4OverviewPage() {
   for (const r of requests) {
     const age = ageFrom(r.createdAt);
     if (r.status === "Mới tiếp nhận" && age >= REQUEST_SLA_DAYS) {
-      alerts.push({ href: `/service-requests?q=${encodeURIComponent(r.code)}`, code: r.code, who: r.contactName, text: `Yêu cầu chưa xử lý ${age} ngày · ${r.targetUnit}`, tone: "red" });
+      alerts.push({ href: `/request-inbox?box=all&id=${r.id}`, code: r.code, who: r.contactName, text: `Yêu cầu chưa xử lý ${age} ngày · ${r.targetUnit}`, tone: "red" });
     }
   }
   for (const q of quotations) {
