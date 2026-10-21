@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Plus, Pencil, X, Loader2 } from "lucide-react";
@@ -49,6 +49,9 @@ export function EntityFormDialog({
   initial,
   submitLabel = "Lưu",
   addLabel = "Thêm",
+  actionUrl,
+  trigger,
+  successText,
 }: {
   mode: "add" | "edit";
   endpoint: string; // vd "/api/calibration-logs"
@@ -59,6 +62,11 @@ export function EntityFormDialog({
   initial?: Record<string, unknown>;
   submitLabel?: string;
   addLabel?: string;
+  /** Gửi POST tới địa chỉ thao tác riêng (VD /api/culture-batches/{id}/transfer) thay cho thêm / sửa. */
+  actionUrl?: string;
+  /** Nút mở hộp thoại tùy biến. */
+  trigger?: ReactNode;
+  successText?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,9 +90,9 @@ export function EntityFormDialog({
       }
     }
     setSubmitting(true);
-    const url = mode === "add" ? endpoint : `${endpoint}/${id}`;
+    const url = actionUrl ?? (mode === "add" ? endpoint : `${endpoint}/${id}`);
     const res = await fetch(url, {
-      method: mode === "add" ? "POST" : "PATCH",
+      method: actionUrl || mode === "add" ? "POST" : "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
@@ -93,10 +101,10 @@ export function EntityFormDialog({
       const body = await res.json().catch(() => ({}));
       const msg = body.error ?? `HTTP ${res.status}`;
       setError(msg);
-      toast.error(mode === "add" ? "Thêm thất bại" : "Cập nhật thất bại", msg);
+      toast.error(actionUrl ? "Thao tác thất bại" : mode === "add" ? "Thêm thất bại" : "Cập nhật thất bại", msg);
       return;
     }
-    toast.success(mode === "add" ? "Đã thêm" : "Cập nhật thành công");
+    toast.success(successText ?? (mode === "add" ? "Đã thêm" : "Cập nhật thành công"));
     startTransition(() => {
       router.refresh();
       setOpen(false);
@@ -121,7 +129,7 @@ export function EntityFormDialog({
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        {mode === "add" ? (
+        {trigger ?? (mode === "add" ? (
           <Button size="sm">
             <Plus />
             {addLabel}
@@ -136,7 +144,7 @@ export function EntityFormDialog({
             <Pencil className="w-3.5 h-3.5" />
             Sửa
           </Button>
-        )}
+        ))}
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />

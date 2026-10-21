@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   LayoutDashboard,
+  ArrowRightLeft,
   ArrowLeft,
   ClipboardList,
   FlaskConical,
@@ -296,6 +297,8 @@ export const navModules: NavModule[] = [
         label: "Tổng quan",
         items: [
           { href: "/tissue-overview", label: "Dây chuyền nuôi cấy", icon: LayoutDashboard },
+          { href: "/tissue-bench", label: "Bàn cấy", icon: ArrowRightLeft },
+          { href: "/production-schedule", label: "Lịch sản xuất", icon: CalendarDays },
           { href: "/tissue-stats", label: "Thống kê tỷ lệ nhiễm", icon: BarChart3 },
         ],
       },
@@ -324,7 +327,6 @@ export const navModules: NavModule[] = [
         label: "Kế hoạch & điều độ",
         items: [
           { href: "/seedling-orders", label: "Đơn hàng cây giống", icon: ClipboardList },
-          { href: "/production-schedule", label: "Lịch điều độ", icon: CalendarDays },
           { href: "/production-profiles", label: "Thông số sản xuất", icon: Settings },
         ],
       },
