@@ -1,7 +1,8 @@
 // Phân quyền theo vai trò (ISO/IEC 17025:2017 §7.11.3, §6.2.6): hàm thuần, kiểm thử được.
 // Nguyên tắc tách nhiệm vụ: người nhập ≠ người duyệt ≠ người phê duyệt; Quản trị hệ thống không duyệt kết quả.
 
-export const ROLES = ["Quản trị", "Trưởng phòng", "QA/QC", "KTV", "Tiếp nhận mẫu", "Chỉ xem"] as const;
+// "Dịch vụ – Kế toán" (M4), "Nuôi cấy mô" (M3.1), "Giống" (M3.2): vai trò riêng của từng phân hệ.
+export const ROLES = ["Quản trị", "Trưởng phòng", "QA/QC", "KTV", "Tiếp nhận mẫu", "Dịch vụ – Kế toán", "Nuôi cấy mô", "Giống", "Chỉ xem"] as const;
 export type Role = (typeof ROLES)[number];
 
 export const PERMISSIONS = {
@@ -20,6 +21,9 @@ export const PERMISSIONS = {
   "write.quality": { label: "Tài liệu, đánh giá nội bộ, xem xét lãnh đạo, rủi ro, quy tắc quyết định, nhà cung cấp, xác nhận PP", roles: ["QA/QC", "Trưởng phòng", "Quản trị"] },
   "write.lab": { label: "Thiết bị, hóa chất, dụng cụ, QC, môi trường, nhật ký", roles: ["KTV", "QA/QC", "Trưởng phòng", "Quản trị"] },
   "write.reception": { label: "Khách hàng, phiếu yêu cầu, tiếp nhận mẫu, mẫu lưu, ý kiến KH", roles: ["Tiếp nhận mẫu", "KTV", "QA/QC", "Trưởng phòng", "Quản trị"] },
+  "write.services": { label: "M4: báo giá, hợp đồng, thanh toán", roles: ["Dịch vụ – Kế toán", "Trưởng phòng", "Quản trị"] },
+  "write.tissue": { label: "M3.1: vật liệu, công thức môi trường, mẻ cấy, lô cây giống", roles: ["Nuôi cấy mô", "Trưởng phòng", "Quản trị"] },
+  "write.breeding": { label: "M3.2: lý lịch giống, nguồn gen, khảo nghiệm", roles: ["Giống", "Trưởng phòng", "Quản trị"] },
   "write.any": { label: "Ghi nhận sự không phù hợp, sự cố hệ thống", roles: ["Tiếp nhận mẫu", "KTV", "QA/QC", "Trưởng phòng", "Quản trị"] },
 } as const satisfies Record<string, { label: string; roles: readonly Role[] }>;
 export type Permission = keyof typeof PERMISSIONS;
@@ -50,6 +54,16 @@ const ENTITY_PERMISSION: Record<string, Permission> = {
   "api-clients": "admin.system",
   nonconformities: "write.any",
   "system-incidents": "write.any",
+  quotations: "write.services",
+  contracts: "write.services",
+  payments: "write.services",
+  "tissue-materials": "write.tissue",
+  "media-recipes": "write.tissue",
+  "culture-batches": "write.tissue",
+  "seedling-lots": "write.tissue",
+  varieties: "write.breeding",
+  germplasm: "write.breeding",
+  "breed-trials": "write.breeding",
 };
 
 export const permissionForEntity = (collection: string): Permission => ENTITY_PERMISSION[collection] ?? "write.lab";

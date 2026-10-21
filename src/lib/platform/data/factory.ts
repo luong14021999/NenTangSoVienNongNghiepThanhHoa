@@ -21,6 +21,7 @@ export type EntityStore<T extends { id: string }> = {
  * Khi cấu hình + DATABASE_URL OK → CRUD đi qua Neon, ngược lại fallback file.
  */
 export type DbMapping<T> = {
+  /** Tên bảng; có thể kèm schema phân hệ, VD "m4.quotations". Không có schema → public. */
   table: string;
   /** Danh sách cột, VD "id, code, name" – dùng nguyên văn trong SELECT/RETURNING. */
   select: string;
@@ -35,7 +36,8 @@ export type DbMapping<T> = {
 export const dateOrNull = (v?: string | null) =>
   v && v !== "" ? v : null;
 
-export type ColumnKind = "text" | "number" | "bool" | "date" | "json";
+/** ref = khóa ngoại uuid: "" (chưa chọn) → null. */
+export type ColumnKind = "text" | "number" | "bool" | "date" | "json" | "ref";
 
 const toSnake = (k: string) => k.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 const emptyOf: Record<ColumnKind, unknown> = {
@@ -44,6 +46,7 @@ const emptyOf: Record<ColumnKind, unknown> = {
   bool: false,
   date: "",
   json: [],
+  ref: "",
 };
 
 /**
@@ -68,19 +71,25 @@ export function columnsMapping<T extends { id: string }>(
       for (const [k, kind] of entries) {
         const v = (entity as Record<string, unknown>)[k];
         if (v === undefined) continue;
-        r[toSnake(k)] = kind === "date" ? dateOrNull(v as string) : v;
+        r[toSnake(k)] = kind === "date" || kind === "ref" ? dateOrNull(v as string) : v;
       }
       return r;
     },
   };
 }
 
+/** "m4.quotations" → "m4"."quotations"; "customers" → public."customers". */
+export const qualifiedTable = (table: string) => {
+  const dot = table.indexOf(".");
+  return dot < 0 ? `public.${ident(table)}` : `${ident(table.slice(0, dot))}.${ident(table.slice(dot + 1))}`;
+};
+
 /**
  * Truyền cả row dưới dạng 1 tham số JSON rồi để Postgres ép kiểu theo
  * định nghĩa bảng (json_populate_record) → mảng text[], jsonb, date… đều đúng.
  */
 const fromJson = (table: string) =>
-  `json_populate_record(null::public.${ident(table)}, $1::json)`;
+  `json_populate_record(null::${qualifiedTable(table)}, $1::json)`;
 
 export function createEntityStore<T extends { id: string }>(
   collection: string,
@@ -96,7 +105,7 @@ export function createEntityStore<T extends { id: string }>(
       if (dbEnabled() && db) {
         try {
           const rows = await dbQuery(
-            `select ${db.select} from public.${ident(db.table)}`,
+            `select ${db.select} from ${qualifiedTable(db.table)}`,
           );
           return rows.map(db.toEntity);
         } catch (e) {
@@ -114,7 +123,7 @@ export function createEntityStore<T extends { id: string }>(
         const row = db.toRow(item);
         const cols = Object.keys(row).map(ident).join(", ");
         const [created] = await dbQuery(
-          `insert into public.${ident(db.table)} (${cols})
+          `insert into ${qualifiedTable(db.table)} (${cols})
            select ${cols} from ${fromJson(db.table)}
            returning ${db.select}`,
           [JSON.stringify(row)],
@@ -128,7 +137,7 @@ export function createEntityStore<T extends { id: string }>(
       if (dbEnabled() && db) {
         const row = db.toRow(patch);
         const cols = Object.keys(row).map(ident).join(", ");
-        const table = `public.${ident(db.table)}`;
+        const table = qualifiedTable(db.table);
         try {
           const [updated] = cols
             ? await dbQuery(
@@ -156,7 +165,7 @@ export function createEntityStore<T extends { id: string }>(
       if (dbEnabled() && db) {
         try {
           const rows = await dbQuery(
-            `delete from public.${ident(db.table)} where id = $1 returning id`,
+            `delete from ${qualifiedTable(db.table)} where id = $1 returning id`,
             [id],
           );
           return rows.length > 0;

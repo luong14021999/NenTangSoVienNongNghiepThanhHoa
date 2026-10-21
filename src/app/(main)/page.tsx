@@ -14,9 +14,8 @@ type Mod = {
   /** Màu nền ô vuông (gradient Tailwind). */
   color: string;
   href?: string;
-  status: "Đang vận hành" | "Kế hoạch";
+  status: "Đang vận hành" | "Đang xây dựng" | "Kế hoạch";
   stats?: { label: string; value: string | number }[];
-  links?: { href: string; label: string }[];
 };
 
 /** Trang chủ: chọn phân hệ của nền tảng số Viện. */
@@ -30,6 +29,13 @@ export default async function PortalPage() {
        (select count(*)::int from public.customers) customers,
        (select count(*)::int from public.test_requests where status in ('Yêu cầu mới', 'Đã báo giá')) requests_open`,
   );
+  // Bảng M3/M4 nằm ở schema riêng (migration 0015) – chưa chạy migration thì ô vẫn hiện, chỉ thiếu số liệu.
+  const [n] = await dbQuery(
+    `select
+       (select count(*)::int from m4.contracts where status in ('Đã ký', 'Đang thực hiện')) contracts_open,
+       (select count(*)::int from m3_tissue.culture_batches where status = 'Đang nuôi') batches_growing,
+       (select count(*)::int from m3_breed.varieties) varieties`,
+  ).catch(() => [{ contracts_open: "—", batches_growing: "—", varieties: "—" }]);
   const modules: Mod[] = [
     {
       code: "M1",
@@ -40,7 +46,6 @@ export default async function PortalPage() {
       href: "/executive",
       status: "Đang vận hành",
       stats: [{ label: "danh mục", value: k.catalogs }, { label: "khóa API hoạt động", value: k.api_keys }],
-      links: [{ href: "/master-data", label: "Danh mục" }, { href: "/integration", label: "Tích hợp" }, { href: "/security", label: "An toàn TT" }],
     },
     {
       code: "M2",
@@ -51,7 +56,6 @@ export default async function PortalPage() {
       href: "/lims",
       status: "Đang vận hành",
       stats: [{ label: "mẫu chưa trả kết quả", value: k.samples_open }, { label: "phiếu đã phát hành", value: k.reports }],
-      links: [{ href: "/samples", label: "Tiếp nhận mẫu" }, { href: "/result-entry", label: "Nhập kết quả" }, { href: "/reports", label: "Phiếu KQ" }],
     },
     {
       code: "M4",
@@ -60,9 +64,8 @@ export default async function PortalPage() {
       icon: Handshake,
       color: "from-amber-500 to-orange-600",
       href: "/customers",
-      status: "Kế hoạch",
-      stats: [{ label: "khách hàng", value: k.customers }, { label: "yêu cầu chờ báo giá / chấp nhận", value: k.requests_open }],
-      links: [{ href: "/customers", label: "Khách hàng" }, { href: "/services", label: "Dịch vụ" }],
+      status: "Đang xây dựng",
+      stats: [{ label: "khách hàng", value: k.customers }, { label: "hợp đồng đang thực hiện", value: n.contracts_open }],
     },
     {
       code: "M3.1",
@@ -70,7 +73,9 @@ export default async function PortalPage() {
       desc: "Vật liệu khởi đầu, công thức môi trường, theo dõi mẻ cấy, nhiễm mẫu, ra ngôi, xuất bán và truy xuất nguồn gốc cây giống",
       icon: Microscope,
       color: "from-violet-500 to-purple-700",
-      status: "Kế hoạch",
+      href: "/culture-batches",
+      status: "Đang xây dựng",
+      stats: [{ label: "mẻ cấy đang nuôi", value: n.batches_growing }],
     },
     {
       code: "M3.2",
@@ -78,7 +83,9 @@ export default async function PortalPage() {
       desc: "Lý lịch giống, nguồn gen, khảo nghiệm, chỉ thị phân tử, BLAST+, sản xuất giống, bản đồ cơ sở giống",
       icon: Sprout,
       color: "from-lime-500 to-green-700",
-      status: "Kế hoạch",
+      href: "/varieties",
+      status: "Đang xây dựng",
+      stats: [{ label: "giống trong lý lịch", value: n.varieties }],
     },
   ];
   return (

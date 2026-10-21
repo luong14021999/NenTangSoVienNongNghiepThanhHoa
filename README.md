@@ -6,9 +6,11 @@ Một ứng dụng Next.js (App Router) chia theo phân hệ – một mã ngu�
 |---|---|---|
 | M1 | Nền tảng dùng chung: xác thực 2 lớp, danh mục dùng chung, API v1 + LGSP/NDXP, kho dữ liệu, điều hành, dự báo, an toàn thông tin, giám sát & sao lưu | Đang vận hành |
 | M2 | LIMS – Phòng phân tích Đất, nước, phân bón và môi trường (VILAS 1501, ISO/IEC 17025) | Đang vận hành |
-| M4 | Dịch vụ KH&CN, khách hàng, báo giá, hợp đồng, thanh toán | Đang xây dựng |
-| M3.1 | Nuôi cấy mô & truy xuất nguồn gốc | Kế hoạch |
-| M3.2 | Giống cây trồng, vật nuôi, thủy sản | Kế hoạch |
+| M4 | Dịch vụ KH&CN, khách hàng, báo giá, hợp đồng, thanh toán, công nợ | Đang xây dựng |
+| M3.1 | Nuôi cấy mô & truy xuất nguồn gốc: vật liệu, công thức môi trường, mẻ cấy, lô cây giống | Đang xây dựng |
+| M3.2 | Giống cây trồng, vật nuôi, thủy sản: lý lịch giống, nguồn gen, khảo nghiệm | Đang xây dựng |
+
+Cơ sở dữ liệu: một database, mỗi phân hệ một schema (`m4`, `m3_tissue`, `m3_breed`) – xem [docs/database-conventions.md](docs/database-conventions.md).
 
 ## Cấu trúc thư mục
 
@@ -22,10 +24,12 @@ src/
       (m1-nen-tang)/           trang M1
       (m2-lims)/               trang M2 (bảng điều khiển PTN: /lims)
       (m4-dich-vu)/            trang M4
+      (m3-1-nuoi-cay-mo)/      trang M3.1
+      (m3-2-giong)/            trang M3.2
     (print)/(m2-lims)/         trang in: phiếu kết quả, nhãn mẫu, xác minh QR
     api/
       auth/                    Neon Auth
-      (m1)/ (m2)/ (m4)/        API nội bộ theo phân hệ
+      (m1)/ (m2)/ (m3)/ (m4)/  API nội bộ theo phân hệ
       (m1)/v1/                 API cho hệ thống bên ngoài (khóa API)
   components/
     ui/ layout/ crud/ common/  dùng chung
@@ -34,6 +38,7 @@ src/
   lib/
     platform/                  db, auth, phân quyền, chữ ký, nhật ký, bảo mật, tích hợp, kho dữ liệu, dự báo
     modules/m2/                nghiệp vụ LIMS (dữ liệu, công thức tính, quy tắc phát hành…)
+    modules/m3/                nghiệp vụ M3.1, M3.2
     modules/m4/                nghiệp vụ M4
     mock-data.ts               dữ liệu mẫu / kiểu dùng chung
 db/

@@ -52,6 +52,15 @@ import {
   Calculator,
   LineChart,
   ServerCrash,
+  FileSpreadsheet,
+  Wallet,
+  Leaf,
+  FlaskConicalOff,
+  Boxes,
+  QrCode,
+  Dna,
+  Sprout,
+  ClipboardCheck,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -180,6 +189,46 @@ export const navModules: NavModule[] = [
         items: [
           { href: "/customers", label: "Khách hàng", icon: Users2 },
           { href: "/services", label: "Dịch vụ & Tư vấn", icon: Briefcase },
+        ],
+      },
+      {
+        label: "Báo giá – Hợp đồng – Thu tiền",
+        items: [
+          { href: "/quotations", label: "Báo giá", icon: FileSpreadsheet },
+          { href: "/contracts", label: "Hợp đồng & công nợ", icon: FileSignature },
+          { href: "/payments", label: "Thanh toán", icon: Wallet },
+        ],
+      },
+    ],
+  },
+  {
+    code: "M3.1",
+    name: "Nuôi cấy mô & truy xuất",
+    groups: [
+      {
+        label: "Nuôi cấy",
+        items: [
+          { href: "/tissue-materials", label: "Vật liệu khởi đầu", icon: Leaf },
+          { href: "/media-recipes", label: "Công thức môi trường", icon: FlaskConicalOff },
+          { href: "/culture-batches", label: "Mẻ cấy & cấy chuyển", icon: Boxes },
+        ],
+      },
+      {
+        label: "Ra ngôi & truy xuất",
+        items: [{ href: "/seedling-lots", label: "Lô cây giống & truy xuất", icon: QrCode }],
+      },
+    ],
+  },
+  {
+    code: "M3.2",
+    name: "Giống cây trồng, vật nuôi, thủy sản",
+    groups: [
+      {
+        label: "Giống & nguồn gen",
+        items: [
+          { href: "/varieties", label: "Lý lịch giống", icon: Sprout },
+          { href: "/germplasm", label: "Nguồn gen", icon: Dna },
+          { href: "/breed-trials", label: "Khảo nghiệm", icon: ClipboardCheck },
         ],
       },
     ],
