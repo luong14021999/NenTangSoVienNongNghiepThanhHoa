@@ -25,6 +25,7 @@ const routes = collectionRoutes<ProductionLot>(
     harvestedAt: "",
     costTotal: 0,
     status: "Kế hoạch",
+    facilityId: "",
     note: "",
   },
   (b) => (!b.code ? "Thiếu mã lô sản xuất" : !b.varietyId ? "Chọn giống" : !b.level ? "Chọn cấp giống" : null),

@@ -152,6 +152,8 @@ export function createEntityStore<T extends { id: string }>(
               );
           return updated ? db.toEntity(updated) : null;
         } catch (e) {
+          // Trùng khóa duy nhất: báo cho route xử lý (409), không coi là "không tìm thấy".
+          if (/duplicate key value|unique constraint/i.test((e as Error).message)) throw e;
           console.error(
             `[${collection}] db update error:`,
             (e as Error).message,

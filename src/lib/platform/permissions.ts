@@ -114,6 +114,13 @@ const ENTITY_PERMISSION: Record<string, Permission> = {
   "breed-demands": "write.breeding",
   "breed-orders": "write.breeding",
   "breed-deliveries": "write.breeding",
+  markers: "write.breeding",
+  "genotype-samples": "write.breeding",
+  "genotype-calls": "write.breeding",
+  "breed-facilities": "write.breeding",
+  "breed-distributions": "write.breeding",
+  "market-posts": "write.breeding",
+  "sequence-refs": "write.breeding",
 };
 
 export const permissionForEntity = (collection: string): Permission => ENTITY_PERMISSION[collection] ?? "write.lab";

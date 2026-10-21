@@ -7,6 +7,7 @@ import { EntityFormDialog, type CrudField } from "@/components/crud/entity-form-
 import { EntitySearchInput } from "@/components/crud/search-input";
 import { StatGrid } from "@/components/common/stat-grid";
 import { productionLogStore, productionLotStore, seedLotStore, sourceStockStore, varietyStore } from "@/lib/modules/m3/data/breeding";
+import { facilityStore } from "@/lib/modules/m3/data/genomics";
 import { PRODUCTION_STATUSES, QTY_UNITS, SEED_LEVEL_NAMES, productionMetrics } from "@/lib/modules/m3/breeding-rules";
 import { fmtVND } from "@/lib/modules/m4/finance";
 import { byId, matches, refOptions } from "@/lib/platform/ref-options";
@@ -17,7 +18,7 @@ export const metadata = { title: "Sản xuất giống theo cấp" };
 
 export default async function BreedProductionPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q = "" } = await searchParams;
-  const [all, varieties, seedLots, stocks, logs] = await Promise.all([productionLotStore.list(), varietyStore.list(), seedLotStore.list(), sourceStockStore.list(), productionLogStore.list()]);
+  const [all, varieties, seedLots, stocks, logs, facilities] = await Promise.all([productionLotStore.list(), varietyStore.list(), seedLotStore.list(), sourceStockStore.list(), productionLogStore.list(), facilityStore.list()]);
   const varietyById = byId(varieties);
   const seedById = byId(seedLots);
   const stockById = byId(stocks);
@@ -27,7 +28,8 @@ export default async function BreedProductionPage({ searchParams }: { searchPara
     { name: "level", label: "Cấp giống sản xuất ra", type: "select", required: true, options: [...SEED_LEVEL_NAMES] },
     { name: "sourceSeedLotId", label: "Nguồn: lô giống cấp trên (phải cấp cao hơn, đã đạt)", type: "select", full: true, options: refOptions(seedLots, (s) => `${s.code} · ${s.level} · ${s.status}`) },
     { name: "sourceStockId", label: "Hoặc nguồn giống gốc", type: "select", full: true, options: refOptions(stocks, (s) => `${s.code} · ${s.kind} ${s.name}`) },
-    { name: "facility", label: "Cơ sở sản xuất" },
+    { name: "facilityId", label: "Cơ sở sản xuất (bản đồ)", type: "select", options: refOptions(facilities, (f) => `${f.code} · ${f.name}`) },
+    { name: "facility", label: "Cơ sở / vị trí (ghi chú thêm)" },
     { name: "season", label: "Vụ / đợt", placeholder: "VD: Vụ Xuân 2027" },
     { name: "scale", label: "Quy mô", type: "number" },
     { name: "scaleUnit", label: "Đơn vị quy mô", type: "select", options: ["ha", "m²", "con bố mẹ", "lồng / ao"] },

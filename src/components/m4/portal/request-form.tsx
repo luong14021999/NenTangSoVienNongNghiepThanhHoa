@@ -7,7 +7,7 @@ import { REQUEST_KINDS } from "@/lib/modules/m4/portal";
 
 const input = "w-full h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
 
-export function PublicRequestForm() {
+export function PublicRequestForm({ initialKind = "", initialDescription = "" }: { initialKind?: string; initialDescription?: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState<{ code?: string; targetUnit?: string; phone: string } | null>(null);
@@ -61,7 +61,7 @@ export function PublicRequestForm() {
       </div>
       <label className="space-y-1.5 sm:col-span-2 text-sm">
         <span className="font-medium">Loại dịch vụ *</span>
-        <select name="kind" required defaultValue="" className={input}>
+        <select name="kind" required defaultValue={(REQUEST_KINDS as readonly string[]).includes(initialKind) ? initialKind : ""} className={input}>
           <option value="" disabled>— Chọn loại dịch vụ —</option>
           {REQUEST_KINDS.map((k) => <option key={k}>{k}</option>)}
         </select>
@@ -92,7 +92,7 @@ export function PublicRequestForm() {
       </label>
       <label className="space-y-1.5 sm:col-span-2 text-sm">
         <span className="font-medium">Nội dung yêu cầu *</span>
-        <textarea name="description" required minLength={10} maxLength={3000} rows={5} placeholder="VD: Phân tích 10 mẫu đất trồng lúa: pH, OM, N, P, K dễ tiêu…" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+        <textarea name="description" required minLength={10} maxLength={3000} rows={5} defaultValue={initialDescription} placeholder="VD: Phân tích 10 mẫu đất trồng lúa: pH, OM, N, P, K dễ tiêu…" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
       </label>
       {error && <div className="sm:col-span-2 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-2">{error}</div>}
       <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3">

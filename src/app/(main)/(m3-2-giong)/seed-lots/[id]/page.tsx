@@ -16,6 +16,8 @@ import {
   varietyStore,
 } from "@/lib/modules/m3/data/breeding";
 import { labDataFor } from "@/lib/modules/m4/data/research";
+import { genotypeCallStore, genotypeSampleStore } from "@/lib/modules/m3/data/genomics";
+import { profilesBySample, purityTest, referenceProfiles } from "@/lib/modules/m3/genomics";
 import { evaluateCriteria, seedLotChain, validityAlert } from "@/lib/modules/m3/breeding-rules";
 import { byId } from "@/lib/platform/ref-options";
 import { fmtDateVN, todayISO } from "@/lib/platform/dates";
@@ -26,7 +28,7 @@ export const metadata = { title: "Lô giống" };
 /** Lô giống (M3.2.3 / M3.2.6): đối chiếu bộ chỉ tiêu với kết quả kiểm nghiệm đã duyệt từ M2, chuỗi cấp giống, giao nhận. */
 export default async function SeedLotPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [seedLots, prodLots, varieties, standards, criteria, deliveries, stocks] = await Promise.all([
+  const [seedLots, prodLots, varieties, standards, criteria, deliveries, stocks, gSamples, gCalls] = await Promise.all([
     seedLotStore.list(),
     productionLotStore.list(),
     varietyStore.list(),
@@ -34,6 +36,8 @@ export default async function SeedLotPage({ params }: { params: Promise<{ id: st
     standardCriterionStore.list(),
     deliveryStore.list(),
     sourceStockStore.list(),
+    genotypeSampleStore.list(),
+    genotypeCallStore.list(),
   ]);
   const s = seedLots.find((x) => x.id === id);
   if (!s) notFound();
@@ -47,6 +51,11 @@ export default async function SeedLotPage({ params }: { params: Promise<{ id: st
   const myDeliveries = deliveries.filter((d) => d.seedLotId === id);
   const delivered = myDeliveries.reduce((sum, d) => sum + d.quantity, 0);
   const conf = validityAlert(s.conformityUntil, today);
+  // Giám định độ thuần bằng chỉ thị phân tử (M3.2.5)
+  const gProfiles = profilesBySample(gCalls);
+  const refProfile = referenceProfiles(gSamples, gProfiles).get(s.varietyId);
+  const plants = gSamples.filter((x) => x.seedLotId === id && x.purpose === "Cây kiểm tra độ thuần").map((x) => ({ id: x.id, label: x.code, profile: gProfiles.get(x.id) ?? new Map() }));
+  const purity = refProfile && plants.length ? purityTest(plants, refProfile) : null;
 
   return (
     <>
@@ -86,6 +95,21 @@ export default async function SeedLotPage({ params }: { params: Promise<{ id: st
             <CardContent><CriteriaTable rows={evaluation.rows} /></CardContent>
           </Card>
         </section>
+
+        {plants.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Độ thuần di truyền (chỉ thị phân tử)</CardTitle>
+              <CardDescription>{refProfile ? `${plants.length} cây kiểm tra so với hồ sơ chuẩn của giống` : "Giống chưa có hồ sơ chuẩn (mẫu Giống tham chiếu) – chưa tính được"}</CardDescription>
+            </CardHeader>
+            {purity && (
+              <CardContent className="text-sm space-y-1">
+                <div className="text-2xl font-semibold">{purity.purity == null ? "—" : `${purity.purity.toLocaleString("vi-VN")}%`}</div>
+                <div className="text-xs text-muted-foreground">{purity.trueToType}/{purity.tested} cây đúng giống{purity.offTypes.length > 0 && ` · cây khác dạng: ${purity.offTypes.map((o) => o.label).join(", ")}`}</div>
+              </CardContent>
+            )}
+          </Card>
+        )}
 
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><GitMerge className="w-4 h-4" />Chuỗi cấp giống</CardTitle><CardDescription>Từ lô này ngược về nguồn giống gốc</CardDescription></CardHeader>

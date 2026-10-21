@@ -26,6 +26,7 @@ export default function PublicLayout({ children }: Readonly<{ children: React.Re
             <Link href="/portal/status" className="px-3 py-2 rounded-md hover:bg-white/10">Tra cứu yêu cầu</Link>
             <Link href="/trace" className="px-3 py-2 rounded-md hover:bg-white/10">Truy xuất lô giống</Link>
             <Link href="/portal/knowledge" className="px-3 py-2 rounded-md hover:bg-white/10">Tra cứu tri thức</Link>
+            <Link href="/portal/giong" className="px-3 py-2 rounded-md hover:bg-white/10">Giống</Link>
           </nav>
         </div>
         <nav className="md:hidden flex gap-1 overflow-x-auto px-3 pb-2 text-xs">
@@ -34,6 +35,7 @@ export default function PublicLayout({ children }: Readonly<{ children: React.Re
           <Link href="/portal/status" className="px-2.5 py-1.5 rounded-md bg-white/10 whitespace-nowrap">Tra cứu</Link>
           <Link href="/trace" className="px-2.5 py-1.5 rounded-md bg-white/10 whitespace-nowrap">Truy xuất</Link>
           <Link href="/portal/knowledge" className="px-2.5 py-1.5 rounded-md bg-white/10 whitespace-nowrap">Tri thức</Link>
+          <Link href="/portal/giong" className="px-2.5 py-1.5 rounded-md bg-white/10 whitespace-nowrap">Giống</Link>
         </nav>
       </header>
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-6 sm:py-8">{children}</main>

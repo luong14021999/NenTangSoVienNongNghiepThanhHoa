@@ -7,7 +7,7 @@ import { EntityFormDialog } from "@/components/crud/entity-form-dialog";
 import { EntitySearchInput } from "@/components/crud/search-input";
 import { StatGrid, clip } from "@/components/common/stat-grid";
 import { BREED_KINDS, breedTrialStore, varietyDocumentStore, varietyStore, type Variety } from "@/lib/modules/m3/data/breeding";
-import { ipAssetStore } from "@/lib/modules/m4/data/knowledge";
+import { ipAssetStore, knowledgeStore } from "@/lib/modules/m4/data/knowledge";
 import { VARIETY_SCOPES, validityAlert } from "@/lib/modules/m3/breeding-rules";
 import { varietyFields } from "@/lib/modules/m3/variety-fields";
 import { byId, matches } from "@/lib/platform/ref-options";
@@ -25,10 +25,10 @@ const statusVariant: Record<Variety["status"], "warning" | "success" | "default"
 
 export default async function VarietiesPage({ searchParams }: { searchParams: Promise<{ q?: string; kind?: string; scope?: string }> }) {
   const { q = "", kind = "", scope = "" } = await searchParams;
-  const [all, trials, ipAssets, docs] = await Promise.all([varietyStore.list(), breedTrialStore.list(), ipAssetStore.list(), varietyDocumentStore.list()]);
+  const [all, trials, ipAssets, docs, knowledge] = await Promise.all([varietyStore.list(), breedTrialStore.list(), ipAssetStore.list(), varietyDocumentStore.list(), knowledgeStore.list()]);
   const ipById = byId(ipAssets);
   const today = todayISO();
-  const fields = varietyFields(ipAssets);
+  const fields = varietyFields(ipAssets, knowledge.filter((k) => k.isPublic));
   const query = q.trim().toLowerCase();
   const rows = [...all]
     .sort((a, b) => a.code.localeCompare(b.code))
@@ -81,7 +81,7 @@ export default async function VarietiesPage({ searchParams }: { searchParams: Pr
               cells: [
                 <div key="c"><Link href={`/varieties/${x.id}`} className="font-mono text-xs font-semibold text-primary hover:underline">{x.code}</Link><div className="text-[11px] text-muted-foreground">{x.kind} · {x.scope}</div></div>,
                 <div key="n" className="max-w-[260px]">
-                  <div className="text-sm font-medium">{x.name}</div>
+                  <div className="text-sm font-medium">{x.name}{x.isPublic && <Badge variant="success" className="ml-1.5">Cổng</Badge>}</div>
                   <div className="text-[11px] text-muted-foreground">{[x.species, x.owner, clip(x.traits, 50)].filter(Boolean).join(" · ") || "—"}</div>
                 </div>,
                 <div key="r" className="text-xs"><span className="font-mono">{x.recognitionNo || "—"}</span><div className="text-muted-foreground">{fmtDateVN(x.recognizedAt)}</div></div>,

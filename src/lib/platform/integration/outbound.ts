@@ -3,6 +3,7 @@ import { accreditedTests, labInfo } from "@/lib/modules/m2/accreditation";
 import { dbQuery } from "@/lib/platform/db";
 import { getReportByCode } from "@/lib/modules/m2/data/reports";
 import type { OutboundService } from "@/lib/platform/integration/lgsp";
+import { breedIndicators } from "@/lib/modules/m3/data/genomics";
 
 export async function buildOutboundData(service: OutboundService, ref: string) {
   if (service === "danh-muc-phep-thu") {
@@ -19,6 +20,12 @@ export async function buildOutboundData(service: OutboundService, ref: string) {
     const items = await dbQuery(`select code, name, name_en, parent_code, status, version from public.mdm_items where catalog_code = $1 order by code`, [catalog]);
     if (!items.length) throw new Error(`Danh mục ${catalog} trống hoặc không tồn tại`);
     return { danhMuc: catalog, soMuc: items.length, muc: items };
+  }
+  if (service === "chi-tieu-giong") {
+    const year = /^\d{4}$/.test(ref) ? Number(ref) : new Date().getFullYear();
+    const data = await breedIndicators(year);
+    if (!data) throw new Error("Chưa có cơ sở dữ liệu");
+    return data;
   }
   if (service === "nhiem-vu-khcn") {
     if (!ref) throw new Error("Nhập mã nhiệm vụ");

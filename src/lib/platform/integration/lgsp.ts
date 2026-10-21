@@ -12,6 +12,7 @@ export const OUTBOUND_SERVICES = {
   "bao-cao-thong-ke": "Báo cáo thống kê hoạt động định kỳ",
   "ket-qua-kiem-nghiem": "Thông tin phiếu kết quả đã phát hành (mã, trạng thái, mã băm)",
   "danh-muc-dung-chung": "Danh mục dùng chung (MDM)",
+  "chi-tieu-giong": "Chỉ tiêu về giống: giống công nhận / lưu hành, sản xuất theo cấp, cơ sở sản xuất, phân bố giống (Sở NN&MT, IOC tỉnh)",
   "nhiem-vu-khcn": "Thông tin nhiệm vụ KH&CN (đăng ký, tiến độ, kết quả) – CSDL quốc gia về KH&CN",
 } as const;
 export type OutboundService = keyof typeof OUTBOUND_SERVICES;

@@ -77,6 +77,11 @@ import {
   TreePine,
   GitBranch,
   Tractor,
+  ScanSearch,
+  SearchCode,
+  MapPinned,
+  Map as MapIcon,
+  Newspaper,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -334,11 +339,27 @@ export const navModules: NavModule[] = [
         ],
       },
       {
+        label: "Di truyền phân tử",
+        items: [
+          { href: "/markers", label: "Chỉ thị phân tử", icon: Dna },
+          { href: "/genotypes", label: "Mẫu ADN & kiểu gen", icon: ScanSearch },
+          { href: "/blast", label: "Đối soát trình tự (BLAST+)", icon: SearchCode },
+        ],
+      },
+      {
         label: "Sản xuất & cung ứng",
         items: [
           { href: "/breed-production", label: "Sản xuất theo cấp", icon: Tractor },
           { href: "/breed-supply", label: "Nhu cầu & cân đối", icon: Scale },
           { href: "/breed-orders", label: "Đơn hàng & giao nhận", icon: Truck },
+        ],
+      },
+      {
+        label: "Bản đồ số & thị trường",
+        items: [
+          { href: "/breed-facilities", label: "Bản đồ cơ sở sản xuất", icon: MapPinned },
+          { href: "/breed-distributions", label: "Phân bố giống & chỉ tiêu", icon: MapIcon },
+          { href: "/market-posts", label: "Thị trường & dịch vụ kỹ thuật", icon: Newspaper },
         ],
       },
     ],

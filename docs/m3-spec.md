@@ -61,8 +61,8 @@ Mở rộng phạm vi quản lý sang toàn bộ giống do Viện nghiên cứu
 |---|---|---|
 | A | M3.1.1–M3.1.4: cây mẹ, lô môi trường, mẻ cấy (mẻ cha – con, hệ số nhân), thống kê nhiễm, phòng nuôi | Xong |
 | B | M3.1.5–M3.1.6: đơn hàng, kế hoạch, vườn ươm; truy xuất từ cây mẹ; giá thành; xuất bán; phản hồi; báo cáo | Xong |
-| C | M3.2.1–M3.2.3, M3.2.6: hồ sơ pháp lý, nguồn giống gốc, phả hệ, kiểm định – chứng nhận, sản xuất giống theo cấp | Đang làm |
-| D | M3.2.4, M3.2.5, M3.2.7, M3.2.8: BLAST+ (máy chủ nội bộ), chỉ thị phân tử, bản đồ số, kết nối cung – cầu | Kế hoạch |
+| C | M3.2.1–M3.2.3, M3.2.6: hồ sơ pháp lý, nguồn giống gốc, phả hệ, kiểm định – chứng nhận, sản xuất giống theo cấp | Xong |
+| D | M3.2.4, M3.2.5, M3.2.7, M3.2.8: BLAST+ (máy chủ nội bộ), chỉ thị phân tử, bản đồ số, kết nối cung – cầu | Đang làm |
 
 ## Đợt A – thiết kế
 
@@ -102,3 +102,14 @@ Mở rộng phạm vi quản lý sang toàn bộ giống do Viện nghiên cứu
 | Sản xuất theo cấp (M3.2.6) | `production_lots`: cấp sản xuất ra, nguồn là lô giống cấp trên hoặc nguồn giống gốc. **Lô nguồn phải cùng giống, đã đạt kiểm định và ở cấp cao hơn** (thứ bậc: tác giả → siêu nguyên chủng → nguyên chủng → xác nhận 1 / xác nhận → xác nhận 2; cụ kỵ → ông bà → bố mẹ → thương phẩm). `production_logs`: nhật ký, chi phí. Năng suất = sản lượng ÷ quy mô; giá thành = (chi phí lô + chi phí nhật ký) ÷ sản lượng |
 | Cung ứng (M3.2.6) | `demands` theo địa phương, mùa vụ; cân đối với sản lượng kế hoạch / thực tế theo giống – mùa vụ – đơn vị. `orders` + `deliveries`: **chỉ giao lô Đạt / Đã chứng nhận, còn hiệu lực hợp quy, không vượt lượng còn lại** |
 | Truy xuất QR | Cùng trang `/trace/[mã]`: không phải lô cây giống nuôi cấy mô thì tra `seed_lots`, hiện giống, cấp, công nhận, lưu hành, chứng nhận, hợp quy, chuỗi cấp giống đến nguồn giống gốc. Tem QR `/seed-lot-labels` |
+
+## Đợt D – thiết kế
+
+| Chức năng | Cách làm |
+|---|---|
+| BLAST+ (M3.2.4) | Dịch vụ riêng `services/blast` (Node.js không phụ thuộc thư viện + ncbi-blast+, có Dockerfile), chạy trên máy chủ bất kỳ của Viện. **Trình tự chỉ lưu trên đĩa máy chủ đó.** Web gọi qua `BLAST_SERVICE_URL` + `BLAST_SERVICE_TOKEN`; chỉ lưu `sequence_refs` (mã, loại, gen, giống / nguồn gen, độ dài, sha256) và `blast_searches` (nhãn, độ dài, sha256 truy vấn, bảng hit). Bảo vệ: token bắt buộc (so sánh hằng thời gian), chỉ nhận ký hiệu IUPAC, mã trình tự `[A-Za-z0-9._-]`, gọi lệnh không qua shell (`execFile`), giới hạn 2 MB, 2 lượt song song, 120 giây. Chưa cấu hình → hiện "chưa kết nối", **không mô phỏng**. Đã kiểm thử với BLAST+ 2.17.0 thật |
+| Chỉ thị phân tử (M3.2.5) | `markers` (SSR / SNP / mã vạch ADN), `genotype_samples` (giống tham chiếu / mẫu cần nhận dạng / cây kiểm tra độ thuần), `genotype_calls` (alen 1, alen 2; trống = đồng hợp), nhập bằng cách dán từ Excel. Hồ sơ chuẩn của giống = gộp các mẫu tham chiếu. Độ tương đồng = tỷ lệ alen chung trung bình trên chỉ thị chung; **nhận dạng** cần ≥ 3 chỉ thị (Trùng khớp = 100%, Rất gần ≥ 90%, Gần giống ≥ 75%). **Độ thuần** = cây khớp hoàn toàn ÷ cây đủ số liệu; hiện cả ở trang lô giống |
+| Bản đồ số (M3.2.7) | `facilities` (của Viện / liên kết, tọa độ kiểm tra trong lãnh thổ Việt Nam, quy mô, năng lực, điều kiện, kiểm tra); bản đồ Leaflet 1.9.4 (CDN, có SRI) + nền OpenStreetMap; popup dựng bằng `textContent`. `distributions`: diện tích / quy mô giống theo huyện – năm. Lô sản xuất gắn cơ sở |
+| Chỉ tiêu cho Sở NN&MT, IOC | Dịch vụ LGSP `chi-tieu-giong` (bộ kết nối M1, mô phỏng khi chưa cấu hình) và `GET /api/v1/m3/breed-indicators?year=` (khóa API phạm vi `breed:read`). Chỉ số liệu tổng hợp: giống công nhận / lưu hành, sản xuất theo cấp, cơ sở sản xuất, phân bố giống – không có khách hàng, giá |
+| Cung – cầu, thị trường (M3.2.8) | Giống thêm `is_public`, mô tả ngắn, quy trình kỹ thuật kèm giống (kho tri thức M4.5, mục đã công bố). `market_posts`: thông tin thị trường, mô hình hiệu quả, tiến bộ kỹ thuật, nguồn giống, hỗ trợ sau cung ứng. Cổng công khai `/portal/giong`: giống giới thiệu, lô đạt chuẩn còn cung ứng (không giá), tin công bố; nút đăng ký nhu cầu mở form yêu cầu M4 đã điền sẵn loại dịch vụ |
+| Sửa chung | Trùng mã / khóa duy nhất trả 409 kèm thông báo (trước đây 500, hoặc 404 khi sửa) |

@@ -14,7 +14,7 @@ import {
   varietyDocumentStore,
   varietyStore,
 } from "@/lib/modules/m3/data/breeding";
-import { ipAssetStore } from "@/lib/modules/m4/data/knowledge";
+import { ipAssetStore, knowledgeStore } from "@/lib/modules/m4/data/knowledge";
 import { safeUrl } from "@/lib/modules/m4/data/portal";
 import { DOC_KINDS, validityAlert } from "@/lib/modules/m3/breeding-rules";
 import { varietyFields } from "@/lib/modules/m3/variety-fields";
@@ -28,7 +28,7 @@ export const metadata = { title: "Hồ sơ giống" };
 /** Hồ sơ giống (M3.2.1): thông tin, văn bản pháp lý & hiệu lực, nguồn giống gốc, khảo nghiệm, sản xuất, lô giống. */
 export default async function VarietyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [varieties, docs, stocks, trials, prodLots, seedLots, ipAssets, access] = await Promise.all([
+  const [varieties, docs, stocks, trials, prodLots, seedLots, ipAssets, access, knowledge] = await Promise.all([
     varietyStore.list(),
     varietyDocumentStore.list(),
     sourceStockStore.list(),
@@ -37,6 +37,7 @@ export default async function VarietyDetailPage({ params }: { params: Promise<{ 
     seedLotStore.list(),
     ipAssetStore.list(),
     currentAccess(),
+    knowledgeStore.list(),
   ]);
   const v = varieties.find((x) => x.id === id);
   if (!v) notFound();
@@ -62,7 +63,7 @@ export default async function VarietyDetailPage({ params }: { params: Promise<{ 
           <Link href="/varieties" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mr-auto">
             <ArrowLeft className="w-4 h-4" /> Lý lịch giống
           </Link>
-          {access.can("write.breeding") && <EntityFormDialog mode="edit" endpoint="/api/varieties" id={v.id} title={`Sửa ${v.code}`} fields={varietyFields(ipAssets)} initial={v} />}
+          {access.can("write.breeding") && <EntityFormDialog mode="edit" endpoint="/api/varieties" id={v.id} title={`Sửa ${v.code}`} fields={varietyFields(ipAssets, knowledge.filter((k) => k.isPublic))} initial={v} />}
         </div>
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2">Thông tin giống <Badge variant="outline">{v.status}</Badge></CardTitle></CardHeader>

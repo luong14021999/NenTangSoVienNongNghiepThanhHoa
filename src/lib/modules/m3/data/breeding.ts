@@ -26,6 +26,9 @@ export type Variety = {
   ipAssetId: string;
   regions: string;
   areaHa: number;
+  isPublic: boolean;
+  publicSummary: string;
+  guideKnowledgeId: string;
   note: string;
 };
 
@@ -50,6 +53,9 @@ export const varietyStore = createEntityStore<Variety>(
     ipAssetId: "ref",
     regions: "text",
     areaHa: "number",
+    isPublic: "bool",
+    publicSummary: "text",
+    guideKnowledgeId: "ref",
     note: "text",
   }),
 );
@@ -272,6 +278,7 @@ export type ProductionLot = {
   harvestedAt: string;
   costTotal: number;
   status: string;
+  facilityId: string;
   note: string;
 };
 export const productionLotStore = createEntityStore<ProductionLot>(
@@ -295,6 +302,7 @@ export const productionLotStore = createEntityStore<ProductionLot>(
     harvestedAt: "date",
     costTotal: "number",
     status: "text",
+    facilityId: "ref",
     note: "text",
   }),
 );

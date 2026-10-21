@@ -8,6 +8,10 @@ type Rec = Record<string, unknown>;
 
 type Validator<T> = (body: Partial<T>) => string | null;
 
+/** Vi phạm ràng buộc duy nhất của Postgres (trùng mã…) → thông báo dễ hiểu thay cho lỗi 500. */
+const isUniqueViolation = (e: unknown) => /duplicate key value|unique constraint/i.test((e as Error)?.message ?? "");
+const DUPLICATE = "Đã có bản ghi trùng (mã hoặc tổ hợp khóa phải là duy nhất) – kiểm tra lại";
+
 export function listRoute<T extends { id: string }>(store: EntityStore<T>) {
   return async function GET() {
     const items = await store.list();
@@ -34,7 +38,13 @@ export function createRoute<T extends { id: string }>(
     } catch (e) {
       return NextResponse.json({ error: (e as Error).message }, { status: 400 });
     }
-    const created = await store.create(item);
+    let created: T;
+    try {
+      created = await store.create(item);
+    } catch (e) {
+      if (isUniqueViolation(e)) return NextResponse.json({ error: DUPLICATE }, { status: 409 });
+      throw e;
+    }
     await logChange({
       entity: store.collection,
       entityId: created.id,
@@ -71,7 +81,13 @@ export function patchRoute<T extends { id: string }>(store: EntityStore<T>, hook
         return NextResponse.json({ error: (e as Error).message }, { status: 400 });
       }
     }
-    const item = await store.update(id, patch);
+    let item: T | null;
+    try {
+      item = await store.update(id, patch);
+    } catch (e) {
+      if (isUniqueViolation(e)) return NextResponse.json({ error: DUPLICATE }, { status: 409 });
+      throw e;
+    }
     if (!item)
       return NextResponse.json({ error: "Không tìm thấy" }, { status: 404 });
     // So với giá trị đã lưu (sau khi DB chuẩn hoá kiểu) để không ghi thay đổi giả.
