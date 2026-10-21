@@ -5,12 +5,12 @@ import Image from "next/image";
 import { HeaderUser } from "@/components/layout/header-user";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
 import { usePathname } from "next/navigation";
-import { moduleOf } from "@/components/layout/nav-config";
+import { moduleOf, shellOf } from "@/components/layout/nav-config";
 
 export function TopBar() {
   const pathname = usePathname();
   const mod = moduleOf(pathname);
-  const hasSidebar = !!mod;
+  const hasSidebar = shellOf(mod) === "sidebar";
   const ModIcon = mod?.icon;
   return (
     <header

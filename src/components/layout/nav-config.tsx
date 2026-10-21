@@ -94,6 +94,13 @@ import { cn } from "@/lib/utils";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon };
 export type NavGroup = { label: string; items: NavItem[] };
+/** Tab chính của phần mềm dùng khung riêng: gom một số trang (theo href trong `groups`), trang đầu là trang vào. */
+export type NavTab = { label: string; icon: LucideIcon; hrefs: string[]; /** Hiện ở thanh dưới đáy trên điện thoại. */ mobile?: boolean };
+/**
+ * Khung điều hướng: "sidebar" = menu dọc bên trái (phòng thí nghiệm);
+ * "bench" = tab lớn + danh mục, thanh dưới đáy trên điện thoại (nuôi cấy mô – dùng tại phòng cấy).
+ */
+export type ModuleShell = "sidebar" | "bench";
 /** Khóa giao diện: chọn bộ màu `[data-module]` trong globals.css. */
 export type ModuleKey = "m1" | "m2" | "m3-1" | "m3-2" | "m4";
 /** Phân hệ của nền tảng: mỗi phân hệ gồm nhiều nhóm menu và có bản sắc giao diện riêng. */
@@ -107,6 +114,10 @@ export type NavModule = {
   tagline: string;
   /** Gợi ý trong ô tìm kiếm ở đầu mỗi trang. */
   searchHint: string;
+  /** Trang vào phần mềm (ô ở trang chủ). */
+  home: string;
+  shell?: ModuleShell;
+  tabs?: NavTab[];
   groups: NavGroup[];
 };
 
@@ -116,6 +127,7 @@ export const navHome: NavItem[] = [{ href: "/", label: "Trang chủ – các ph�
 export const navModules: NavModule[] = [
   {
     code: "M1",
+    home: "/executive",
     name: "Nền tảng dùng chung",
     key: "m1",
     icon: Boxes,
@@ -156,6 +168,7 @@ export const navModules: NavModule[] = [
   },
   {
     code: "M2",
+    home: "/lims",
     name: "Phòng thí nghiệm (LIMS)",
     key: "m2",
     icon: FlaskConical,
@@ -230,6 +243,7 @@ export const navModules: NavModule[] = [
   },
   {
     code: "M4",
+    home: "/m4-overview",
     name: "Nghiên cứu – dịch vụ – tra cứu KH&CN",
     key: "m4",
     icon: Handshake,
@@ -294,6 +308,15 @@ export const navModules: NavModule[] = [
   },
   {
     code: "M3.1",
+    home: "/tissue-bench",
+    shell: "bench",
+    tabs: [
+      { label: "Bàn cấy", icon: ArrowRightLeft, hrefs: ["/tissue-bench", "/culture-batches"], mobile: true },
+      { label: "Dây chuyền", icon: LayoutDashboard, hrefs: ["/tissue-overview", "/tissue-stats"], mobile: true },
+      { label: "Kế hoạch", icon: CalendarDays, hrefs: ["/production-schedule", "/seedling-orders", "/production-profiles"], mobile: true },
+      { label: "Phòng nuôi", icon: Thermometer, hrefs: ["/growth-rooms"] },
+      { label: "Vườn ươm & xuất", icon: Sprout, hrefs: ["/seedling-lots", "/lot-sales", "/lot-feedback"], mobile: true },
+    ],
     name: "Nuôi cấy mô & truy xuất",
     key: "m3-1",
     icon: Microscope,
@@ -356,6 +379,7 @@ export const navModules: NavModule[] = [
   },
   {
     code: "M3.2",
+    home: "/breed-overview",
     name: "Giống cây trồng, vật nuôi, thủy sản",
     key: "m3-2",
     icon: Sprout,
@@ -432,6 +456,23 @@ export function moduleOf(pathname: string): NavModule | undefined {
   if (byMenu) return byMenu;
   if (/^\/(sample-labels|report-print|verify)(\/|$)/.test(pathname)) return navModules.find((m) => m.code === "M2");
   return undefined;
+}
+
+/** Khung điều hướng của phần mềm (mặc định menu dọc). */
+export const shellOf = (m: NavModule | undefined): ModuleShell | null => (m ? (m.shell ?? "sidebar") : null);
+
+const allItems = (m: NavModule) => m.groups.flatMap((g) => g.items);
+
+/** Các tab chính kèm trang con (lấy nhãn, biểu tượng từ `groups`). */
+export function tabsOf(m: NavModule) {
+  const byHref = new Map(allItems(m).map((i) => [i.href, i]));
+  return (m.tabs ?? []).map((t) => ({ ...t, items: t.hrefs.map((h) => byHref.get(h)).filter((i): i is NavItem => Boolean(i)) }));
+}
+
+/** Nhóm "Danh mục": các trang không thuộc tab chính nào. */
+export function catalogOf(m: NavModule): NavGroup[] {
+  const inTabs = new Set((m.tabs ?? []).flatMap((t) => t.hrefs));
+  return m.groups.map((g) => ({ ...g, items: g.items.filter((i) => !inTabs.has(i.href)) })).filter((g) => g.items.length);
 }
 
 export function SidebarBrand() {
