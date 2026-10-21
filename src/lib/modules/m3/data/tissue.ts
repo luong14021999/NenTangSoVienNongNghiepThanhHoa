@@ -99,6 +99,7 @@ export type CultureBatch = {
   roomId: string;
   explants: number;
   survived: number;
+  orderId: string;
   note: string;
 };
 
@@ -125,6 +126,7 @@ export const cultureBatchStore = createEntityStore<CultureBatch>(
     roomId: "ref",
     explants: "number",
     survived: "number",
+    orderId: "ref",
     note: "text",
   }),
 );
@@ -145,6 +147,12 @@ export type SeedlingLot = {
   releasedAt: string;
   releasedQty: number;
   status: (typeof LOT_STATUSES)[number];
+  orderId: string;
+  nurseryBed: string;
+  readyAt: string;
+  grade1Qty: number;
+  grade2Qty: number;
+  rejectQty: number;
   note: string;
 };
 
@@ -162,6 +170,12 @@ export const seedlingLotStore = createEntityStore<SeedlingLot>(
     releasedAt: "date",
     releasedQty: "number",
     status: "text",
+    orderId: "ref",
+    nurseryBed: "text",
+    readyAt: "date",
+    grade1Qty: "number",
+    grade2Qty: "number",
+    rejectQty: "number",
     note: "text",
   }),
 );
@@ -209,7 +223,7 @@ export const motherPlantStore = createEntityStore<MotherPlant>(
 );
 
 // ── M3.1.2 Định mức hóa chất, lô môi trường ────────────────────────
-export type RecipeChemical = { id: string; recipeId: string; chemical: string; chemicalCode: string; amountPerL: number; unit: string; note: string };
+export type RecipeChemical = { id: string; recipeId: string; chemical: string; chemicalCode: string; amountPerL: number; unit: string; supplyId: string; note: string };
 
 export const recipeChemicalStore = createEntityStore<RecipeChemical>(
   "recipe-chemicals",
@@ -220,6 +234,7 @@ export const recipeChemicalStore = createEntityStore<RecipeChemical>(
     chemicalCode: "text",
     amountPerL: "number",
     unit: "text",
+    supplyId: "ref",
     note: "text",
   }),
 );
@@ -359,4 +374,178 @@ export async function insertReading(
     [roomId, r.at, r.temperature, r.humidity, r.light, source, deviceCode],
   );
   return String(row.id);
+}
+
+// ── M3.1.5 Thông số sản xuất, đơn hàng ─────────────────────────────
+export type ProductionProfile = {
+  id: string;
+  code: string;
+  species: string;
+  variety: string;
+  multiplicationRate: number;
+  cycleDays: number;
+  rootingDays: number;
+  nurseryDays: number;
+  invitroSurvival: number;
+  nurserySurvival: number;
+  grade1Share: number;
+  note: string;
+};
+
+export const productionProfileStore = createEntityStore<ProductionProfile>(
+  "production-profiles",
+  [],
+  columnsMapping<ProductionProfile>("m3_tissue.production_profiles", {
+    code: "text",
+    species: "text",
+    variety: "text",
+    multiplicationRate: "number",
+    cycleDays: "number",
+    rootingDays: "number",
+    nurseryDays: "number",
+    invitroSurvival: "number",
+    nurserySurvival: "number",
+    grade1Share: "number",
+    note: "text",
+  }),
+);
+
+export type SeedlingOrder = {
+  id: string;
+  code: string;
+  customerId: string;
+  contractId: string;
+  profileId: string;
+  species: string;
+  variety: string;
+  quantity: number;
+  gradeRequired: string;
+  dueAt: string;
+  season: string;
+  unitPrice: number;
+  status: string;
+  note: string;
+};
+
+export const seedlingOrderStore = createEntityStore<SeedlingOrder>(
+  "seedling-orders",
+  [],
+  columnsMapping<SeedlingOrder>("m3_tissue.orders", {
+    code: "text",
+    customerId: "ref",
+    contractId: "ref",
+    profileId: "ref",
+    species: "text",
+    variety: "text",
+    quantity: "number",
+    gradeRequired: "text",
+    dueAt: "date",
+    season: "text",
+    unitPrice: "number",
+    status: "text",
+    note: "text",
+  }),
+);
+
+// ── M3.1.6 Kho vật tư, xuất bán, phản hồi ──────────────────────────
+export type Supply = { id: string; code: string; name: string; category: string; unit: string; unitPrice: number; minStock: number; note: string };
+
+export const supplyStore = createEntityStore<Supply>(
+  "tissue-supplies",
+  [],
+  columnsMapping<Supply>("m3_tissue.supplies", {
+    code: "text",
+    name: "text",
+    category: "text",
+    unit: "text",
+    unitPrice: "number",
+    minStock: "number",
+    note: "text",
+  }),
+);
+
+export type SupplyMove = { id: string; supplyId: string; movedAt: string; kind: string; quantity: number; unitPrice: number; ref: string; actor: string; note: string };
+
+export const supplyMoveStore = createEntityStore<SupplyMove>(
+  "supply-moves",
+  [],
+  columnsMapping<SupplyMove>("m3_tissue.supply_moves", {
+    supplyId: "ref",
+    movedAt: "date",
+    kind: "text",
+    quantity: "number",
+    unitPrice: "number",
+    ref: "text",
+    actor: "text",
+    note: "text",
+  }),
+);
+
+export type LotSale = { id: string; code: string; lotId: string; orderId: string; customerId: string; soldAt: string; quantity: number; grade: string; unitPrice: number; note: string };
+
+export const lotSaleStore = createEntityStore<LotSale>(
+  "lot-sales",
+  [],
+  columnsMapping<LotSale>("m3_tissue.lot_sales", {
+    code: "text",
+    lotId: "ref",
+    orderId: "ref",
+    customerId: "ref",
+    soldAt: "date",
+    quantity: "number",
+    grade: "text",
+    unitPrice: "number",
+    note: "text",
+  }),
+);
+
+export type LotFeedback = {
+  id: string;
+  lotId: string;
+  customerId: string;
+  receivedAt: string;
+  channel: string;
+  contactName: string;
+  phone: string;
+  survivalPct: number;
+  rating: number;
+  content: string;
+  response: string;
+  status: string;
+  note: string;
+};
+
+export const lotFeedbackStore = createEntityStore<LotFeedback>(
+  "lot-feedback",
+  [],
+  columnsMapping<LotFeedback>("m3_tissue.lot_feedback", {
+    lotId: "ref",
+    customerId: "ref",
+    receivedAt: "date",
+    channel: "text",
+    contactName: "text",
+    phone: "text",
+    survivalPct: "number",
+    rating: "number",
+    content: "text",
+    response: "text",
+    status: "text",
+    note: "text",
+  }),
+);
+
+/** Phản hồi khách gửi qua trang QR công khai (không cần đăng nhập). */
+export async function insertPublicFeedback(
+  lotCode: string,
+  f: { contactName: string; phone: string; survivalPct: number | null; rating: number | null; content: string },
+  ipHash: string,
+) {
+  const [lot] = await dbQuery(`select id from m3_tissue.seedling_lots where code = $1 and status <> 'Hủy'`, [lotCode]);
+  if (!lot) return null;
+  const [row] = await dbQuery(
+    `insert into m3_tissue.lot_feedback (lot_id, channel, contact_name, phone, survival_pct, rating, content, ip_hash)
+     values ($1, 'Trang QR', $2, $3, $4, $5, $6, $7) returning id`,
+    [lot.id, f.contactName, f.phone, f.survivalPct, f.rating, f.content, ipHash],
+  );
+  return row.id as string;
 }

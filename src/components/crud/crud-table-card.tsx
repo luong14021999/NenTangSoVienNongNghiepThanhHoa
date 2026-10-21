@@ -94,15 +94,18 @@ export function CrudTableCard({
                     ))}
                     <TableCell>
                       <div className="flex items-center justify-end gap-1.5">
-                        <EntityFormDialog
-                          mode="edit"
-                          endpoint={endpoint}
-                          id={r.id}
-                          title={`Sửa – ${title}`}
-                          fields={editFields}
-                          initial={r.initial}
-                          submitLabel="Lưu thay đổi"
-                        />
+                        {/* Không có trường sửa (VD phiếu kho chỉ xóa) → ẩn nút Sửa. */}
+                        {editFields.length > 0 && (
+                          <EntityFormDialog
+                            mode="edit"
+                            endpoint={endpoint}
+                            id={r.id}
+                            title={`Sửa – ${title}`}
+                            fields={editFields}
+                            initial={r.initial}
+                            submitLabel="Lưu thay đổi"
+                          />
+                        )}
                         <DeleteEntityButton
                           entity={entity}
                           id={r.id}

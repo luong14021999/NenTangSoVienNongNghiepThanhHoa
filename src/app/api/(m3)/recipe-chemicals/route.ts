@@ -11,6 +11,7 @@ export const { GET, POST } = collectionRoutes<RecipeChemical>(
     chemicalCode: "",
     amountPerL: 0,
     unit: "mg",
+    supplyId: "",
     note: "",
   },
   (b) => (!b.recipeId ? "Thiếu công thức" : !b.chemical ? "Nhập tên hóa chất" : !(Number(b.amountPerL) > 0) ? "Định mức phải lớn hơn 0" : null),

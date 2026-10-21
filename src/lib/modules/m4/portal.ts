@@ -96,4 +96,6 @@ export function validatePublicRequest(b: Record<string, unknown>): { error: stri
 export const RATE_LIMITS = {
   request: { perIp: 5, windowMinutes: 60, perDayTotal: 300 },
   status: { perIp: 30, windowMinutes: 60 },
+  /** Phản hồi khách mua cây giống qua trang QR (M3.1.6). */
+  feedback: { perIp: 5, windowMinutes: 60, perDayTotal: 200 },
 } as const;

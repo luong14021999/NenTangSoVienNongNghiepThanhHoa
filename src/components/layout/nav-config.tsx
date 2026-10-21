@@ -72,6 +72,8 @@ import {
   Handshake,
   Repeat,
   TreeDeciduous,
+  CalendarDays,
+  Package,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -278,8 +280,27 @@ export const navModules: NavModule[] = [
         ],
       },
       {
-        label: "Ra ngôi & truy xuất",
-        items: [{ href: "/seedling-lots", label: "Lô cây giống & truy xuất", icon: QrCode }],
+        label: "Kế hoạch & điều độ",
+        items: [
+          { href: "/seedling-orders", label: "Đơn hàng cây giống", icon: ClipboardList },
+          { href: "/production-schedule", label: "Lịch điều độ", icon: CalendarDays },
+          { href: "/production-profiles", label: "Thông số sản xuất", icon: Settings },
+        ],
+      },
+      {
+        label: "Vườn ươm, xuất bán & truy xuất",
+        items: [
+          { href: "/seedling-lots", label: "Lô cây giống & vườn ươm", icon: QrCode },
+          { href: "/lot-sales", label: "Xuất bán", icon: Truck },
+          { href: "/lot-feedback", label: "Phản hồi khách hàng", icon: MessageSquare },
+        ],
+      },
+      {
+        label: "Kho & báo cáo",
+        items: [
+          { href: "/tissue-supplies", label: "Kho vật tư", icon: Package },
+          { href: "/tissue-reports", label: "Báo cáo cây giống", icon: PieChart },
+        ],
       },
     ],
   },

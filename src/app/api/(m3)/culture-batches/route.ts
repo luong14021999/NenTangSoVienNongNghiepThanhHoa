@@ -27,6 +27,7 @@ const routes = collectionRoutes<CultureBatch>(
     roomId: "",
     explants: 0,
     survived: 0,
+    orderId: "",
     note: "",
   },
   (b) => (!b.code ? "Thiếu mã mẻ cấy" : null),

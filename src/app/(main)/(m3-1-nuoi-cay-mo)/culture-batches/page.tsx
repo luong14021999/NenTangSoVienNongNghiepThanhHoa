@@ -14,6 +14,7 @@ import {
   growthRoomStore,
   mediaBatchStore,
   mediaRecipeStore,
+  seedlingOrderStore,
   tissueMaterialStore,
   type CultureBatch,
 } from "@/lib/modules/m3/data/tissue";
@@ -35,7 +36,7 @@ const statusVariant: Record<CultureBatch["status"], "default" | "secondary" | "s
 
 export default async function CultureBatchesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q = "" } = await searchParams;
-  const [all, materials, recipes, mediaBatches, cabinets, rooms, threshold] = await Promise.all([
+  const [all, materials, recipes, mediaBatches, cabinets, rooms, threshold, orders] = await Promise.all([
     cultureBatchStore.list(),
     tissueMaterialStore.list(),
     mediaRecipeStore.list(),
@@ -43,6 +44,7 @@ export default async function CultureBatchesPage({ searchParams }: { searchParam
     cabinetStore.list(),
     growthRoomStore.list(),
     getSetting("tissue_contamination_threshold").catch(() => 7),
+    seedlingOrderStore.list(),
   ]);
   const materialById = byId(materials);
   const recipeById = byId(recipes);
@@ -68,6 +70,7 @@ export default async function CultureBatchesPage({ searchParams }: { searchParam
     { name: "contaminated", label: "Số bình nhiễm", type: "number" },
     { name: "survived", label: "Số mẫu sống cuối giai đoạn", type: "number" },
     { name: "plantlets", label: "Số chồi / cây thu được", type: "number" },
+    { name: "orderId", label: "Phục vụ đơn hàng", type: "select", options: refOptions(orders.filter((o) => o.status !== "Hoàn thành" && o.status !== "Hủy"), (o) => `${o.code} · ${o.species} ${o.variety} · ${o.quantity} cây`) },
     { name: "status", label: "Trạng thái", type: "select", options: [...BATCH_STATUSES] },
     { name: "note", label: "Ghi chú", type: "textarea" },
   ];

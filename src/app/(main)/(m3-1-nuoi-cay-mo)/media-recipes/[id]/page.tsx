@@ -6,7 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CrudTableCard } from "@/components/crud/crud-table-card";
 import { EntityFormDialog, type CrudField } from "@/components/crud/entity-form-dialog";
-import { cultureBatchStore, mediaBatchStore, mediaRecipeStore, recipeChemicalStore } from "@/lib/modules/m3/data/tissue";
+import { cultureBatchStore, mediaBatchStore, mediaRecipeStore, recipeChemicalStore, supplyStore } from "@/lib/modules/m3/data/tissue";
+import { mediaCostPerLiter } from "@/lib/modules/m3/production";
+import { fmtVND } from "@/lib/modules/m4/finance";
+import { byId, refOptions } from "@/lib/platform/ref-options";
 import { CHEMICAL_UNITS } from "@/lib/modules/m3/tissue-rules";
 import { contaminationRate, fmtPct } from "@/lib/modules/m3/rates";
 import { mediaQcVariant } from "@/lib/modules/m3/ui";
@@ -21,15 +24,18 @@ const fmtAmount = (n: number) => n.toLocaleString("vi-VN", { maximumFractionDigi
 export default async function MediaRecipeDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ v?: string }> }) {
   const { id } = await params;
   const volume = Math.min(1000, Math.max(0, Number((await searchParams).v) || 1));
-  const [recipes, chemicals, batches, cultures] = await Promise.all([mediaRecipeStore.list(), recipeChemicalStore.list(), mediaBatchStore.list(), cultureBatchStore.list()]);
+  const [recipes, chemicals, batches, cultures, supplies] = await Promise.all([mediaRecipeStore.list(), recipeChemicalStore.list(), mediaBatchStore.list(), cultureBatchStore.list(), supplyStore.list()]);
+  const supplyById = byId(supplies);
   const r = recipes.find((x) => x.id === id);
   if (!r) notFound();
   const myChemicals = chemicals.filter((c) => c.recipeId === id).sort((a, b) => a.chemical.localeCompare(b.chemical, "vi"));
+  const cost = mediaCostPerLiter(myChemicals, supplyById);
   const myBatches = batches.filter((b) => b.recipeId === id).sort((a, b) => (b.preparedAt || "").localeCompare(a.preparedAt || ""));
   const fields: CrudField[] = [
     { name: "recipeId", label: "Công thức", type: "select", options: [{ value: r.id, label: r.code }], defaultValue: r.id },
     { name: "chemical", label: "Hóa chất", required: true, placeholder: "VD: NH₄NO₃, BAP, Sucrose" },
-    { name: "chemicalCode", label: "Mã trong kho (M2)", mono: true },
+    { name: "supplyId", label: "Vật tư trong kho (để tính giá)", type: "select", options: refOptions(supplies, (x) => `${x.code} · ${x.name} (${x.unit})`) },
+    { name: "chemicalCode", label: "Mã trong kho M2 (nếu có)", mono: true },
     { name: "amountPerL", label: "Định mức / 1 lít", type: "number", required: true },
     { name: "unit", label: "Đơn vị", type: "select", options: [...CHEMICAL_UNITS] },
     { name: "note", label: "Ghi chú (dung dịch mẹ, thứ tự pha…)", type: "textarea" },
@@ -45,12 +51,12 @@ export default async function MediaRecipeDetailPage({ params, searchParams }: { 
 
         <CrudTableCard
           title="Định mức hóa chất (trên 1 lít)"
-          description="Dùng để tính lượng cần khi pha và (đợt sau) tính giá thành lô giống"
+          description={`Chi phí hóa chất ≈ ${fmtVND(cost.cost)} / lít${cost.missing.length ? ` – chưa tính: ${cost.missing.join(", ")} (chưa gắn vật tư hoặc đơn vị không quy đổi được)` : ""}. Đường, agar cũng cần nhập thành dòng để tính giá`}
           endpoint="/api/recipe-chemicals"
           entity="recipe-chemicals"
           editFields={fields}
           addNode={<EntityFormDialog mode="add" endpoint="/api/recipe-chemicals" title="Thêm hóa chất" fields={fields} addLabel="Thêm hóa chất" />}
-          headers={["Hóa chất", "Mã kho", "Định mức / lít", "Ghi chú"]}
+          headers={["Hóa chất", "Vật tư · đơn giá", "Định mức / lít", "Chi phí / lít"]}
           emptyText="Chưa nhập định mức hóa chất"
           rows={myChemicals.map((c) => ({
             id: c.id,
@@ -58,9 +64,12 @@ export default async function MediaRecipeDetailPage({ params, searchParams }: { 
             initial: c,
             cells: [
               <span key="n" className="text-sm">{c.chemical}</span>,
-              <span key="k" className="text-xs font-mono">{c.chemicalCode || "—"}</span>,
+              <span key="k" className="text-xs">{supplyById.get(c.supplyId) ? `${supplyById.get(c.supplyId)!.code} · ${fmtVND(supplyById.get(c.supplyId)!.unitPrice)}/${supplyById.get(c.supplyId)!.unit}` : <span className="text-amber-600">chưa gắn vật tư</span>}</span>,
               <span key="a" className="text-sm tabular-nums">{fmtAmount(c.amountPerL)} {c.unit}</span>,
-              <span key="g" className="text-xs text-muted-foreground">{c.note || ""}</span>,
+              <span key="g" className="text-xs">{(() => {
+                const one = mediaCostPerLiter([c], supplyById);
+                return one.missing.length ? "—" : fmtVND(one.cost);
+              })()}</span>,
             ],
           }))}
         />

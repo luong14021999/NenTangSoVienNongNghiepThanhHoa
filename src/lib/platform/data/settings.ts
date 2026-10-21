@@ -7,6 +7,9 @@ export const SETTINGS = {
   api_default_rate_limit: { label: "Giới hạn mặc định cho khóa API mới (lượt / phút)", type: "number", default: 60 },
   backup_retention_days: { label: "Thời gian giữ nhật ký sức khỏe / sao lưu (ngày)", type: "number", default: 30 },
   tissue_contamination_threshold: { label: "M3.1: ngưỡng cảnh báo tỷ lệ nhiễm mẫu nuôi cấy mô (%)", type: "number", default: 7 },
+  tissue_labor_per_vessel: { label: "M3.1 giá thành: nhân công cấy mỗi bình (VND)", type: "number", default: 0 },
+  tissue_overhead_per_vessel: { label: "M3.1 giá thành: chi phí chung mỗi bình – điện, khấu hao phòng nuôi (VND)", type: "number", default: 0 },
+  tissue_nursery_per_plant: { label: "M3.1 giá thành: chi phí vườn ươm mỗi cây – bầu, giá thể, chăm sóc (VND)", type: "number", default: 0 },
   maintenance_banner: { label: "Thông báo bảo trì hiển thị cho người dùng (để trống = tắt)", type: "text", default: "" },
 } as const;
 export type SettingKey = keyof typeof SETTINGS;

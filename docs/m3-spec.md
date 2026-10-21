@@ -59,8 +59,8 @@ Mở rộng phạm vi quản lý sang toàn bộ giống do Viện nghiên cứu
 
 | Đợt | Phạm vi | Trạng thái |
 |---|---|---|
-| A | M3.1.1–M3.1.4: cây mẹ, lô môi trường, mẻ cấy (mẻ cha – con, hệ số nhân), thống kê nhiễm, phòng nuôi | Đang làm |
-| B | M3.1.5–M3.1.6: đơn hàng, kế hoạch, vườn ươm; truy xuất từ cây mẹ; giá thành; xuất bán; phản hồi; báo cáo | Kế hoạch |
+| A | M3.1.1–M3.1.4: cây mẹ, lô môi trường, mẻ cấy (mẻ cha – con, hệ số nhân), thống kê nhiễm, phòng nuôi | Xong |
+| B | M3.1.5–M3.1.6: đơn hàng, kế hoạch, vườn ươm; truy xuất từ cây mẹ; giá thành; xuất bán; phản hồi; báo cáo | Đang làm |
 | C | M3.2.1–M3.2.3, M3.2.6: hồ sơ pháp lý, nguồn giống gốc, phả hệ, kiểm định – chứng nhận, sản xuất giống theo cấp | Kế hoạch |
 | D | M3.2.4, M3.2.5, M3.2.7, M3.2.8: BLAST+ (máy chủ nội bộ), chỉ thị phân tử, bản đồ số, kết nối cung – cầu | Kế hoạch |
 
@@ -73,3 +73,19 @@ Mở rộng phạm vi quản lý sang toàn bộ giống do Viện nghiên cứu
 | Mẻ cấy (M3.1.3) | Thêm mẻ cha (cấy chuyển), lô môi trường, tủ cấy, phòng nuôi, số mẫu đưa vào, số mẫu sống. Hệ số nhân = chồi ÷ mẫu đưa vào; tỷ lệ sống = mẫu sống ÷ mẫu đưa vào. **Chỉ dùng lô môi trường "Đạt" và còn hạn**; chặn mẻ cha tạo vòng lặp. Trang chi tiết mẻ hiện chuỗi cây mẹ → vật liệu → các mẻ cấy chuyển → mẻ con, lô ra ngôi |
 | Thống kê (M3.1.4) | `/tissue-stats`: tỷ lệ nhiễm theo tháng, tủ cấy, người thao tác, lô môi trường, cây mẹ, công thức, giai đoạn. Tỷ lệ nhóm = tổng bình nhiễm ÷ tổng bình. Ngưỡng cảnh báo là cấu hình M1 `tissue_contamination_threshold` (mặc định 7%). Nhóm dưới 20 bình được ghi "ít mẫu" và không đưa vào danh sách cảnh báo |
 | Phòng nuôi (M3.1.4) | `growth_rooms` có ngưỡng nhiệt độ, độ ẩm, ánh sáng; `room_readings` lưu số liệu. Thiết bị I.1.4 gửi qua `POST /api/v1/m3/room-readings` bằng khóa API phạm vi `m3:readings` (tối đa 500 lần đo mỗi gói, kiểm tra khoảng giá trị vật lý); có thể nhập tay. Biểu đồ 72 giờ, cảnh báo ngoài ngưỡng, cảnh báo thiết bị mất tín hiệu (> 2 giờ không có số liệu) |
+
+## Đợt B – thiết kế
+
+| Chức năng | Cách làm |
+|---|---|
+| Thông số sản xuất | `production_profiles` theo loài/giống: hệ số nhân mỗi lần cấy chuyển, chu kỳ, số ngày ra rễ, số ngày vườn ươm, tỷ lệ sống in vitro, tỷ lệ sống vườn ươm, tỷ lệ Loại 1 |
+| Đơn hàng | `orders`: khách hàng (`public.customers`), hợp đồng M4 (tùy chọn), giống, số lượng, yêu cầu loại, ngày giao, mùa vụ, đơn giá. Mẻ cấy và lô ra ngôi gắn đơn hàng |
+| Kế hoạch tính ngược | Cây cần giao ÷ tỷ lệ Loại 1 (nếu yêu cầu Loại 1) ÷ tỷ lệ sống vườn ươm = cây phải ra ngôi; ÷ tỷ lệ sống in vitro = chồi phải ra rễ; số lần cấy chuyển n = ⌈log(chồi cần ÷ chồi sẵn có) ÷ log(hệ số nhân)⌉. Hạn chót: ra ngôi = ngày giao − ngày vườn ươm; ra rễ = ra ngôi − ngày ra rễ; bắt đầu nhân = ra rễ − n × chu kỳ. Chồi sẵn có mặc định = chồi của các mẻ đang nuôi gắn đơn (nhập được để thử kịch bản) |
+| Điều độ | `/production-schedule`: lịch theo tuần (4/8/12 tuần): cấy chuyển đến hạn, bắt đầu nhân, đưa ra rễ, ra ngôi theo kế hoạch, lô đủ tiêu chuẩn, giao hàng; mục quá hạn tách riêng |
+| Vườn ươm | Lô ra ngôi thêm khu/luống, ngày đủ tiêu chuẩn, số cây Loại 1 / Loại 2 / không đạt (tổng không vượt số cây sống) |
+| Kho vật tư | `supplies` (đơn vị tồn kho = đơn vị định giá, đơn giá, tồn tối thiểu) + `supply_moves` (Nhập / Xuất / Kiểm kê điều chỉnh). Không xuất quá tồn; nhập có giá → cập nhật đơn giá; phiếu chỉ xóa, không sửa |
+| Giá thành | Chi phí môi trường / lít = Σ định mức × đơn giá vật tư (quy đổi mg↔g↔kg, µl↔ml↔l). Chi phí 1 bình = chi phí lô môi trường ÷ số bình đã rót. Mẻ: (chồi nhận từ mẻ cha × giá thành chồi mẻ cha + số bình × (môi trường + nhân công + chi phí chung)) ÷ chồi thu được. Lô: số cây ra ngôi × giá thành chồi + chi phí vườn ươm / cây; giá thành / cây = tổng ÷ cây sống. Đơn giá nhân công, chi phí chung, vườn ươm là cấu hình M1 |
+| Truy xuất QR | `/trace/[mã lô]` đi ngược mọi lần cấy chuyển (truy vấn đệ quy, tối đa 50 đời, chặn vòng lặp) đến vật liệu và cây mẹ (kết quả sạch bệnh). Không công bố khách hàng, người cấy, tủ cấy, giá |
+| Xuất bán | `lot_sales`: một lô xuất nhiều lần; không xuất quá số cây sống còn lại; khách hàng và đơn giá lấy theo đơn hàng nếu để trống. Dữ liệu xuất cũ ghi trên lô được chuyển thành phiếu `PX-CU-<mã lô>` |
+| Phản hồi | `lot_feedback`: cán bộ ghi hoặc khách gửi từ trang QR (`POST /api/public/lot-feedback`, honeypot, giới hạn 5 lần/giờ/IP và 200 lần/ngày) |
+| Báo cáo | `/tissue-reports`: cây ra ngôi, đã bán, doanh thu theo tháng; theo giống; giá thành – lãi theo lô; tỷ lệ giao đúng hạn; hài lòng. Xuất CSV `/api/m3-reports/tissue` |
