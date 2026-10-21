@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { currentActor } from "@/lib/auth/server";
 import { EDITABLE, addAudit, deleteResult, getResult, updateResult } from "@/lib/data/results";
 import { AUDITED, buildResultColumns, validateInput, type ResultInput } from "@/lib/data/result-input";
+import { loadReleaseContext } from "@/lib/data/release-rules";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,14 @@ export async function PATCH(req: Request, { params }: Ctx) {
   const body = (await req.json()) as ResultInput;
   const err = validateInput(body);
   if (err) return NextResponse.json({ error: err }, { status: 400 });
+
+  const { lockedEquipment } = await loadReleaseContext();
+  if (body.instrumentCode && lockedEquipment.has(body.instrumentCode)) {
+    return NextResponse.json(
+      { error: `Thiết bị ${body.instrumentCode} đang bị khóa (quá hạn hiệu chuẩn hoặc không ở trạng thái Hoạt động)` },
+      { status: 409 },
+    );
+  }
 
   const cols = await buildResultColumns(body);
   const before: Record<string, unknown> = {

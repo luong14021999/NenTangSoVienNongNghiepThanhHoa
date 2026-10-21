@@ -114,7 +114,7 @@ export default async function ReportPrintPage({ params }: { params: Promise<{ id
                 <td>{l.method}</td>
                 <td className="text-center whitespace-nowrap">{l.unit}</td>
                 <td className="text-center whitespace-nowrap font-semibold">
-                  {vn(l.mean)}{l.uncertainty !== null && ` ± ${vn(l.uncertainty)}`}
+                  {l.reported ? l.reported : <>{vn(l.mean)}{l.uncertainty !== null && ` ± ${vn(l.uncertainty)}`}</>}
                 </td>
                 <td className="text-center whitespace-nowrap">{l.decisionLimit !== null && l.conclusion !== "Báo cáo giá trị" ? vn(l.decisionLimit) : "—"}</td>
                 <td className="text-center">{l.conclusion === "Báo cáo giá trị" ? "—" : l.conclusion}</td>
@@ -129,6 +129,7 @@ export default async function ReportPrintPage({ params }: { params: Promise<{ id
           <div className="font-semibold">Ghi chú:</div>
           {hasAccredited && <div>(*) Phép thử được công nhận theo {s.lab.standard}, mã số {s.lab.vilas}.</div>}
           <div>Kết quả được báo cáo dạng x̄ ± U, trong đó U là độ không đảm bảo đo mở rộng, hệ số phủ k = 2 (mức tin cậy xấp xỉ 95%).</div>
+          {s.lines.some((l) => l.reported) && <div>&ldquo;&lt; giá trị&rdquo;: kết quả nhỏ hơn giới hạn định lượng (LOQ) của phương pháp.</div>}
           {rules.length > 0 && (
             <div>Quy tắc quyết định áp dụng khi công bố sự phù hợp: {rules.join("; ")} (JCGM 106:2012).</div>
           )}

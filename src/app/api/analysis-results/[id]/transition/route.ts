@@ -8,6 +8,8 @@ import {
   updateResult,
   type TransitionAction,
 } from "@/lib/data/results";
+import { loadReleaseContext } from "@/lib/data/release-rules";
+import { blockers, warnings } from "@/lib/release-checks";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +43,25 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Người duyệt phải khác người đã nhập kết quả" }, { status: 403 });
   }
 
+  // Kiểm soát trước phát hành (M2.5): chặn khi nộp, khi QA/QC duyệt và khi Trưởng phòng phê duyệt.
+  let checkNote = "";
+  if (action === "submit" || action === "qa_approve" || action === "manager_approve") {
+    const { evaluate, version } = await loadReleaseContext();
+    const checks = evaluate(current, action === "manager_approve" ? actor.name : undefined);
+    const blocked = blockers(checks);
+    if (blocked.length) {
+      return NextResponse.json(
+        {
+          error: `Bị chặn bởi quy tắc kiểm soát (phiên bản ${version}): ${blocked.map((c) => c.message).join("; ")}`,
+          checks: blocked,
+        },
+        { status: 409 },
+      );
+    }
+    const warn = warnings(checks);
+    checkNote = `Kiểm soát v${version}: ${checks.filter((c) => c.status === "Đạt").length} đạt${warn.length ? `, ${warn.length} cảnh báo (${warn.map((c) => c.message).join("; ")})` : ""}`;
+  }
+
   const signedAt = nowVN();
   let approvals = current.approvals.length ? [...current.approvals] : [];
   // Nộp lại sau khi bị trả: làm mới các bước duyệt phía sau.
@@ -61,7 +82,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   await addAudit(id, {
     actor: actor.name,
     action: t.label,
-    detail: comment.trim() || undefined,
+    detail: [comment.trim(), checkNote].filter(Boolean).join(" · ") || undefined,
     field: "Trạng thái",
     oldValue: current.status,
     newValue: t.to,

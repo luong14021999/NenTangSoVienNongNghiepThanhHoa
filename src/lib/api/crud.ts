@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import type { EntityStore } from "@/lib/data/factory";
+import { diffFields, labelOf, logChange } from "@/lib/data/change-log";
+
+type Rec = Record<string, unknown>;
 
 type Validator<T> = (body: Partial<T>) => string | null;
 
@@ -22,6 +25,12 @@ export function createRoute<T extends { id: string }>(
       if (err) return NextResponse.json({ error: err }, { status: 400 });
     }
     const created = await store.create(buildItem(body));
+    await logChange({
+      entity: store.collection,
+      entityId: created.id,
+      action: "Thêm",
+      label: labelOf(created as unknown as Rec),
+    });
     return NextResponse.json({ ok: true, item: created }, { status: 201 });
   };
 }
@@ -33,9 +42,17 @@ export function patchRoute<T extends { id: string }>(store: EntityStore<T>) {
   ) {
     const { id } = await params;
     const patch = (await req.json()) as Partial<T>;
+    const before = (await store.list()).find((x) => x.id === id);
     const item = await store.update(id, patch);
     if (!item)
       return NextResponse.json({ error: "Không tìm thấy" }, { status: 404 });
+    // So với giá trị đã lưu (sau khi DB chuẩn hoá kiểu) để không ghi thay đổi giả.
+    const changes = diffFields((before ?? {}) as Rec, Object.fromEntries(
+      Object.keys(patch).map((k) => [k, (item as unknown as Rec)[k]]),
+    ));
+    if (changes.length) {
+      await logChange({ entity: store.collection, entityId: id, action: "Sửa", label: labelOf(item as unknown as Rec), changes });
+    }
     return NextResponse.json({ ok: true, item });
   };
 }
@@ -46,9 +63,17 @@ export function deleteRoute<T extends { id: string }>(store: EntityStore<T>) {
     { params }: { params: Promise<{ id: string }> },
   ) {
     const { id } = await params;
+    const before = (await store.list()).find((x) => x.id === id);
     const ok = await store.remove(id);
     if (!ok)
       return NextResponse.json({ error: "Không tìm thấy" }, { status: 404 });
+    await logChange({
+      entity: store.collection,
+      entityId: id,
+      action: "Xoá",
+      label: labelOf(before as unknown as Rec),
+      changes: before ? [{ field: "bản ghi", old: JSON.stringify(before), new: "" }] : [],
+    });
     return NextResponse.json({ ok: true });
   };
 }

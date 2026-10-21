@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { EntityFormDialog } from "@/components/crud/entity-form-dialog";
 import { StatGrid } from "@/components/qms/stat-grid";
-import { listReports } from "@/lib/data/reports";
+import { listReports, releaseBlockers } from "@/lib/data/reports";
 import { listResults } from "@/lib/data/results";
 import { samplesStore } from "@/lib/data/samples";
 
@@ -44,6 +44,9 @@ export default async function ReportsPage({
     .sort((a, b) => Number(b.code === focus) - Number(a.code === focus) || a.code.localeCompare(b.code));
 
   const active = reports.filter((r) => r.status === "Đã phát hành");
+  const blocks = Object.fromEntries(
+    await Promise.all(ready.map(async (x) => [x.code, (await releaseBlockers(x.code)).issues] as const)),
+  );
 
   return (
     <>
@@ -84,6 +87,9 @@ export default async function ReportsPage({
                   <div className="text-xs md:w-56">
                     <div>{x.approved}/{x.total} kết quả đã phê duyệt</div>
                     {x.total > x.approved && <div className="text-amber-700">{x.total - x.approved} kết quả chưa duyệt – không đưa vào phiếu</div>}
+                    {blocks[x.code]?.length > 0 && (
+                      <div className="text-rose-600 mt-0.5" title={blocks[x.code].join("\n")}>⛔ Bị chặn: {blocks[x.code][0]}{blocks[x.code].length > 1 && ` (+${blocks[x.code].length - 1})`}</div>
+                    )}
                   </div>
                   <div className="text-xs md:w-60">
                     {x.active ? (

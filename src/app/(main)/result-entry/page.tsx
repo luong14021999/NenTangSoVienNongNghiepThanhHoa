@@ -43,6 +43,9 @@ import { chemicalsStore } from "@/lib/data/chemicals";
 import { decisionRuleStore } from "@/lib/data/quality";
 import { testLabels, testNoOf } from "@/lib/accreditation";
 import { fmtDateVN } from "@/lib/dates";
+import { loadReleaseContext } from "@/lib/data/release-rules";
+import { currentActor } from "@/lib/auth/server";
+import type { CheckResult } from "@/lib/release-checks";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Nhập kết quả & duyệt" };
@@ -154,6 +157,37 @@ function DecisionZone({ result }: { result: ResultRow }) {
   );
 }
 
+const checkMeta: Record<CheckResult["status"], { icon: string; className: string }> = {
+  "Đạt": { icon: "✓", className: "text-emerald-700" },
+  "Cảnh báo": { icon: "⚠", className: "text-amber-700" },
+  "Chặn": { icon: "⛔", className: "text-rose-700 font-medium" },
+  "Không áp dụng": { icon: "–", className: "text-muted-foreground" },
+};
+
+function ReleaseChecks({ checks, version, stage }: { checks: CheckResult[]; version: number; stage: string }) {
+  const blocked = checks.filter((c) => c.status === "Chặn").length;
+  const warn = checks.filter((c) => c.status === "Cảnh báo").length;
+  return (
+    <div className={`p-4 rounded-lg border ${blocked ? "border-rose-300 bg-rose-50/40" : warn ? "border-amber-300 bg-amber-50/30" : "border-emerald-200 bg-emerald-50/30"}`}>
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="text-sm font-semibold">Kiểm soát trước phát hành</div>
+        <Link href="/release-rules" className="text-[11px] text-primary hover:underline">quy tắc v{version}</Link>
+      </div>
+      <div className="text-xs mb-2">
+        {blocked ? `⛔ ${blocked} điều kiện CHẶN – không thể ${stage}` : warn ? `⚠ ${warn} cảnh báo – vẫn ${stage} được, cảnh báo được ghi vào lưu vết` : `✓ Đủ điều kiện ${stage}`}
+      </div>
+      <ul className="space-y-1.5">
+        {checks.map((c) => (
+          <li key={c.key} className={`text-[11px] leading-snug flex gap-1.5 ${checkMeta[c.status].className}`} title={c.label}>
+            <span className="w-3 shrink-0">{checkMeta[c.status].icon}</span>
+            <span>{c.message}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function ResultDetail({ result }: { result: ResultRow }) {
   const concl = conclusionMeta[result.conclusion] ?? conclusionMeta["Báo cáo giá trị"];
   const recoveryOk = result.matrixSpikeRecovery >= 90 && result.matrixSpikeRecovery <= 110;
@@ -248,17 +282,25 @@ export default async function ResultEntryPage({
   searchParams: Promise<{ status?: string; id?: string }>;
 }) {
   const { status = "", id = "" } = await searchParams;
-  const [results, samples, equipment, chemicals, rules] = await Promise.all([
+  const [results, samples, equipment, chemicals, rules, release, me] = await Promise.all([
     listResults(),
     samplesStore.list(),
     equipmentStore.list(),
     chemicalsStore.list(),
     decisionRuleStore.list(),
+    loadReleaseContext(),
+    currentActor(),
   ]);
 
   const queue = results.filter((r) => (status ? r.status === status : r.status !== "Đã duyệt"));
   const selected = results.find((r) => r.id === id) ?? queue[0] ?? results[0];
   const audit = selected ? await listAudit(selected.id) : [];
+  // Bước kế tiếp cần kiểm soát; ở bước Trưởng phòng đánh giá thêm ủy quyền phê duyệt của người đang đăng nhập.
+  const stage = !selected ? "" : selected.status === "Chờ Trưởng phòng" ? "phê duyệt" : selected.status === "Chờ QA/QC" ? "duyệt QA/QC" : selected.status === "Đã duyệt" ? "phát hành phiếu" : "nộp QA/QC";
+  const checks = selected
+    ? release.evaluate(selected, selected.status === "Chờ Trưởng phòng" ? me?.name : selected.status === "Đã duyệt" ? selected.approvals.find((a) => a.step === "Trưởng phòng duyệt")?.actor : undefined)
+    : [];
+  const usable = equipment.filter((e) => !release.lockedEquipment.has(e.code));
 
   const RESULT_FIELDS: CrudField[] = [
     { name: "sampleCode", label: "Mẫu", type: "select", required: true, full: true, options: samples.map((s) => ({ value: s.code, label: `${s.code} · ${s.customer} · ${s.type}` })) },
@@ -266,7 +308,7 @@ export default async function ResultEntryPage({
     { name: "replicates", label: "Giá trị các phép lặp (cách nhau bằng dấu ;)", required: true, full: true, placeholder: "VD: 0,232; 0,241; 0,238" },
     { name: "unit", label: "Đơn vị", placeholder: "mg/kg" },
     { name: "uncertainty", label: "U mở rộng (k = 2)", placeholder: "VD: 0,02" },
-    { name: "instrumentCode", label: "Thiết bị", type: "select", full: true, options: [{ value: "", label: "—" }, ...equipment.map((e) => ({ value: e.code, label: `${e.code} · ${e.name}` }))] },
+    { name: "instrumentCode", label: release.lockedEquipment.size ? `Thiết bị (${release.lockedEquipment.size} thiết bị đang bị khóa do quá hạn hiệu chuẩn / không hoạt động – không hiển thị)` : "Thiết bị", type: "select", full: true, options: [{ value: "", label: "—" }, ...usable.map((e) => ({ value: e.code, label: `${e.code} · ${e.name}` }))] },
     { name: "referenceMaterial", label: "Mẫu chuẩn / CRM", type: "select", full: true, options: ["", ...chemicals.filter((c) => c.isReference).map((c) => c.name)] },
     { name: "matrixSpikeRecovery", label: "Độ thu hồi (%)", placeholder: "VD: 98,5" },
     { name: "blankValue", label: "Mẫu trắng", placeholder: "VD: 0,002" },
@@ -416,6 +458,7 @@ export default async function ResultEntryPage({
               <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4">
                 <ResultDetail result={selected} />
                 <div className="space-y-4">
+                  <ReleaseChecks checks={checks} version={release.version} stage={stage} />
                   <WorkflowActions id={selected.id} status={selected.status} />
                   {selected.status === "Đã duyệt" && (
                     <Link href={`/reports?sample=${encodeURIComponent(selected.sampleCode)}`} className="block p-4 rounded-lg border bg-emerald-50/50 border-emerald-200 text-sm text-emerald-800 hover:bg-emerald-50">

@@ -87,7 +87,7 @@ const numOrNull = (v: unknown) => (v === undefined || v === "" || Number.isNaN(N
 const ruleMapping: DbMapping<DecisionRule> = {
   table: "decision_rules",
   select:
-    "id, criterion, matrix, method, unit, limit_value, limit_direction, limit_min, limit_source, uncertainty, rule_type, acceptance_upper, acceptance_lower, rejection_upper, rejection_lower, notes, approved_by, approved_at",
+    "id, criterion, matrix, method, unit, limit_value, limit_direction, limit_min, limit_source, uncertainty, rule_type, acceptance_upper, acceptance_lower, rejection_upper, rejection_lower, notes, approved_by, approved_at, version",
   toEntity: (r) => ({
     id: r.id as string,
     criterion: (r.criterion as string) ?? "",

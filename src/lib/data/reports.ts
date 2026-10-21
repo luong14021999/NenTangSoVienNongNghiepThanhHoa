@@ -4,10 +4,15 @@ import { dbQuery, isDbConfigured } from "@/lib/db";
 import { labInfo } from "@/lib/accreditation";
 import { customersStore } from "./customers";
 import { samplesStore } from "./samples";
-import { listResults } from "./results";
+import { listResults, type ResultRow } from "./results";
+import { loadReleaseContext } from "./release-rules";
+import { accreditedTests, testNoOf } from "@/lib/accreditation";
+import { belowLoq, blockers, parseLoq } from "@/lib/release-checks";
 
 export type ReportLine = {
   resultCode: string;
+  /** Giá trị in trên phiếu, VD "< 0,25" khi dưới LOQ (rỗng = in x̄ ± U). */
+  reported?: string;
   criterion: string;
   accredited: boolean;
   method: string;
@@ -72,6 +77,17 @@ export async function getReport(id: string): Promise<TestReport | null> {
 }
 
 /** Nội dung phiếu từ các kết quả đã phê duyệt của mẫu. */
+/** Kết quả đã phê duyệt của mẫu nhưng vi phạm quy tắc kiểm soát hiện hành → không được phát hành. */
+export async function releaseBlockers(sampleCode: string) {
+  const [results, { evaluate, version }] = await Promise.all([listResults(), loadReleaseContext()]);
+  const approved = results.filter((r) => r.sampleCode === sampleCode && r.status === "Đã duyệt");
+  const issues = approved.flatMap((r: ResultRow) => {
+    const approver = r.approvals.find((a) => a.step === "Trưởng phòng duyệt")?.actor;
+    return blockers(evaluate(r, approver)).map((c) => `${r.resultCode}: ${c.message}`);
+  });
+  return { version, issues };
+}
+
 export async function buildSnapshot(sampleCode: string): Promise<ReportSnapshot | null> {
   const [results, samples, customers] = await Promise.all([listResults(), samplesStore.list(), customersStore.list()]);
   const approved = results
@@ -101,6 +117,12 @@ export async function buildSnapshot(sampleCode: string): Promise<ReportSnapshot 
     sample: { code: sampleCode, type: sample?.type ?? approved[0].matrix, receivedAt: sample?.receivedAt ?? "" },
     lines: approved.map((r) => ({
       resultCode: r.resultCode,
+      reported: (() => {
+        const loq = parseLoq(accreditedTests.find((t) => t.no === testNoOf(r.criterion))?.loq ?? "");
+        return Number.isFinite(r.mean) && belowLoq(r.mean, r.unit, loq) && loq?.kind === "min"
+          ? `< ${String(loq.value).replace(".", ",")}`
+          : "";
+      })(),
       criterion: r.criterion.replace(/^#\d+\s*/, ""),
       accredited: /^#\d+/.test(r.criterion),
       method: r.method,
@@ -123,6 +145,10 @@ export async function buildSnapshot(sampleCode: string): Promise<ReportSnapshot 
 
 /** Phát hành phiếu; nếu mẫu đã có phiếu hiệu lực → phiếu mới là bản sửa đổi thay thế. */
 export async function issueReport(sampleCode: string, issuedBy: string, note: string) {
+  const { version, issues } = await releaseBlockers(sampleCode);
+  if (issues.length) {
+    return { error: `Không phát hành được – vi phạm quy tắc kiểm soát (phiên bản ${version}): ${issues.join("; ")}` } as const;
+  }
   const snapshot = await buildSnapshot(sampleCode);
   if (!snapshot) return { error: "Mẫu chưa có kết quả nào được Trưởng phòng phê duyệt" } as const;
 

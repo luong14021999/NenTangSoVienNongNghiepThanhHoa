@@ -32,6 +32,9 @@ import {
   UserCheck,
   Truck,
   FlaskRound,
+  ShieldBan,
+  History,
+  BadgeCheck,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -84,6 +87,9 @@ export const navGroups: NavGroup[] = [
       { href: "/nonconformities", label: "Không phù hợp & CAPA", icon: OctagonAlert },
       { href: "/internal-audits", label: "Đánh giá nội bộ", icon: SearchCheck },
       { href: "/management-reviews", label: "Xem xét của lãnh đạo", icon: Presentation },
+      { href: "/release-rules", label: "Quy tắc kiểm soát phát hành", icon: ShieldBan },
+      { href: "/change-log", label: "Nhật ký thay đổi", icon: History },
+      { href: "/software-validation", label: "Xác nhận phần mềm", icon: BadgeCheck },
     ],
   },
   {

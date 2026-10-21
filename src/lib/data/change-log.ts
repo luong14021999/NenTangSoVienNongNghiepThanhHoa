@@ -1,0 +1,110 @@
+// Nhật ký thay đổi chung (ISO/IEC 17025:2017 §7.11.3, §8.4): ai sửa gì, lúc nào, cũ → mới.
+import { dbQuery, isDbConfigured } from "@/lib/db";
+import { currentActor } from "@/lib/auth/server";
+import { diffFields, show, type FieldChange } from "@/lib/diff";
+
+export { diffFields, type FieldChange };
+
+export type ChangeEntry = {
+  id: string;
+  at: string;
+  actor: string;
+  entity: string;
+  entityId: string;
+  action: string;
+  label: string;
+  changes: FieldChange[];
+};
+
+/** Nhãn tiếng Việt của các collection, dùng trên trang nhật ký. */
+export const ENTITY_LABELS: Record<string, string> = {
+  customers: "Khách hàng",
+  staff: "Nhân sự",
+  equipment: "Thiết bị",
+  tools: "Dụng cụ",
+  supplies: "Vật tư",
+  chemicals: "Hóa chất",
+  samples: "Mẫu",
+  "test-requests": "Phiếu yêu cầu",
+  "archived-samples": "Mẫu lưu",
+  environment: "Điều kiện môi trường",
+  feedback: "Ý kiến khách hàng",
+  "qms-documents": "Tài liệu",
+  nonconformities: "Không phù hợp & CAPA",
+  "internal-audits": "Đánh giá nội bộ",
+  "management-reviews": "Xem xét lãnh đạo",
+  "staff-commitments": "Cam kết",
+  "test-authorizations": "Ủy quyền phép thử",
+  suppliers: "Nhà cung cấp",
+  "method-validations": "Xác nhận phương pháp",
+  risks: "Rủi ro",
+  opportunities: "Cơ hội",
+  "decision-rules": "Quy tắc quyết định",
+  "qc-charts": "Biểu đồ kiểm soát",
+  "qc-points": "Điểm QC",
+  "pt-rounds": "Thử nghiệm thành thạo",
+  "release-rules": "Quy tắc kiểm soát phát hành",
+  "test-reports": "Phiếu kết quả",
+  "calibration-logs": "Hiệu chuẩn",
+  "maintenance-logs": "Bảo trì",
+  "inspection-records": "Kiểm định",
+  "equipment-manuals": "Hướng dẫn thiết bị",
+  "equipment-usage-logs": "Nhật ký sử dụng thiết bị",
+  "chemical-usage-logs": "Nhật ký dùng hóa chất",
+  "chemical-profiles": "Hồ sơ hóa chất",
+  "tool-usage-logs": "Nhật ký dụng cụ",
+};
+
+export const labelOf = (item: Record<string, unknown> | null | undefined) =>
+  show(item?.code || item?.name || item?.title || item?.criterion || item?.staffName || item?.id);
+
+export async function logChange(e: {
+  entity: string;
+  entityId: string;
+  action: string;
+  label?: string;
+  changes?: FieldChange[];
+  actor?: string;
+}) {
+  if (!isDbConfigured()) return;
+  try {
+    const actor = e.actor ?? (await currentActor())?.name ?? "Không xác định";
+    await dbQuery(
+      `insert into public.change_log (actor, entity, entity_id, action, label, changes)
+       values ($1, $2, $3, $4, $5, $6::jsonb)`,
+      [actor, e.entity, e.entityId, e.action, e.label ?? "", JSON.stringify(e.changes ?? [])],
+    );
+  } catch (err) {
+    console.error("[change-log] ghi nhật ký thất bại:", (err as Error).message);
+  }
+}
+
+export async function listChanges(opts: { entity?: string; entityId?: string; limit?: number } = {}) {
+  if (!isDbConfigured()) return [];
+  const where: string[] = [];
+  const params: unknown[] = [];
+  if (opts.entity) {
+    params.push(opts.entity);
+    where.push(`entity = $${params.length}`);
+  }
+  if (opts.entityId) {
+    params.push(opts.entityId);
+    where.push(`entity_id = $${params.length}`);
+  }
+  params.push(opts.limit ?? 200);
+  const rows = await dbQuery(
+    `select id, at, actor, entity, entity_id, action, label, changes from public.change_log
+     ${where.length ? `where ${where.join(" and ")}` : ""} order by at desc limit $${params.length}`,
+    params,
+  );
+  return rows.map((r) => ({
+    id: r.id as string,
+    at: r.at as string,
+    actor: (r.actor as string) ?? "",
+    entity: r.entity as string,
+    entityId: (r.entity_id as string) ?? "",
+    action: r.action as string,
+    label: (r.label as string) ?? "",
+    changes: (r.changes as FieldChange[]) ?? [],
+  })) as ChangeEntry[];
+}
