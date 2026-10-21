@@ -61,6 +61,9 @@ import {
   Dna,
   Sprout,
   ClipboardCheck,
+  Inbox,
+  Tags,
+  Globe,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -182,8 +185,16 @@ export const navModules: NavModule[] = [
   },
   {
     code: "M4",
-    name: "Dịch vụ KH&CN & khách hàng",
+    name: "Nghiên cứu – dịch vụ – tra cứu KH&CN",
     groups: [
+      {
+        label: "Cổng dịch vụ trực tuyến",
+        items: [
+          { href: "/service-requests", label: "Yêu cầu dịch vụ", icon: Inbox },
+          { href: "/price-list", label: "Bảng giá dịch vụ", icon: Tags },
+          { href: "/public-content", label: "Nội dung công khai", icon: Globe },
+        ],
+      },
       {
         label: "Khách hàng & thị trường",
         items: [

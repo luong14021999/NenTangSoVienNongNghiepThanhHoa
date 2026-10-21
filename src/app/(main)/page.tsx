@@ -32,10 +32,11 @@ export default async function PortalPage() {
   // Bảng M3/M4 nằm ở schema riêng (migration 0015) – chưa chạy migration thì ô vẫn hiện, chỉ thiếu số liệu.
   const [n] = await dbQuery(
     `select
+       (select count(*)::int from m4.service_requests where status = 'Mới tiếp nhận') requests_new,
        (select count(*)::int from m4.contracts where status in ('Đã ký', 'Đang thực hiện')) contracts_open,
        (select count(*)::int from m3_tissue.culture_batches where status = 'Đang nuôi') batches_growing,
        (select count(*)::int from m3_breed.varieties) varieties`,
-  ).catch(() => [{ contracts_open: "—", batches_growing: "—", varieties: "—" }]);
+  ).catch(() => [{ requests_new: "—", contracts_open: "—", batches_growing: "—", varieties: "—" }]);
   const modules: Mod[] = [
     {
       code: "M1",
@@ -59,13 +60,13 @@ export default async function PortalPage() {
     },
     {
       code: "M4",
-      name: "Dịch vụ KH&CN & khách hàng",
-      desc: "Cổng tiếp nhận dịch vụ trực tuyến, báo giá, hợp đồng, thanh toán, công nợ, quan hệ khách hàng",
+      name: "Nghiên cứu – dịch vụ – tra cứu KH&CN",
+      desc: "Cổng tiếp nhận dịch vụ trực tuyến, tra cứu công khai, báo giá, hợp đồng, thanh toán, công nợ; nhiệm vụ KH&CN, kho tri thức, chuyển giao",
       icon: Handshake,
       color: "from-amber-500 to-orange-600",
-      href: "/customers",
+      href: "/service-requests",
       status: "Đang xây dựng",
-      stats: [{ label: "khách hàng", value: k.customers }, { label: "hợp đồng đang thực hiện", value: n.contracts_open }],
+      stats: [{ label: "yêu cầu mới chờ xử lý", value: n.requests_new }, { label: "hợp đồng đang thực hiện", value: n.contracts_open }],
     },
     {
       code: "M3.1",

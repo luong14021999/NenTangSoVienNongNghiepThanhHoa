@@ -6,7 +6,7 @@ Một ứng dụng Next.js (App Router) chia theo phân hệ – một mã ngu�
 |---|---|---|
 | M1 | Nền tảng dùng chung: xác thực 2 lớp, danh mục dùng chung, API v1 + LGSP/NDXP, kho dữ liệu, điều hành, dự báo, an toàn thông tin, giám sát & sao lưu | Đang vận hành |
 | M2 | LIMS – Phòng phân tích Đất, nước, phân bón và môi trường (VILAS 1501, ISO/IEC 17025) | Đang vận hành |
-| M4 | Dịch vụ KH&CN, khách hàng, báo giá, hợp đồng, thanh toán, công nợ | Đang xây dựng |
+| M4 | Nghiên cứu – dịch vụ – tra cứu KH&CN: cổng dịch vụ công khai `/portal`, truy xuất lô giống `/trace`, bảng giá, báo giá, hợp đồng, thanh toán, công nợ ([mô tả & lộ trình](docs/m4-spec.md)) | Đang xây dựng |
 | M3.1 | Nuôi cấy mô & truy xuất nguồn gốc: vật liệu, công thức môi trường, mẻ cấy, lô cây giống | Đang xây dựng |
 | M3.2 | Giống cây trồng, vật nuôi, thủy sản: lý lịch giống, nguồn gen, khảo nghiệm | Đang xây dựng |
 
@@ -27,9 +27,12 @@ src/
       (m3-1-nuoi-cay-mo)/      trang M3.1
       (m3-2-giong)/            trang M3.2
     (print)/(m2-lims)/         trang in: phiếu kết quả, nhãn mẫu, xác minh QR
+    (print)/(m3)/              tem QR truy xuất lô giống
+    (public)/                  cổng công khai không cần đăng nhập: /portal, /trace (M4.1, M4.3)
     api/
       auth/                    Neon Auth
       (m1)/ (m2)/ (m3)/ (m4)/  API nội bộ theo phân hệ
+      public/                  API của cổng công khai (giới hạn tần suất, M4.7)
       (m1)/v1/                 API cho hệ thống bên ngoài (khóa API)
   components/
     ui/ layout/ crud/ common/  dùng chung

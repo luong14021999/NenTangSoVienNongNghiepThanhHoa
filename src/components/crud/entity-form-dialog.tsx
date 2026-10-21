@@ -28,11 +28,14 @@ export type CrudField = {
   placeholder?: string;
   mono?: boolean;
   full?: boolean; // chiếm cả 2 cột
-  defaultValue?: string | number;
+  defaultValue?: string | number; // bool: 0 = mặc định sai
+  /** Nhãn [đúng, sai] cho ô bool; mặc định Đạt / Không đạt. */
+  boolLabels?: [string, string];
 };
 
 const BOOL_TRUE = "Đạt";
 const BOOL_FALSE = "Không đạt";
+const boolPair = (f: CrudField): [string, string] => f.boolLabels ?? [BOOL_TRUE, BOOL_FALSE];
 
 export function EntityFormDialog({
   mode,
@@ -69,7 +72,7 @@ export function EntityFormDialog({
       if (f.type === "number") {
         payload[f.name] = Number(raw ?? 0);
       } else if (f.type === "bool") {
-        payload[f.name] = String(raw ?? "") === BOOL_TRUE;
+        payload[f.name] = String(raw ?? "") === boolPair(f)[0];
       } else {
         let v = String(raw ?? "").trim();
         if (f.type === "datetime-local") v = v.replace("T", " ");
@@ -103,8 +106,9 @@ export function EntityFormDialog({
   function defaultFor(f: CrudField): string {
     const v = initial?.[f.name] ?? f.defaultValue;
     if (f.type === "bool") {
-      if (v === undefined) return BOOL_TRUE;
-      return v ? BOOL_TRUE : BOOL_FALSE;
+      const [yes, no] = boolPair(f);
+      if (v === undefined) return yes;
+      return v ? yes : no;
     }
     if (v === undefined || v === null) return "";
     let s = String(v);
@@ -173,7 +177,7 @@ export function EntityFormDialog({
                         className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm"
                       >
                         {(f.type === "bool"
-                          ? [BOOL_TRUE, BOOL_FALSE]
+                          ? boolPair(f)
                           : (f.options ?? [])
                         ).map((o) => {
                           const opt = typeof o === "string" ? { value: o, label: o } : o;

@@ -1,4 +1,5 @@
-import { QrCode, Sprout, HeartPulse, Truck } from "lucide-react";
+import Link from "next/link";
+import { QrCode, Sprout, HeartPulse, Truck, Printer } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Badge } from "@/components/ui/badge";
 import { CrudTableCard } from "@/components/crud/crud-table-card";
@@ -83,7 +84,13 @@ export default async function SeedlingLotsPage({ searchParams }: { searchParams:
             { label: "Cây đã xuất", value: all.reduce((s, x) => s + (Number(x.releasedQty) || 0), 0).toLocaleString("vi-VN"), icon: Truck, accent: "bg-amber-50 text-amber-600" },
           ]}
         />
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Link
+            href={`/lot-labels?codes=${encodeURIComponent(rows.filter((x) => x.status !== "Hủy").map((x) => x.code).join(","))}`}
+            className="h-9 px-3 inline-flex items-center gap-1.5 rounded-md border bg-background text-sm hover:bg-accent"
+          >
+            <Printer className="w-4 h-4" /> In tem QR truy xuất ({rows.filter((x) => x.status !== "Hủy").length} lô đang lọc)
+          </Link>
           <EntitySearchInput basePath="/seedling-lots" placeholder="Tìm mã lô, mã mẻ, mã vật liệu, loài, khách hàng…" />
         </div>
         <CrudTableCard
@@ -103,7 +110,7 @@ export default async function SeedlingLotsPage({ searchParams }: { searchParams:
               initial: x,
               cells: [
                 <div key="c">
-                  <div className="font-mono text-xs font-semibold">{x.code}</div>
+                  <Link href={`/trace/${encodeURIComponent(x.code)}`} target="_blank" className="font-mono text-xs font-semibold text-primary hover:underline">{x.code}</Link>
                   <div className="text-[11px] text-muted-foreground">{fmtDateVN(x.acclimatizedAt)}</div>
                 </div>,
                 <div key="t" className="text-[11px] leading-relaxed">
