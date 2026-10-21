@@ -21,6 +21,9 @@ export type ReleaseRules = {
   crmExpired: Level;
   inconclusive: Level;
   uncertaintyMissing: Level;
+  curveR2: Level;
+  curveRange: Level;
+  curveExpired: Level;
 };
 
 /** Phiên bản mặc định ban đầu – PTN xem xét và phê duyệt phiên bản của mình. */
@@ -38,6 +41,9 @@ export const DEFAULT_RULES: ReleaseRules = {
   crmExpired: "Chặn",
   inconclusive: "Cảnh báo",
   uncertaintyMissing: "Chặn",
+  curveR2: "Chặn",
+  curveRange: "Cảnh báo",
+  curveExpired: "Chặn",
 };
 
 /** Mô tả từng quy tắc (thứ tự hiển thị). */
@@ -55,6 +61,9 @@ export const RULE_INFO: { key: keyof ReleaseRules; label: string; clause: string
   { key: "crmExpired", label: "Mẫu chuẩn / CRM hết hạn sử dụng tại thời điểm phân tích", clause: "§6.5" },
   { key: "inconclusive", label: "Kết luận Vô định (kết quả nằm trong vùng guard band)", clause: "§7.8.6" },
   { key: "uncertaintyMissing", label: "Áp dụng quy tắc có guard band nhưng thiếu độ không đảm bảo đo U", clause: "§7.6, §7.8.6" },
+  { key: "curveR2", label: "Đường chuẩn có R² thấp hơn tiêu chí chấp nhận", clause: "M2.5, §7.7.1" },
+  { key: "curveRange", label: "Nồng độ nằm ngoài khoảng đường chuẩn (ngoại suy)", clause: "M2.5" },
+  { key: "curveExpired", label: "Đường chuẩn hết hiệu lực tại thời điểm phân tích", clause: "M2.5" },
 ];
 
 export const levelOf = (rules: ReleaseRules, key: keyof ReleaseRules): Level => {
@@ -77,6 +86,8 @@ export type CheckInput = {
     startedAt: string;
     decisionRuleType: string;
     conclusion: string;
+    /** Chi tiết tính toán đã lưu (đường chuẩn đã dùng, nồng độ nội suy). */
+    calcDetail?: { concs?: number[]; curve?: { code: string; r2: number; r2Min: number; minConc: number; maxConc: number; validUntil: string } } | null;
   };
   test?: AccreditedTest;
   equipment: { code: string; name: string; status: string; nextCalibration: string }[];
@@ -208,6 +219,18 @@ export function evaluateRelease(rules: ReleaseRules, input: CheckInput): CheckRe
   const guarded = r.decisionRuleType.startsWith("Guarded");
   push("uncertaintyMissing", guarded ? !Number.isFinite(r.uncertainty) : null,
     guarded ? (Number.isFinite(r.uncertainty) ? `U = ${r.uncertainty}` : "Quy tắc guard band cần U của kết quả") : "Không áp dụng guard band");
+  // Đường chuẩn
+  const cv = r.calcDetail?.curve;
+  if (cv) {
+    push("curveR2", cv.r2 < cv.r2Min, `${cv.code}: R² = ${cv.r2} (tiêu chí ≥ ${cv.r2Min})`);
+    const concs = r.calcDetail?.concs ?? [];
+    const outside = concs.filter((c) => c < cv.minConc || c > cv.maxConc);
+    push("curveRange", outside.length > 0,
+      outside.length ? `${outside.length} số đọc ngoài khoảng đường chuẩn ${cv.minConc} – ${cv.maxConc} (ngoại suy)` : `Trong khoảng đường chuẩn ${cv.minConc} – ${cv.maxConc}`);
+    push("curveExpired", cv.validUntil ? day(cv.validUntil) < analysisDay : null,
+      !cv.validUntil ? `${cv.code} chưa đặt hạn hiệu lực` : day(cv.validUntil) < analysisDay ? `${cv.code} hết hiệu lực từ ${day(cv.validUntil)}` : `${cv.code} hiệu lực đến ${day(cv.validUntil)}`);
+  }
+
   push("inconclusive", r.conclusion === "Vô định", r.conclusion === "Vô định" ? "Kết luận Vô định – cần thỏa thuận với khách hàng hoặc phân tích lại" : `Kết luận: ${r.conclusion}`);
 
   return out;

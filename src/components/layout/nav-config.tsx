@@ -36,6 +36,8 @@ import {
   History,
   BadgeCheck,
   KeyRound,
+  Calculator,
+  LineChart,
   ServerCrash,
   type LucideIcon,
 } from "lucide-react";
@@ -101,6 +103,8 @@ export const navGroups: NavGroup[] = [
     items: [
       { href: "/accreditation", label: "Phạm vi công nhận VILAS", icon: Award },
       { href: "/method-validations", label: "Xác nhận phương pháp", icon: FlaskRound },
+      { href: "/calculation-methods", label: "Công thức tính & ĐKĐBĐ", icon: Calculator },
+      { href: "/calibration-curves", label: "Đường chuẩn", icon: LineChart },
       { href: "/qc", label: "QC Levey-Jennings", icon: ShieldCheck },
       { href: "/risks", label: "Đăng ký rủi ro", icon: AlertOctagon },
       { href: "/decision-rules", label: "Quy tắc quyết định", icon: Scale },

@@ -129,6 +129,7 @@ export async function loadReleaseContext() {
         startedAt: r.startedAt,
         decisionRuleType: r.decisionRuleType,
         conclusion: r.conclusion,
+        calcDetail: r.calcDetail,
       },
     });
   /** Thiết bị bị khóa (quá hạn hiệu chuẩn / không Hoạt động) khi quy tắc thiết bị đang ở mức Chặn. */

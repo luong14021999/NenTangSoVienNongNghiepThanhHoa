@@ -22,10 +22,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  EntityFormDialog,
-  type CrudField,
-} from "@/components/crud/entity-form-dialog";
+import { ResultForm, type ResultFormValues } from "@/components/results/result-form";
+import { budgetStore, calcTemplateStore, curveStore } from "@/lib/data/calc-methods";
 import { DeleteEntityButton } from "@/components/crud/delete-button";
 import { StatGrid } from "@/components/qms/stat-grid";
 import { WorkflowActions } from "@/components/results/workflow-actions";
@@ -269,6 +267,66 @@ function ResultDetail({ result }: { result: ResultRow }) {
         </div>
       </div>
 
+      {(result.calcDetail?.template || result.calcDetail?.curve || result.uncertaintyDetail || result.rawFiles.length > 0) && (
+        <div className="p-4 rounded-lg border bg-card space-y-3 text-xs">
+          <div className="text-[11px] uppercase font-semibold text-muted-foreground">Dữ liệu gốc & tính toán (§7.5, M2.4)</div>
+          {result.calcDetail?.template && (
+            <div>
+              Công thức <span className="font-mono font-semibold">{result.calcDetail.template.code}</span>:{" "}
+              <span className="font-mono">{result.unit} = {result.calcDetail.template.formula}</span>
+              <span className="text-muted-foreground"> · {Object.entries(result.calcDetail.template.variables).map(([k, val]) => `${k} = ${val}`).join(" · ")}</span>
+            </div>
+          )}
+          {result.calcDetail?.curve && (
+            <div>
+              Đường chuẩn <span className="font-mono font-semibold">{result.calcDetail.curve.code}</span>: y = {result.calcDetail.curve.intercept} + {result.calcDetail.curve.slope}·x · R² = {result.calcDetail.curve.r2} · khoảng {result.calcDetail.curve.minConc}–{result.calcDetail.curve.maxConc} {result.calcDetail.curve.concUnit}
+            </div>
+          )}
+          {result.calcDetail && (result.calcDetail.template || result.calcDetail.curve) && (
+            <table className="w-full max-w-md">
+              <thead className="text-muted-foreground"><tr className="text-left"><th>Lần</th><th>Số đọc</th>{result.calcDetail.concs && <th>Nồng độ</th>}<th>Kết quả</th></tr></thead>
+              <tbody className="font-mono">
+                {result.calcDetail.readings.map((r, i) => (
+                  <tr key={i}><td className="font-sans">{i + 1}</td><td>{r}</td>{result.calcDetail!.concs && <td>{result.calcDetail!.concs[i]}</td>}<td>{result.calcDetail!.values[i]}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {result.uncertaintyDetail && (
+            <div>
+              <div className="font-medium">Ngân sách độ không đảm bảo đo {result.uncertaintyDetail.budgetCode}</div>
+              <table className="w-full max-w-md">
+                <tbody>
+                  {result.uncertaintyDetail.rows.map((r) => (
+                    <tr key={r.name}><td>{r.name} <span className="text-muted-foreground">({r.type}{r.source ? ` · ${r.source}` : ""})</span></td><td className="text-right font-mono">{r.relU}%</td></tr>
+                  ))}
+                  <tr className="border-t font-medium"><td>u_c tương đối → U (k = {result.uncertaintyDetail.k})</td><td className="text-right font-mono">{result.uncertaintyDetail.relUc}% → ±{result.uncertaintyDetail.U}</td></tr>
+                </tbody>
+              </table>
+              {result.uncertaintyDetail.note && <div className="text-muted-foreground">{result.uncertaintyDetail.note}</div>}
+            </div>
+          )}
+          {result.rawFiles.length > 0 && (
+            <div>
+              <div className="font-medium">File dữ liệu thô</div>
+              <ul>
+                {result.rawFiles.map((f, i) => (
+                  <li key={i} className="flex flex-wrap gap-x-2">
+                    {"id" in f ? (
+                      <a href={`/api/raw-files/${(f as { id: string }).id}`} className="text-primary hover:underline">{f.name}</a>
+                    ) : (
+                      <span>{f.name}</span>
+                    )}
+                    <span className="text-muted-foreground">{f.size} · {f.uploadedBy}</span>
+                    <span className="font-mono text-[10px] text-muted-foreground">SHA-256 {f.hash.slice(0, 16)}…</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="p-4 rounded-lg border bg-card space-y-2">
         <div className="flex items-center gap-2 text-[11px] uppercase font-semibold text-muted-foreground">
           <Scale className="w-3.5 h-3.5" />
@@ -296,6 +354,7 @@ export default async function ResultEntryPage({
     loadReleaseContext(),
     currentAccess(),
   ]);
+  const [templates, curves, budgets] = await Promise.all([calcTemplateStore.list(), curveStore.list(), budgetStore.list()]);
   const me = access.actor;
 
   const queue = results.filter((r) => (status ? r.status === status : r.status !== "Đã duyệt"));
@@ -308,29 +367,34 @@ export default async function ResultEntryPage({
     : [];
   const usable = equipment.filter((e) => !release.lockedEquipment.has(e.code));
 
-  const RESULT_FIELDS: CrudField[] = [
-    { name: "sampleCode", label: "Mẫu", type: "select", required: true, full: true, options: samples.map((s) => ({ value: s.code, label: `${s.code} · ${s.customer} · ${s.type}` })) },
-    { name: "testLabel", label: "Phép thử (danh mục VILAS 1501)", type: "select", required: true, full: true, options: testLabels },
-    { name: "replicates", label: "Giá trị các phép lặp (cách nhau bằng dấu ;)", required: true, full: true, placeholder: "VD: 0,232; 0,241; 0,238" },
-    { name: "unit", label: "Đơn vị", placeholder: "mg/kg" },
-    { name: "uncertainty", label: "U mở rộng (k = 2)", placeholder: "VD: 0,02" },
-    { name: "instrumentCode", label: release.lockedEquipment.size ? `Thiết bị (${release.lockedEquipment.size} thiết bị đang bị khóa do quá hạn hiệu chuẩn / không hoạt động – không hiển thị)` : "Thiết bị", type: "select", full: true, options: [{ value: "", label: "—" }, ...usable.map((e) => ({ value: e.code, label: `${e.code} · ${e.name}` }))] },
-    { name: "referenceMaterial", label: "Mẫu chuẩn / CRM", type: "select", full: true, options: ["", ...chemicals.filter((c) => c.isReference).map((c) => c.name)] },
-    { name: "matrixSpikeRecovery", label: "Độ thu hồi (%)", placeholder: "VD: 98,5" },
-    { name: "blankValue", label: "Mẫu trắng", placeholder: "VD: 0,002" },
-    { name: "decisionRuleId", label: "Quy tắc quyết định", type: "select", full: true, options: [{ value: "", label: "Không công bố sự phù hợp – báo cáo giá trị" }, ...rules.map((r) => ({ value: r.id, label: `${r.criterion} trong ${r.matrix} – ${r.ruleType.split(" (")[0]} (giới hạn ${r.limit} ${r.unit})` }))] },
-  ];
-  const editInitial = (r: ResultRow) => ({
+  const vnS = (x: number) => (fin(x) ? String(x).replace(".", ",") : "");
+  const formProps = {
+    samples: samples.map((s) => ({ value: s.code, label: `${s.code} · ${s.customer} · ${s.type}` })),
+    tests: testLabels,
+    equipment: usable.map((e) => ({ value: e.code, label: `${e.code} · ${e.name}` })),
+    crms: chemicals.filter((c) => c.isReference).map((c) => c.name),
+    rules: rules.map((r) => ({ value: r.id, label: `${r.criterion} trong ${r.matrix} – ${r.ruleType.split(" (")[0]} (giới hạn ${r.limit} ${r.unit})` })),
+    templates: templates.filter((t) => t.status === "Hiệu lực"),
+    curves,
+    budgets,
+    lockedNote: release.lockedEquipment.size ? `${release.lockedEquipment.size} thiết bị đang bị khóa.` : "",
+  };
+  const editInitial = (r: ResultRow): Partial<ResultFormValues> => ({
     sampleCode: r.sampleCode,
     testLabel: testLabels.find((l) => testNoOf(l) === testNoOf(r.criterion)) ?? "",
-    replicates: r.replicates.map((x) => String(x.value).replace(".", ",")).join("; "),
+    // Sửa trên số đọc gốc (không phải giá trị đã tính).
+    replicates: (r.calcDetail?.readings ?? r.replicates.map((x) => x.value)).map((x) => String(x).replace(".", ",")).join("; "),
     unit: r.unit,
-    uncertainty: fin(r.uncertainty) ? String(r.uncertainty).replace(".", ",") : "",
+    uncertainty: r.budgetId ? "" : vnS(r.uncertainty),
     instrumentCode: r.instrument.code,
     referenceMaterial: r.referenceMaterial,
-    matrixSpikeRecovery: fin(r.matrixSpikeRecovery) ? String(r.matrixSpikeRecovery).replace(".", ",") : "",
-    blankValue: fin(r.blankBlankValue) ? String(r.blankBlankValue).replace(".", ",") : "",
+    matrixSpikeRecovery: vnS(r.matrixSpikeRecovery),
+    blankValue: vnS(r.blankBlankValue),
     decisionRuleId: r.decisionRuleId,
+    templateId: r.templateId,
+    curveId: r.curveId,
+    budgetId: r.budgetId,
+    varValues: Object.fromEntries(Object.entries(r.calcDetail?.template?.variables ?? {}).map(([k, val]) => [k, String(val).replace(".", ",")])),
   });
 
   const count = (s: ResultStatus) => results.filter((r) => r.status === s).length;
@@ -359,14 +423,7 @@ export default async function ResultEntryPage({
               <CardTitle>Kết quả phân tích</CardTitle>
               <CardDescription>Chọn 1 dòng để xem chi tiết, thao tác duyệt và lưu vết</CardDescription>
             </div>
-            <EntityFormDialog
-              mode="add"
-              endpoint="/api/analysis-results"
-              title="Nhập kết quả phân tích"
-              description="x̄, SD, RSD và kết luận được tính tự động; KTV = tài khoản đang đăng nhập"
-              fields={RESULT_FIELDS}
-              addLabel="Nhập kết quả"
-            />
+            <ResultForm mode="add" {...formProps} />
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex flex-wrap gap-1.5">
@@ -439,16 +496,7 @@ export default async function ResultEntryPage({
               </div>
               {EDITABLE.includes(selected.status) ? (
                 <div className="flex gap-1.5">
-                  <EntityFormDialog
-                    mode="edit"
-                    endpoint="/api/analysis-results"
-                    id={selected.id}
-                    title={`Sửa kết quả ${selected.resultCode}`}
-                    description="Mỗi trường thay đổi được ghi vào lưu vết (giá trị cũ → mới, người sửa, thời điểm)"
-                    fields={RESULT_FIELDS}
-                    initial={editInitial(selected)}
-                    submitLabel="Lưu thay đổi"
-                  />
+                  <ResultForm mode="edit" id={selected.id} initial={editInitial(selected)} {...formProps} />
                   {selected.status === "Đang nhập" && selected.approvals.every((a) => a.decision === "Chờ") && (
                     <DeleteEntityButton entity="analysis-results" id={selected.id} label={selected.resultCode} />
                   )}

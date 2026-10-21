@@ -138,3 +138,23 @@ describe("Nhật ký thay đổi", () => {
     expect(diffFields({ a: null }, { a: "" })).toEqual([]);
   });
 });
+
+describe("Kiểm soát đường chuẩn (M2.5)", () => {
+  const withCurve = (c: Partial<{ r2: number; r2Min: number; minConc: number; maxConc: number; validUntil: string }>, concs = [1, 2]) =>
+    base({}, { calcDetail: { concs, curve: { code: "DC-1", r2: 0.9995, r2Min: 0.995, minConc: 0, maxConc: 4, validUntil: "2026-12-31", ...c } } });
+  it("TC-RC-14 R² thấp hơn tiêu chí → Chặn; đạt → Đạt", () => {
+    expect(status(withCurve({ r2: 0.99 }), "curveR2")).toBe("Chặn");
+    expect(status(withCurve({}), "curveR2")).toBe("Đạt");
+  });
+  it("TC-RC-15 ngoại suy ngoài khoảng đường chuẩn → Cảnh báo", () => {
+    expect(status(withCurve({}, [1, 4.5]), "curveRange")).toBe("Cảnh báo");
+    expect(status(withCurve({}, [0, 4]), "curveRange")).toBe("Đạt");
+  });
+  it("TC-RC-16 đường chuẩn hết hiệu lực trước ngày phân tích → Chặn", () => {
+    expect(status(withCurve({ validUntil: "2026-10-19" }), "curveExpired")).toBe("Chặn");
+    expect(status(withCurve({ validUntil: "2026-10-20" }), "curveExpired")).toBe("Đạt");
+  });
+  it("TC-RC-17 không dùng đường chuẩn → không đánh giá các quy tắc đường chuẩn", () => {
+    expect(status(base(), "curveR2")).toBeUndefined();
+  });
+});

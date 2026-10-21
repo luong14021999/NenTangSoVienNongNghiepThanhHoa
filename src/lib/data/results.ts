@@ -10,7 +10,16 @@ import type {
 } from "@/lib/mock-data";
 import { concludeWith, zonesOf } from "./quality";
 
-export type ResultRow = AnalysisResult & { createdAt: string };
+import type { CalcDetail, ComputeOutput } from "@/lib/calc/compute-result";
+
+export type ResultRow = AnalysisResult & {
+  createdAt: string;
+  templateId: string;
+  curveId: string;
+  budgetId: string;
+  calcDetail: CalcDetail | null;
+  uncertaintyDetail: ComputeOutput["uncertaintyDetail"] | null;
+};
 export type AuditRow = AuditEvent & { id: string };
 
 export const RESULT_STATUSES: ResultStatus[] = [
@@ -23,7 +32,7 @@ export const RESULT_STATUSES: ResultStatus[] = [
 export const EDITABLE: ResultStatus[] = ["Đang nhập", "Trả lại sửa"];
 
 const COLS =
-  "id, result_code, sample_code, customer_name, matrix, criterion, unit, method, instrument_code, instrument_name, reference_material, technician, started_at, finished_at, replicates, mean, sd, rsd, uncertainty, matrix_spike_recovery, blank_value, decision_rule_id, decision_rule_type, decision_limit, acceptance_upper, rejection_upper, conclusion, conclusion_explanation, raw_files, approvals, status, qa_comment, manager_comment, created_at";
+  "id, result_code, sample_code, customer_name, matrix, criterion, unit, method, instrument_code, instrument_name, reference_material, technician, started_at, finished_at, replicates, mean, sd, rsd, uncertainty, matrix_spike_recovery, blank_value, decision_rule_id, decision_rule_type, decision_limit, acceptance_upper, rejection_upper, conclusion, conclusion_explanation, raw_files, approvals, status, qa_comment, manager_comment, created_at, template_id, curve_id, budget_id, calc_detail, uncertainty_detail";
 
 const n = (v: unknown) => (v === null || v === undefined ? NaN : Number(v));
 
@@ -63,6 +72,11 @@ function toResult(r: Record<string, unknown>): ResultRow {
     qaComment: (r.qa_comment as string) ?? undefined,
     managerComment: (r.manager_comment as string) ?? undefined,
     createdAt: (r.created_at as string) ?? "",
+    templateId: (r.template_id as string) ?? "",
+    curveId: (r.curve_id as string) ?? "",
+    budgetId: (r.budget_id as string) ?? "",
+    calcDetail: (r.calc_detail as CalcDetail) ?? null,
+    uncertaintyDetail: (r.uncertainty_detail as ComputeOutput["uncertaintyDetail"]) ?? null,
   };
 }
 
@@ -235,4 +249,28 @@ export function nowVN() {
   }).formatToParts(new Date());
   const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
   return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}`;
+}
+
+// ── File dữ liệu thô (§7.5: dữ liệu gốc được lưu nguyên văn, có mã băm) ─────────
+export type RawFileRow = { id: string; resultId: string; name: string; size: number; sha256: string; uploadedBy: string; uploadedAt: string };
+
+export async function saveRawFile(resultId: string, file: { name: string; content: string }, actor: string) {
+  const { createHash } = await import("crypto");
+  const sha256 = createHash("sha256").update(file.content, "utf8").digest("hex");
+  const size = Buffer.byteLength(file.content, "utf8");
+  const [row] = await dbQuery(
+    `insert into public.raw_data_files (result_id, name, size, sha256, content, uploaded_by)
+     values ($1, $2, $3, $4, $5, $6) returning id, uploaded_at`,
+    [resultId, file.name.slice(0, 200), size, sha256, file.content, actor],
+  );
+  await dbQuery(
+    `update public.analysis_results set raw_files = coalesce(raw_files, '[]'::jsonb) || $2::jsonb where id = $1`,
+    [resultId, JSON.stringify([{ id: row.id, name: file.name, kind: "CSV raw", size: `${(size / 1024).toFixed(1)} KB`, uploadedAt: row.uploaded_at, uploadedBy: actor, hash: sha256 }])],
+  );
+  return { id: row.id as string, sha256 };
+}
+
+export async function getRawFile(id: string) {
+  const [r] = await dbQuery(`select id, result_id, name, size, sha256, content, uploaded_by, uploaded_at from public.raw_data_files where id = $1`, [id]);
+  return r ? { id: r.id as string, name: r.name as string, sha256: r.sha256 as string, content: r.content as string } : null;
 }

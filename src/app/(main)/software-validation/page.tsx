@@ -32,6 +32,12 @@ const SCOPE: { prefix: string; fn: string; req: string }[] = [
   { prefix: "TC-CL", fn: "Nhật ký thay đổi: chỉ ghi trường thực sự thay đổi", req: "§7.11.3 · §8.4" },
   { prefix: "TC-AU", fn: "Phân quyền theo vai trò, tách nhiệm vụ, chống tự khoá", req: "§7.11.3 · §6.2.6" },
   { prefix: "TC-SG", fn: "Chữ ký điện tử: mã băm SHA-256 phát hiện chỉnh sửa sau khi ký", req: "M2.6 · §7.11.3" },
+  { prefix: "TC-FX", fn: "Bộ tính công thức an toàn (không eval), dấu phẩy thập phân, báo lỗi", req: "M2.4 · §7.11.2" },
+  { prefix: "TC-CC", fn: "Đường chuẩn: hồi quy, R², s(y/x), LOD/LOQ, nội suy s(x0)", req: "M2.5 · §7.7" },
+  { prefix: "TC-UN", fn: "Ngân sách độ không đảm bảo đo, kết hợp căn tổng bình phương", req: "§7.6 · GUM" },
+  { prefix: "TC-IO", fn: "Đọc file dữ liệu thiết bị CSV/TXT", req: "M2.4" },
+  { prefix: "TC-TF", fn: "Định dạng nhập biến, thành phần ngân sách, điểm chuẩn; kiểm tra công thức", req: "M2.4" },
+  { prefix: "TC-CR", fn: "Tính kết quả toàn chuỗi: đường chuẩn → công thức → thống kê → U (đối chiếu tính độc lập)", req: "M2.4 · §7.5 · §7.6" },
 ];
 
 export default async function SoftwareValidationPage() {

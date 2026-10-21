@@ -163,8 +163,8 @@ export default async function IsoOverviewPage() {
     },
     "7.6": {
       status: results.length && withU === results.length ? "ok" : "records",
-      evidence: `${withU}/${results.length} kết quả có độ không đảm bảo đo U · ${rules.length} quy tắc quyết định có U`,
-      modules: [{ href: "/result-entry", label: "Kết quả" }, { href: "/decision-rules", label: "Quy tắc quyết định" }],
+      evidence: `${withU}/${results.length} kết quả có độ không đảm bảo đo U · ${results.filter((r) => r.budgetId).length} tính theo ngân sách · ${rules.length} quy tắc quyết định có U`,
+      modules: [{ href: "/calculation-methods", label: "Ngân sách ĐKĐBĐ" }, { href: "/result-entry", label: "Kết quả" }, { href: "/decision-rules", label: "Quy tắc quyết định" }],
     },
     "7.7": {
       status: charts.length && ptYear ? "ok" : "records",

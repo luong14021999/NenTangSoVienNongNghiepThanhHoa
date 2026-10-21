@@ -39,6 +39,8 @@ const ENTITY_PERMISSION: Record<string, Permission> = {
   "test-requests": "write.reception",
   "archived-samples": "write.reception",
   feedback: "write.reception",
+  "calc-templates": "write.quality",
+  "uncertainty-budgets": "write.quality",
   nonconformities: "write.any",
   "system-incidents": "write.any",
 };

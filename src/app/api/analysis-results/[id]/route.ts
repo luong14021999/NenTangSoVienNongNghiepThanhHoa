@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { EDITABLE, addAudit, deleteResult, getResult, updateResult } from "@/lib/data/results";
+import { EDITABLE, addAudit, deleteResult, getResult, saveRawFile, updateResult } from "@/lib/data/results";
 import { AUDITED, buildResultColumns, validateInput, type ResultInput } from "@/lib/data/result-input";
 import { loadReleaseContext } from "@/lib/data/release-rules";
 import { authorize } from "@/lib/data/access";
@@ -34,7 +34,12 @@ export async function PATCH(req: Request, { params }: Ctx) {
     );
   }
 
-  const cols = await buildResultColumns(body);
+  let cols: Awaited<ReturnType<typeof buildResultColumns>>;
+  try {
+    cols = await buildResultColumns(body);
+  } catch (e) {
+    return NextResponse.json({ error: `Không tính được kết quả: ${(e as Error).message}` }, { status: 400 });
+  }
   const before: Record<string, unknown> = {
     sample_code: current.sampleCode,
     criterion: current.criterion,
@@ -48,8 +53,21 @@ export async function PATCH(req: Request, { params }: Ctx) {
     blank_value: Number.isFinite(current.blankBlankValue) ? current.blankBlankValue : null,
     decision_rule_type: current.decisionRuleType,
     conclusion: current.conclusion,
+    readings: current.calcDetail?.readings ?? current.replicates.map((r) => r.value),
+    calc_template: current.calcDetail?.template ? `${current.calcDetail.template.code} ${JSON.stringify(current.calcDetail.template.variables)}` : "",
+    calc_curve: current.calcDetail?.curve?.code ?? "",
+    uncertainty_budget: current.uncertaintyDetail?.budgetCode ?? "",
   };
-  const changes = Object.keys(AUDITED).filter((k) => show(before[k]) !== show((cols as Record<string, unknown>)[k]));
+  const after: Record<string, unknown> = {
+    ...cols,
+    readings: cols.calc_detail.readings,
+    calc_template: cols.calc_detail.template ? `${cols.calc_detail.template.code} ${JSON.stringify(cols.calc_detail.template.variables)}` : "",
+    calc_curve: cols.calc_detail.curve?.code ?? "",
+    uncertainty_budget: cols.uncertainty_detail?.budgetCode ?? "",
+  };
+  const changes = Object.keys(AUDITED).filter((k) => show(before[k]) !== show(after[k]));
+  const raw = body.rawFile?.content ? await saveRawFile(id, body.rawFile, actor.name) : null;
+  if (raw) await addAudit(id, { actor: actor.name, action: "Đính kèm file dữ liệu thô", detail: `${body.rawFile!.name} · SHA-256 ${raw.sha256}` });
   if (changes.length === 0) return NextResponse.json({ ok: true, item: current });
 
   const item = await updateResult(id, cols);
@@ -59,7 +77,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
       action: "Sửa kết quả",
       field: AUDITED[k],
       oldValue: show(before[k]),
-      newValue: show((cols as Record<string, unknown>)[k]),
+      newValue: show(after[k]),
     });
   }
   return NextResponse.json({ ok: true, item });

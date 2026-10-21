@@ -28,7 +28,13 @@ export function createRoute<T extends { id: string }>(
       const err = validate(body);
       if (err) return NextResponse.json({ error: err }, { status: 400 });
     }
-    const created = await store.create(buildItem(body));
+    let item: T;
+    try {
+      item = buildItem(body);
+    } catch (e) {
+      return NextResponse.json({ error: (e as Error).message }, { status: 400 });
+    }
+    const created = await store.create(item);
     await logChange({
       entity: store.collection,
       entityId: created.id,
@@ -39,7 +45,13 @@ export function createRoute<T extends { id: string }>(
   };
 }
 
-export function patchRoute<T extends { id: string }>(store: EntityStore<T>) {
+/** Kiểm tra / bổ sung bản ghi sau khi trộn patch với bản ghi cũ (VD tính lại đường chuẩn). */
+export type PatchHooks<T> = {
+  validate?: (merged: T) => string | null;
+  transform?: (merged: T) => Partial<T>;
+};
+
+export function patchRoute<T extends { id: string }>(store: EntityStore<T>, hooks: PatchHooks<T> = {}) {
   return async function PATCH(
     req: Request,
     { params }: { params: Promise<{ id: string }> },
@@ -47,8 +59,18 @@ export function patchRoute<T extends { id: string }>(store: EntityStore<T>) {
     const gate = await authorize(permissionForEntity(store.collection));
     if (!gate.ok) return gate.response;
     const { id } = await params;
-    const patch = (await req.json()) as Partial<T>;
+    let patch = (await req.json()) as Partial<T>;
     const before = (await store.list()).find((x) => x.id === id);
+    if (before && (hooks.validate || hooks.transform)) {
+      const merged = { ...before, ...patch } as T;
+      const err = hooks.validate?.(merged);
+      if (err) return NextResponse.json({ error: err }, { status: 400 });
+      try {
+        patch = { ...patch, ...(hooks.transform?.(merged) ?? {}) };
+      } catch (e) {
+        return NextResponse.json({ error: (e as Error).message }, { status: 400 });
+      }
+    }
     const item = await store.update(id, patch);
     if (!item)
       return NextResponse.json({ error: "Không tìm thấy" }, { status: 404 });
@@ -103,6 +125,6 @@ export function collectionRoutes<T extends { id: string }>(
 }
 
 /** PATCH + DELETE cho /[id]. */
-export function itemRoutes<T extends { id: string }>(store: EntityStore<T>) {
-  return { PATCH: patchRoute(store), DELETE: deleteRoute(store) };
+export function itemRoutes<T extends { id: string }>(store: EntityStore<T>, hooks?: PatchHooks<T>) {
+  return { PATCH: patchRoute(store, hooks), DELETE: deleteRoute(store) };
 }

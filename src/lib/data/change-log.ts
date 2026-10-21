@@ -54,6 +54,10 @@ export const ENTITY_LABELS: Record<string, string> = {
   "chemical-profiles": "Hồ sơ hóa chất",
   "tool-usage-logs": "Nhật ký dụng cụ",
   "user-roles": "Phân quyền",
+  "calc-templates": "Công thức tính",
+  "calibration-curves": "Đường chuẩn",
+  "uncertainty-budgets": "Ngân sách ĐKĐBĐ",
+  "raw-data-files": "File dữ liệu thô",
   "system-incidents": "Sự cố hệ thống",
 };
 
