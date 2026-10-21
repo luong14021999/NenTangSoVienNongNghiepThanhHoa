@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { currentActor } from "@/lib/auth/server";
+import { authorize, requireFreshAuth } from "@/lib/data/access";
+import { SIGN_METHOD, contentHash, resultSignedContent } from "@/lib/signature";
+import type { Permission } from "@/lib/permissions";
 import {
   TRANSITIONS,
   addAudit,
@@ -25,11 +27,18 @@ const ROLE: Record<string, string> = {
  */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const actor = await currentActor();
-  if (!actor) return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
   const { action, comment = "" } = (await req.json()) as { action: TransitionAction; comment?: string };
   const t = TRANSITIONS[action];
   if (!t) return NextResponse.json({ error: "Thao tác không hợp lệ" }, { status: 400 });
+  const perm: Permission = action === "submit" ? "results.enter" : action.startsWith("qa_") ? "results.qa" : "results.approve";
+  const gate = await authorize(perm);
+  if (!gate.ok) return gate.response;
+  const actor = gate.actor;
+  // Phê duyệt = ký điện tử → phải vừa xác thực lại bằng mật khẩu.
+  if (action === "manager_approve") {
+    const reauth = await requireFreshAuth();
+    if (reauth) return reauth;
+  }
 
   const current = await getResult(id);
   if (!current) return NextResponse.json({ error: "Không tìm thấy" }, { status: 404 });
@@ -68,7 +77,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (action === "submit") {
     approvals = approvals.map((a) => (a.step === "KTV nhập" ? a : { step: a.step, actor: "—", role: "—", decision: "Chờ" as const }));
   }
-  const record = { step: t.step, actor: actor.name, role: ROLE[t.step], decision: t.decision, comment: comment.trim() || undefined, signedAt };
+  const record = {
+    step: t.step,
+    actor: actor.name,
+    role: ROLE[t.step],
+    decision: t.decision,
+    comment: comment.trim() || undefined,
+    signedAt,
+    ...(action === "manager_approve" ? { signatureHash: contentHash(resultSignedContent(current)) } : {}),
+  };
   const idx = approvals.findIndex((a) => a.step === t.step);
   if (idx >= 0) approvals[idx] = record;
   else approvals.push(record);
@@ -82,7 +99,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   await addAudit(id, {
     actor: actor.name,
     action: t.label,
-    detail: [comment.trim(), checkNote].filter(Boolean).join(" · ") || undefined,
+    detail: [
+      comment.trim(),
+      checkNote,
+      action === "manager_approve" ? `Ký điện tử (${SIGN_METHOD}) · SHA-256 ${record.signatureHash?.slice(0, 16)}…` : "",
+    ].filter(Boolean).join(" · ") || undefined,
     field: "Trạng thái",
     oldValue: current.status,
     newValue: t.to,

@@ -4,6 +4,7 @@ import { deleteRoute } from "@/lib/api/crud";
 import type { DecisionRule } from "@/lib/mock-data";
 import { diffFields, logChange } from "@/lib/data/change-log";
 import { dbQuery } from "@/lib/db";
+import { authorize } from "@/lib/data/access";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,8 @@ const num = (v: unknown) => (v === undefined || v === "" || v === null ? undefin
 
 /** Sửa quy tắc → tính lại ngưỡng vùng quyết định từ bản ghi sau khi trộn. */
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const gate = await authorize("write.quality");
+  if (!gate.ok) return gate.response;
   const { id } = await params;
   const patch = (await req.json()) as Partial<DecisionRule>;
   const current = (await decisionRuleStore.list()).find((r) => r.id === id);

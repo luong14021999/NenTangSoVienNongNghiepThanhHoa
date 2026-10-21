@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import type { EntityStore } from "@/lib/data/factory";
 import { diffFields, labelOf, logChange } from "@/lib/data/change-log";
+import { authorize } from "@/lib/data/access";
+import { permissionForEntity } from "@/lib/permissions";
 
 type Rec = Record<string, unknown>;
 
@@ -19,6 +21,8 @@ export function createRoute<T extends { id: string }>(
   validate?: Validator<T>,
 ) {
   return async function POST(req: Request) {
+    const gate = await authorize(permissionForEntity(store.collection));
+    if (!gate.ok) return gate.response;
     const body = (await req.json()) as Partial<T>;
     if (validate) {
       const err = validate(body);
@@ -40,6 +44,8 @@ export function patchRoute<T extends { id: string }>(store: EntityStore<T>) {
     req: Request,
     { params }: { params: Promise<{ id: string }> },
   ) {
+    const gate = await authorize(permissionForEntity(store.collection));
+    if (!gate.ok) return gate.response;
     const { id } = await params;
     const patch = (await req.json()) as Partial<T>;
     const before = (await store.list()).find((x) => x.id === id);
@@ -62,6 +68,8 @@ export function deleteRoute<T extends { id: string }>(store: EntityStore<T>) {
     _req: Request,
     { params }: { params: Promise<{ id: string }> },
   ) {
+    const gate = await authorize(permissionForEntity(store.collection));
+    if (!gate.ok) return gate.response;
     const { id } = await params;
     const before = (await store.list()).find((x) => x.id === id);
     const ok = await store.remove(id);

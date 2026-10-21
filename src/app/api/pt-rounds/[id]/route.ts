@@ -3,10 +3,13 @@ import { ptRoundStore, verdictOfZ } from "@/lib/data/quality";
 import { deleteRoute } from "@/lib/api/crud";
 import type { ExternalQCRound } from "@/lib/mock-data";
 import { diffFields, logChange } from "@/lib/data/change-log";
+import { authorize } from "@/lib/data/access";
 
 export const dynamic = "force-dynamic";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const gate = await authorize("write.lab");
+  if (!gate.ok) return gate.response;
   const { id } = await params;
   const patch = (await req.json()) as Partial<ExternalQCRound>;
   if (patch.z !== undefined) patch.verdict = verdictOfZ(Number(patch.z));

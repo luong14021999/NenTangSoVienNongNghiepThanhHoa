@@ -53,6 +53,8 @@ export const ENTITY_LABELS: Record<string, string> = {
   "chemical-usage-logs": "Nhật ký dùng hóa chất",
   "chemical-profiles": "Hồ sơ hóa chất",
   "tool-usage-logs": "Nhật ký dụng cụ",
+  "user-roles": "Phân quyền",
+  "system-incidents": "Sự cố hệ thống",
 };
 
 export const labelOf = (item: Record<string, unknown> | null | undefined) =>

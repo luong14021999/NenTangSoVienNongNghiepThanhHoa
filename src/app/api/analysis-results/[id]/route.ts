@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { currentActor } from "@/lib/auth/server";
 import { EDITABLE, addAudit, deleteResult, getResult, updateResult } from "@/lib/data/results";
 import { AUDITED, buildResultColumns, validateInput, type ResultInput } from "@/lib/data/result-input";
 import { loadReleaseContext } from "@/lib/data/release-rules";
+import { authorize } from "@/lib/data/access";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +14,9 @@ const show = (v: unknown) =>
 /** Sửa kết quả (chỉ khi Đang nhập / Trả lại sửa) – mỗi trường thay đổi ghi 1 dòng lưu vết. */
 export async function PATCH(req: Request, { params }: Ctx) {
   const { id } = await params;
-  const actor = await currentActor();
-  if (!actor) return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
+  const gate = await authorize("results.enter");
+  if (!gate.ok) return gate.response;
+  const actor = gate.actor;
   const current = await getResult(id);
   if (!current) return NextResponse.json({ error: "Không tìm thấy" }, { status: 404 });
   if (!EDITABLE.includes(current.status)) {
@@ -66,6 +67,8 @@ export async function PATCH(req: Request, { params }: Ctx) {
 
 /** Chỉ xoá được kết quả chưa từng nộp – hồ sơ đã nộp/duyệt phải được giữ (§8.4). */
 export async function DELETE(_req: Request, { params }: Ctx) {
+  const gate = await authorize("results.enter");
+  if (!gate.ok) return gate.response;
   const { id } = await params;
   const current = await getResult(id);
   if (!current) return NextResponse.json({ error: "Không tìm thấy" }, { status: 404 });

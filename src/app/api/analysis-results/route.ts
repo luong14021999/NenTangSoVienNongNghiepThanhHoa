@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { currentActor } from "@/lib/auth/server";
 import {
   addAudit,
   initialApprovals,
@@ -10,6 +9,7 @@ import {
 import { buildResultColumns, validateInput, type ResultInput } from "@/lib/data/result-input";
 import { todayISO } from "@/lib/dates";
 import { loadReleaseContext } from "@/lib/data/release-rules";
+import { authorize } from "@/lib/data/access";
 
 export const dynamic = "force-dynamic";
 
@@ -20,8 +20,9 @@ export async function GET() {
 
 /** KTV tạo kết quả: tự tính thống kê, áp quy tắc quyết định, ghi lưu vết. */
 export async function POST(req: Request) {
-  const actor = await currentActor();
-  if (!actor) return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
+  const gate = await authorize("results.enter");
+  if (!gate.ok) return gate.response;
+  const actor = gate.actor;
   const body = (await req.json()) as ResultInput;
   const err = validateInput(body);
   if (err) return NextResponse.json({ error: err }, { status: 400 });

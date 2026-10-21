@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import QRCode from "qrcode";
 import { ArrowLeft } from "lucide-react";
 import { PrintButton } from "@/components/reports/print-button";
-import { getReport } from "@/lib/data/reports";
+import { getReport, recomputeHash } from "@/lib/data/reports";
 import { fmtDateVN } from "@/lib/dates";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +34,11 @@ export default async function ReportPrintPage({ params }: { params: Promise<{ id
   const rules = [...new Set(s.lines.map((l) => l.decisionRuleType).filter((t) => t && !t.startsWith("Không công bố")))];
   const approvers = [...new Set(s.lines.map((l) => l.approvedBy).filter(Boolean))];
   const hasAccredited = s.lines.some((l) => l.accredited);
+  const h = await headers();
+  const origin = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`;
+  const verifyUrl = `${origin}/verify/${encodeURIComponent(report.code)}?h=${report.contentHash.slice(0, 16)}`;
+  const qrSvg = report.contentHash ? await QRCode.toString(verifyUrl, { type: "svg", margin: 0, width: 88 }) : "";
+  const intact = report.contentHash ? recomputeHash(report) === report.contentHash : false;
 
   return (
     <div className="py-6 print:py-0">
@@ -46,6 +53,17 @@ export default async function ReportPrintPage({ params }: { params: Promise<{ id
         {report.status === "Đã thay thế" && (
           <div className="mb-4 rounded border-2 border-rose-500 text-rose-700 text-center font-semibold py-1.5">
             PHIẾU ĐÃ BỊ THAY THẾ – không còn hiệu lực
+          </div>
+        )}
+        {report.status === "Đã thu hồi" && (
+          <div className="mb-4 rounded border-2 border-rose-600 text-rose-700 text-center py-1.5">
+            <div className="font-bold">PHIẾU ĐÃ THU HỒI – không còn hiệu lực</div>
+            <div className="text-xs">{dateTimeVN(report.revokedAt)} · {report.revokedBy} · Lý do: {report.revokeReason}</div>
+          </div>
+        )}
+        {report.contentHash && !intact && (
+          <div className="mb-4 rounded border-2 border-amber-500 text-amber-800 text-center font-semibold py-1.5 print:hidden">
+            Cảnh báo: nội dung phiếu không khớp mã băm lúc ký
           </div>
         )}
 
@@ -143,16 +161,45 @@ export default async function ReportPrintPage({ params }: { params: Promise<{ id
         {/* o) người phê duyệt */}
         <div className="mt-8 grid grid-cols-2 gap-8 text-center text-[13px] break-inside-avoid">
           <div>
-            <div className="font-semibold">Người lập phiếu</div>
-            <div className="h-16" />
+            <div className="font-semibold">Người phát hành phiếu</div>
+            {report.signature ? (
+              <div className="my-2 mx-auto w-fit rounded border border-emerald-600 px-3 py-1.5 text-[11px] text-emerald-800 text-left leading-snug">
+                <div className="font-semibold">Đã ký điện tử</div>
+                <div>{dateTimeVN(report.signature.signedAt)}</div>
+                <div className="font-mono">SHA-256 {report.contentHash.slice(0, 16)}…</div>
+              </div>
+            ) : (
+              <div className="h-16" />
+            )}
             <div>{report.issuedBy}</div>
           </div>
           <div>
             <div className="font-semibold">Người phê duyệt kết quả</div>
-            <div className="h-16" />
+            {s.lines.every((l) => l.approvalHash) ? (
+              <div className="my-2 mx-auto w-fit rounded border border-emerald-600 px-3 py-1.5 text-[11px] text-emerald-800 text-left leading-snug">
+                <div className="font-semibold">Đã ký điện tử phê duyệt</div>
+                {s.lines.map((l) => (
+                  <div key={l.resultCode} className="font-mono">{l.resultCode.slice(-5)} · {l.approvalSignedAt} · {l.approvalHash?.slice(0, 10)}…</div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-16" />
+            )}
             <div>{approvers.join(", ") || "—"}</div>
           </div>
         </div>
+
+        {qrSvg && (
+          <div className="mt-6 flex items-center gap-3 text-[10px] text-gray-600 break-inside-avoid">
+            <div className="w-[88px] h-[88px] shrink-0" dangerouslySetInnerHTML={{ __html: qrSvg }} />
+            <div>
+              <div className="font-semibold text-[11px] text-black">Xác minh phiếu</div>
+              <div>Quét mã QR để kiểm tra phiếu còn hiệu lực và nội dung không bị thay đổi.</div>
+              <div className="font-mono break-all">{verifyUrl}</div>
+              <div className="font-mono">SHA-256: {report.contentHash}</div>
+            </div>
+          </div>
+        )}
 
         <footer className="mt-8 pt-2 border-t text-[10px] text-gray-500 flex justify-between">
           <span>{report.code}{report.revision > 0 ? ` · Sửa đổi lần ${report.revision}` : ""}</span>

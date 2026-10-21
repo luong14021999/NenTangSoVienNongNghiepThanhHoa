@@ -29,6 +29,9 @@ const SCOPE: { prefix: string; fn: string; req: string }[] = [
   { prefix: "TC-PT", fn: "Đánh giá z-score thử nghiệm thành thạo", req: "§7.7.2 · ISO 13528" },
   { prefix: "TC-AC", fn: "Danh mục 59 phép thử VILAS 1501", req: "§7.2 · M2.3" },
   { prefix: "TC-RC", fn: "Kiểm soát trước phát hành: khóa thiết bị, ủy quyền, xác nhận PP, LOQ, QC, CRM", req: "M2.5 · M2.7 · §6.2 · §6.4 · §6.5" },
+  { prefix: "TC-CL", fn: "Nhật ký thay đổi: chỉ ghi trường thực sự thay đổi", req: "§7.11.3 · §8.4" },
+  { prefix: "TC-AU", fn: "Phân quyền theo vai trò, tách nhiệm vụ, chống tự khoá", req: "§7.11.3 · §6.2.6" },
+  { prefix: "TC-SG", fn: "Chữ ký điện tử: mã băm SHA-256 phát hiện chỉnh sửa sau khi ký", req: "M2.6 · §7.11.3" },
 ];
 
 export default async function SoftwareValidationPage() {

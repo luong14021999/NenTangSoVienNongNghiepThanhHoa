@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Loader2, RotateCcw, Send, FileSignature } from "lucide-react";
+import { CheckCircle2, Loader2, RotateCcw, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
+import { SignDialog } from "@/components/sign/sign-dialog";
 
 type Action = "submit" | "qa_approve" | "qa_reject" | "manager_approve" | "manager_reject";
 
@@ -23,7 +24,9 @@ const LABEL: Record<Action, string> = {
   manager_reject: "Trả lại",
 };
 
-export function WorkflowActions({ id, status }: { id: string; status: string }) {
+type Can = { enter: boolean; qa: boolean; approve: boolean };
+
+export function WorkflowActions({ id, status, email, can }: { id: string; status: string; email: string; can: Can }) {
   const cfg = BY_STATUS[status];
   const [comment, setComment] = useState("");
   const [busy, setBusy] = useState<Action | null>(null);
@@ -31,6 +34,15 @@ export function WorkflowActions({ id, status }: { id: string; status: string }) 
   const router = useRouter();
 
   if (!cfg) return null;
+  const allowed = cfg.approve === "submit" ? can.enter : cfg.approve === "qa_approve" ? can.qa : can.approve;
+  if (!allowed) {
+    return (
+      <div className="p-4 rounded-lg border bg-muted/30 text-xs text-muted-foreground">
+        <div className="text-sm font-semibold text-foreground">{cfg.title}</div>
+        Tài khoản của bạn không có vai trò thực hiện bước này (xem Phân quyền).
+      </div>
+    );
+  }
 
   async function run(action: Action) {
     setBusy(action);
@@ -51,7 +63,7 @@ export function WorkflowActions({ id, status }: { id: string; status: string }) 
   }
 
   const loading = Boolean(busy) || pending;
-  const ApproveIcon = cfg.approve === "submit" ? Send : cfg.approve === "manager_approve" ? FileSignature : CheckCircle2;
+  const ApproveIcon = cfg.approve === "submit" ? Send : CheckCircle2;
 
   return (
     <div className="p-4 rounded-lg border bg-card space-y-3">
@@ -79,7 +91,17 @@ export function WorkflowActions({ id, status }: { id: string; status: string }) 
             {LABEL[cfg.reject]}
           </Button>
         )}
-        {cfg.approve && (
+        {cfg.approve === "manager_approve" ? (
+          <SignDialog
+            email={email}
+            meaning="Phê duyệt kết quả phân tích"
+            title="Ký điện tử – phê duyệt kết quả"
+            description="Sau khi ký, kết quả bị khóa và được đưa vào phiếu kết quả"
+            endpoint={`/api/analysis-results/${id}/transition`}
+            extraBody={{ action: "manager_approve", comment }}
+            triggerLabel="Phê duyệt"
+          />
+        ) : cfg.approve && (
           <Button size="sm" disabled={loading} onClick={() => run(cfg.approve!)}>
             {busy === cfg.approve ? <Loader2 className="w-4 h-4 animate-spin" /> : <ApproveIcon />}
             {LABEL[cfg.approve]}

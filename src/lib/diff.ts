@@ -3,7 +3,7 @@
 export type FieldChange = { field: string; old: string; new: string };
 
 /** JSON với khoá sắp xếp – để {a,b} và {b,a} không bị coi là thay đổi. */
-const stable = (v: unknown): unknown =>
+export const stable = (v: unknown): unknown =>
   Array.isArray(v)
     ? v.map(stable)
     : v && typeof v === "object"

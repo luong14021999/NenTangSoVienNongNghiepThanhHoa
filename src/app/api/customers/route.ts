@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import {
-  getCustomers,
-  createCustomer,
-} from "@/lib/data/customers";
+import { customersStore, getCustomers } from "@/lib/data/customers";
+import { createRoute } from "@/lib/api/crud";
 import type { Customer } from "@/lib/mock-data";
 
 export const dynamic = "force-dynamic";
@@ -12,24 +10,19 @@ export async function GET() {
   return NextResponse.json({ count: items.length, items });
 }
 
-export async function POST(req: Request) {
-  const body = (await req.json()) as Partial<Customer>;
-  if (!body.code || !body.name || !body.kind) {
-    return NextResponse.json(
-      { error: "Thiếu code / name / kind" },
-      { status: 400 },
-    );
-  }
-  const created = await createCustomer({
+// Qua helper CRUD chung → kiểm tra phân quyền + ghi nhật ký thay đổi.
+export const POST = createRoute<Customer>(
+  customersStore,
+  (body) => ({
     id: "",
-    code: body.code,
-    name: body.name,
-    kind: body.kind,
+    code: body.code ?? "",
+    name: body.name ?? "",
+    kind: body.kind ?? "Doanh nghiệp",
     contact: body.contact ?? "",
     phone: body.phone ?? "",
     address: body.address ?? "",
     samplesYTD: body.samplesYTD ?? 0,
     lastSampleAt: body.lastSampleAt ?? "",
-  });
-  return NextResponse.json({ ok: true, item: created }, { status: 201 });
-}
+  }),
+  (b) => (!b.code || !b.name || !b.kind ? "Thiếu code / name / kind" : null),
+);

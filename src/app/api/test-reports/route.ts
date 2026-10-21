@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { currentActor } from "@/lib/auth/server";
+import { authorize, requireFreshAuth } from "@/lib/data/access";
 import { issueReport, listReports } from "@/lib/data/reports";
 import { logChange } from "@/lib/data/change-log";
 
@@ -12,11 +12,15 @@ export async function GET() {
 
 /** Phát hành phiếu kết quả cho 1 mẫu (hoặc phiếu sửa đổi nếu đã có phiếu). Không có xoá (§8.4). */
 export async function POST(req: Request) {
-  const actor = await currentActor();
-  if (!actor) return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
+  const gate = await authorize("reports.issue");
+  if (!gate.ok) return gate.response;
+  const actor = gate.actor;
+  // Phát hành = ký điện tử → phải vừa xác thực lại bằng mật khẩu.
+  const reauth = await requireFreshAuth();
+  if (reauth) return reauth;
   const { sampleCode = "", note = "" } = (await req.json()) as { sampleCode?: string; note?: string };
   if (!sampleCode) return NextResponse.json({ error: "Thiếu mã mẫu" }, { status: 400 });
-  const res = await issueReport(sampleCode, actor.name, note.trim());
+  const res = await issueReport(sampleCode, { name: actor.name, email: actor.email, roles: gate.roles }, note.trim());
   if ("error" in res) return NextResponse.json({ error: res.error }, { status: 400 });
   await logChange({
     entity: "test-reports",

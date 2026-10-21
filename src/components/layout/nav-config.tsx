@@ -35,6 +35,8 @@ import {
   ShieldBan,
   History,
   BadgeCheck,
+  KeyRound,
+  ServerCrash,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -90,6 +92,8 @@ export const navGroups: NavGroup[] = [
       { href: "/release-rules", label: "Quy tắc kiểm soát phát hành", icon: ShieldBan },
       { href: "/change-log", label: "Nhật ký thay đổi", icon: History },
       { href: "/software-validation", label: "Xác nhận phần mềm", icon: BadgeCheck },
+      { href: "/access-control", label: "Phân quyền", icon: KeyRound },
+      { href: "/system-incidents", label: "Sự cố hệ thống", icon: ServerCrash },
     ],
   },
   {

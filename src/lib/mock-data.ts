@@ -2668,6 +2668,8 @@ export type ApprovalRecord = {
   decision: "Đạt" | "Trả lại sửa" | "Chờ";
   comment?: string;
   signedAt?: string;
+  /** SHA-256 nội dung kết quả tại thời điểm ký (chỉ bước phê duyệt). */
+  signatureHash?: string;
 };
 
 export type AuditEvent = {

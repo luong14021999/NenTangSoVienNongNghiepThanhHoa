@@ -9,7 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { EntityFormDialog } from "@/components/crud/entity-form-dialog";
+import { SignDialog } from "@/components/sign/sign-dialog";
+import { currentAccess } from "@/lib/data/access";
 import { StatGrid } from "@/components/qms/stat-grid";
 import { listReports, releaseBlockers } from "@/lib/data/reports";
 import { listResults } from "@/lib/data/results";
@@ -27,7 +28,10 @@ export default async function ReportsPage({
   searchParams: Promise<{ sample?: string }>;
 }) {
   const { sample: focus = "" } = await searchParams;
-  const [reports, results, samples] = await Promise.all([listReports(), listResults(), samplesStore.list()]);
+  const [reports, results, samples, access] = await Promise.all([listReports(), listResults(), samplesStore.list(), currentAccess()]);
+  const email = access.actor?.email ?? "";
+  const canIssue = access.can("reports.issue");
+  const canRevoke = access.can("reports.revoke");
 
   const sampleCodes = [...new Set(results.map((r) => r.sampleCode))];
   const ready = sampleCodes
@@ -101,17 +105,19 @@ export default async function ReportsPage({
                       <span className="text-muted-foreground">Chưa phát hành</span>
                     )}
                   </div>
-                  <EntityFormDialog
-                    mode="add"
-                    endpoint="/api/test-reports"
+                  <SignDialog
+                    email={email}
+                    meaning={x.active ? "Phát hành phiếu kết quả sửa đổi" : "Phát hành phiếu kết quả"}
                     title={x.active ? `Phát hành phiếu sửa đổi – ${x.code}` : `Phát hành phiếu kết quả – ${x.code}`}
-                    description={x.active ? `Phiếu mới sẽ thay thế ${x.active.code} (§7.8.8)` : "Nội dung phiếu được lưu cố định tại thời điểm phát hành"}
+                    description={x.active ? `Phiếu mới sẽ thay thế ${x.active.code} (§7.8.8)` : "Nội dung phiếu được lưu cố định và băm SHA-256 tại thời điểm ký"}
+                    endpoint="/api/test-reports"
+                    extraBody={{ sampleCode: x.code }}
                     fields={[
-                      { name: "sampleCode", label: "Mẫu", type: "select", options: [x.code], full: true },
-                      { name: "note", label: x.active ? "Lý do sửa đổi / nội dung thay đổi (bắt buộc ghi rõ)" : "Ghi chú: sai lệch, bổ sung hoặc loại trừ so với phương pháp; tình trạng mẫu khi nhận", type: "textarea", required: Boolean(x.active) },
+                      { name: "note", label: x.active ? "Lý do sửa đổi / nội dung thay đổi" : "Ghi chú: sai lệch, bổ sung, loại trừ so với phương pháp; tình trạng mẫu khi nhận", required: Boolean(x.active), multiline: true },
                     ]}
-                    addLabel={x.active ? "Phát hành sửa đổi" : "Phát hành phiếu"}
-                    submitLabel="Phát hành"
+                    triggerLabel={x.active ? "Phát hành sửa đổi" : "Phát hành phiếu"}
+                    disabled={!canIssue || blocks[x.code]?.length > 0}
+                    disabledReason={!canIssue ? "Tài khoản không có quyền phát hành phiếu" : "Bị chặn bởi quy tắc kiểm soát"}
                   />
                 </div>
               ))}
@@ -135,14 +141,30 @@ export default async function ReportsPage({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-mono text-sm font-medium">{r.code}</span>
-                      <Badge variant={r.status === "Đã phát hành" ? "success" : "secondary"}>{r.status}</Badge>
+                      <Badge variant={r.status === "Đã phát hành" ? "success" : r.status === "Đã thu hồi" ? "destructive" : "secondary"}>{r.status}</Badge>
+                      {r.signature && <Badge variant="outline" className="text-emerald-700 border-emerald-300">Đã ký điện tử</Badge>}
                       {r.revision > 0 && <Badge variant="outline">Sửa đổi lần {r.revision}</Badge>}
                     </div>
                     <div className="text-xs text-muted-foreground truncate">
                       Mẫu {r.sampleCode} · {r.snapshot.customer.name} · {r.snapshot.lines.length} chỉ tiêu · phát hành {dt(r.issuedAt)} bởi {r.issuedBy}
                       {r.replacesCode && ` · thay thế ${r.replacesCode}`}
                     </div>
+                    {r.status === "Đã thu hồi" && (
+                      <div className="text-xs text-rose-700">Thu hồi {dt(r.revokedAt)} bởi {r.revokedBy}: {r.revokeReason}</div>
+                    )}
                   </div>
+                  {r.status === "Đã phát hành" && canRevoke && (
+                    <SignDialog
+                      email={email}
+                      meaning="Thu hồi phiếu kết quả"
+                      title={`Thu hồi phiếu ${r.code}`}
+                      description="Phiếu không bị xoá; trạng thái chuyển Đã thu hồi, hiển thị trên bản in và trang xác minh QR"
+                      endpoint={`/api/test-reports/${r.id}/revoke`}
+                      fields={[{ name: "reason", label: "Lý do thu hồi", required: true, multiline: true }]}
+                      triggerLabel="Thu hồi"
+                      variant="danger"
+                    />
+                  )}
                   <Link href={`/report-print/${r.id}`} className="h-8 px-3 inline-flex items-center rounded-md border text-xs font-medium hover:bg-accent shrink-0">
                     Xem / In
                   </Link>

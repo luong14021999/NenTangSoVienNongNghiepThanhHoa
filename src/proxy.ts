@@ -7,6 +7,8 @@ const requireAuth = auth?.middleware({ loginUrl: "/login" });
 export async function proxy(request: NextRequest) {
   // Nếu chưa cấu hình Neon Auth → không bật auth, mọi route đều mở.
   if (!requireAuth) return NextResponse.next();
+  // Trang xác minh phiếu kết quả qua QR là công khai (chỉ hiển thị trạng thái + tính toàn vẹn, không có kết quả).
+  if (request.nextUrl.pathname.startsWith("/verify/")) return NextResponse.next();
   const response = await requireAuth(request);
 
   // API dữ liệu (ISO/IEC 17025 §7.11): chưa đăng nhập → 401 JSON thay vì

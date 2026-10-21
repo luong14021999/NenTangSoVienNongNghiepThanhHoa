@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { currentActor } from "@/lib/auth/server";
+import { authorize } from "@/lib/data/access";
 import { createDraft, listRuleSets } from "@/lib/data/release-rules";
 import { diffFields, logChange } from "@/lib/data/change-log";
 import { DEFAULT_RULES, LEVELS, type Level, type ReleaseRules } from "@/lib/release-checks";
@@ -31,8 +31,9 @@ function sanitize(input: Partial<ReleaseRules>): ReleaseRules {
 
 /** Soạn phiên bản mới (Dự thảo) – chỉ có hiệu lực sau khi người khác phê duyệt. */
 export async function POST(req: Request) {
-  const actor = await currentActor();
-  if (!actor) return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
+  const gate = await authorize("rules.draft");
+  if (!gate.ok) return gate.response;
+  const actor = gate.actor;
   const { rules, note = "" } = (await req.json()) as { rules?: Partial<ReleaseRules>; note?: string };
   if (!note.trim()) return NextResponse.json({ error: "Cần ghi nội dung / lý do thay đổi" }, { status: 400 });
   const sets = await listRuleSets();

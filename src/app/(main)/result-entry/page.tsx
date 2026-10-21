@@ -44,7 +44,7 @@ import { decisionRuleStore } from "@/lib/data/quality";
 import { testLabels, testNoOf } from "@/lib/accreditation";
 import { fmtDateVN } from "@/lib/dates";
 import { loadReleaseContext } from "@/lib/data/release-rules";
-import { currentActor } from "@/lib/auth/server";
+import { currentAccess } from "@/lib/data/access";
 import type { CheckResult } from "@/lib/release-checks";
 
 export const dynamic = "force-dynamic";
@@ -100,6 +100,11 @@ function ApprovalSteps({ result }: { result: ResultRow }) {
                   <div className="font-medium">{a.actor}</div>
                   <div className="text-muted-foreground text-[11px]">{a.role}</div>
                   {a.signedAt && <div className="text-[11px] text-muted-foreground mt-0.5">Ký lúc {a.signedAt}</div>}
+                  {a.signatureHash && (
+                    <div className="text-[10px] font-mono text-emerald-700 mt-0.5" title={a.signatureHash}>
+                      Ký điện tử · SHA-256 {a.signatureHash.slice(0, 12)}…
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -282,15 +287,16 @@ export default async function ResultEntryPage({
   searchParams: Promise<{ status?: string; id?: string }>;
 }) {
   const { status = "", id = "" } = await searchParams;
-  const [results, samples, equipment, chemicals, rules, release, me] = await Promise.all([
+  const [results, samples, equipment, chemicals, rules, release, access] = await Promise.all([
     listResults(),
     samplesStore.list(),
     equipmentStore.list(),
     chemicalsStore.list(),
     decisionRuleStore.list(),
     loadReleaseContext(),
-    currentActor(),
+    currentAccess(),
   ]);
+  const me = access.actor;
 
   const queue = results.filter((r) => (status ? r.status === status : r.status !== "Đã duyệt"));
   const selected = results.find((r) => r.id === id) ?? queue[0] ?? results[0];
@@ -459,7 +465,12 @@ export default async function ResultEntryPage({
                 <ResultDetail result={selected} />
                 <div className="space-y-4">
                   <ReleaseChecks checks={checks} version={release.version} stage={stage} />
-                  <WorkflowActions id={selected.id} status={selected.status} />
+                  <WorkflowActions
+                    id={selected.id}
+                    status={selected.status}
+                    email={me?.email ?? ""}
+                    can={{ enter: access.can("results.enter"), qa: access.can("results.qa"), approve: access.can("results.approve") }}
+                  />
                   {selected.status === "Đã duyệt" && (
                     <Link href={`/reports?sample=${encodeURIComponent(selected.sampleCode)}`} className="block p-4 rounded-lg border bg-emerald-50/50 border-emerald-200 text-sm text-emerald-800 hover:bg-emerald-50">
                       Kết quả đã phê duyệt – lập phiếu kết quả cho mẫu {selected.sampleCode} →
