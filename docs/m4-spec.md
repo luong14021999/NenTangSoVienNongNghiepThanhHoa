@@ -20,8 +20,8 @@ Quản lý nhiệm vụ khoa học và công nghệ theo vòng đời, kết qu�
 |---|---|---|
 | 1 | M4.1 cổng tiếp nhận + M4.3 tra cứu công khai + M4.7 cho cổng | Xong |
 | 2 | Hoàn thiện M4.2 (định mức, phê duyệt báo giá, cảnh báo trễ hạn, trả kết quả, hóa đơn điện tử, báo cáo doanh thu) | Xong |
-| 3 | M4.4 quản trị nhiệm vụ KH&CN | Đang làm |
-| 4 | M4.5 kho tri thức + M4.6 tài sản trí tuệ, hợp tác, chuyển giao | Kế hoạch |
+| 3 | M4.4 quản trị nhiệm vụ KH&CN | Xong |
+| 4 | M4.5 kho tri thức + M4.6 tài sản trí tuệ, hợp tác, chuyển giao | Đang làm |
 
 ## Đợt 1 – thiết kế
 
@@ -89,3 +89,18 @@ Cán bộ có thể đổi đơn vị xử lý ở trang nội bộ `/service-re
 | Dữ liệu từ M2 | `task_samples` gắn mã mẫu (kiểm tra mẫu có thật trong M2). Kết quả chỉ hiện giá trị khi trạng thái là **Đã duyệt** (đã qua QA/QC và Trưởng phòng) |
 | Thống kê định kỳ | `/research-stats`: theo cấp, lĩnh vực, trạng thái, kết quả nghiệm thu, nhân lực theo học vị, giải ngân theo nội dung chi; xuất CSV `/api/m4-reports/research` |
 | CSDL quốc gia | Dịch vụ `nhiem-vu-khcn` của bộ kết nối M1, gửi qua NDXP. Chỉ gửi thông tin công bố của nhiệm vụ, không gửi liên hệ cá nhân. Chưa cấu hình `NDXP_BASE_URL` / `NDXP_TOKEN` thì chạy chế độ mô phỏng; mã tiếp nhận chỉ được lưu khi gửi thật |
+
+## Đợt 4 – thiết kế
+
+| Chức năng | Cách làm |
+|---|---|
+| Kho tri thức | Bảng `m4.knowledge_items`, chia theo loại: kết quả đề tài, số liệu thí nghiệm, quy trình kỹ thuật, báo cáo tổng kết, tiêu chuẩn – quy chuẩn, phương pháp nghiên cứu, bài báo, sách. Tệp gốc lưu bằng đường dẫn `https://`. Nội dung toàn văn dán vào để tìm kiếm |
+| Tìm kiếm toàn văn | Extension `unaccent` + cấu hình `simple`; cột `search` (tsvector) do Postgres tự sinh, có chỉ mục GIN. Trọng số: tiêu đề (A) > từ khóa, tác giả, nguồn (B) > tóm tắt, toàn văn (C). Cú pháp `websearch_to_tsquery`: gõ không dấu, "cụm từ", -loại trừ, OR. Không có DB thì lọc dự phòng theo từ đã bỏ dấu |
+| Liên kết | Tài liệu gắn nhiệm vụ, thí nghiệm, tác giả (`knowledge_authors` → lý lịch khoa học). Trang chi tiết hiện tài liệu cùng nhiệm vụ và tài liệu giống tiêu đề; trang nhiệm vụ hiện sản phẩm tri thức, văn bằng, chuyển giao |
+| Dữ liệu nền | `base_datasets` (chủ đề: đất đai, khí hậu, thủy văn, cơ cấu cây trồng, cơ cấu vật nuôi, hạ tầng nghiên cứu) + `base_observations` (địa bàn – kỳ YYYY/YYYY-MM – chỉ tiêu – giá trị – đơn vị). Nhập bằng cách dán từ Excel hoặc CSV. Tệp ; hoặc tab dùng phẩy thập phân; tệp phẩy dùng chấm thập phân. Lỗi ở bất kỳ dòng nào thì không ghi gì và báo số dòng. Trùng (địa bàn, kỳ, chỉ tiêu) thì cập nhật giá trị |
+| Tài sản trí tuệ | `ip_assets`: loại, số đơn, số văn bằng, hiệu lực. "Được cấp bằng" bắt buộc có số văn bằng. Cảnh báo trước 180 ngày khi văn bằng sắp hết hiệu lực |
+| Hợp tác | `partners`, `agreements` (MOU, thỏa thuận, chương trình, hợp đồng nghiên cứu). Cảnh báo trước 60 ngày khi thỏa thuận sắp hết hạn |
+| Chuyển giao | `tech_transfers`: gắn bên nhận, văn bằng, nhiệm vụ; hợp đồng và biên bản bàn giao ("Đã bàn giao" bắt buộc có ngày biên bản) |
+| Tập huấn | `trainings`: trực tuyến / trực tiếp / kết hợp; thiết bị (Khoản mục I.2), phòng học trực tuyến, tài liệu, học viên dự kiến / tham dự |
+| Cổng công khai | `/portal/knowledge`: chỉ tài liệu đánh dấu "Công bố"; trả mã, loại, tiêu đề, tóm tắt, từ khóa, tác giả ngoài Viện, nguồn, đường dẫn. Không trả toàn văn, ghi chú nội bộ hay liên kết nội bộ |
+| Cảnh báo | Trang Tổng quan M4 thêm cảnh báo văn bằng và thỏa thuận sắp hết hạn |

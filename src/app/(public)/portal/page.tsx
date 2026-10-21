@@ -53,6 +53,9 @@ export default async function PortalPage() {
           <Link href="/portal/status" className="h-10 px-4 inline-flex items-center gap-2 rounded-md border bg-background text-sm font-medium hover:bg-accent">
             <Search className="w-4 h-4" /> Tra cứu yêu cầu đã gửi
           </Link>
+          <Link href="/portal/knowledge" className="h-10 px-4 inline-flex items-center gap-2 rounded-md border bg-background text-sm font-medium hover:bg-accent">
+            <FileDown className="w-4 h-4" /> Tra cứu quy trình kỹ thuật, tài liệu KH&CN
+          </Link>
         </div>
       </section>
 

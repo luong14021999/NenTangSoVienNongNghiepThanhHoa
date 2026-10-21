@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Send, Copy } from "lucide-react";
+import { ArrowLeft, Send, Copy, BookOpen } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,7 @@ import { EXPENSE_CATEGORIES, FUND_SOURCES, MEMBER_ROLES, budgetSummary, duplicat
 import { researchTaskFields, taskStatusVariant } from "@/lib/modules/m4/research-fields";
 import { fmtVND } from "@/lib/modules/m4/finance";
 import { channelMode } from "@/lib/platform/integration/lgsp";
+import { ipAssetStore, knowledgeStore, techTransferStore } from "@/lib/modules/m4/data/knowledge";
 import { currentAccess } from "@/lib/platform/data/access";
 import { byId, refOptions } from "@/lib/platform/ref-options";
 import { fmtDateVN, todayISO } from "@/lib/platform/dates";
@@ -31,7 +32,7 @@ export const metadata = { title: "Chi tiết nhiệm vụ KH&CN" };
 
 export default async function ResearchTaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [tasks, researchers, members, milestones, expenses, samples, provincial, trials, access] = await Promise.all([
+  const [tasks, researchers, members, milestones, expenses, samples, provincial, trials, access, knowledge, ipAssets, transfers] = await Promise.all([
     researchTaskStore.list(),
     researcherStore.list(),
     taskMemberStore.list(),
@@ -41,6 +42,9 @@ export default async function ResearchTaskDetailPage({ params }: { params: Promi
     provincialProjectStore.list(),
     fieldTrialStore.list(),
     currentAccess(),
+    knowledgeStore.list(),
+    ipAssetStore.list(),
+    techTransferStore.list(),
   ]);
   const t = tasks.find((x) => x.id === id);
   if (!t) notFound();
@@ -279,6 +283,36 @@ export default async function ResearchTaskDetailPage({ params }: { params: Promi
             };
           })}
         />
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><BookOpen className="w-4 h-4" />Sản phẩm tri thức, tài sản trí tuệ, chuyển giao</CardTitle>
+            <CardDescription>Tài liệu trong kho tri thức, văn bằng bảo hộ và hợp đồng chuyển giao gắn với nhiệm vụ này</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="divide-y text-sm">
+              {knowledge.filter((k) => k.taskId === id).map((k) => (
+                <li key={k.id} className="py-2 flex flex-wrap justify-between gap-2">
+                  <Link href={`/knowledge/${k.id}`} className="hover:underline"><span className="font-mono text-xs">{k.code}</span> {k.title}</Link>
+                  <span className="text-xs text-muted-foreground">{k.kind}</span>
+                </li>
+              ))}
+              {ipAssets.filter((a) => a.taskId === id).map((a) => (
+                <li key={a.id} className="py-2 flex flex-wrap justify-between gap-2">
+                  <Link href={`/ip-assets?q=${encodeURIComponent(a.code)}`} className="hover:underline"><span className="font-mono text-xs">{a.code}</span> {a.title}</Link>
+                  <span className="text-xs text-muted-foreground">{a.kind} · {a.status}</span>
+                </li>
+              ))}
+              {transfers.filter((x) => x.taskId === id).map((x) => (
+                <li key={x.id} className="py-2 flex flex-wrap justify-between gap-2">
+                  <Link href="/tech-transfers" className="hover:underline"><span className="font-mono text-xs">{x.code}</span> {x.title}</Link>
+                  <span className="text-xs text-muted-foreground">Chuyển giao · {x.status}</span>
+                </li>
+              ))}
+              {![...knowledge, ...ipAssets, ...transfers].some((x) => x.taskId === id) && <li className="py-2 text-muted-foreground">Chưa có – chọn nhiệm vụ này khi thêm tài liệu, văn bằng hoặc chuyển giao</li>}
+            </ul>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader><CardTitle>Thí nghiệm đồng ruộng</CardTitle><CardDescription>Quản lý ở trang Thí nghiệm đồng ruộng (chọn nhiệm vụ này)</CardDescription></CardHeader>

@@ -6,6 +6,8 @@ import { StatGrid } from "@/components/common/stat-grid";
 import { getCustomers } from "@/lib/modules/m4/data/customers";
 import { contractStore, interactionStore, paymentStore, quotationStore } from "@/lib/modules/m4/data/sales";
 import { serviceRequestStore } from "@/lib/modules/m4/data/portal";
+import { agreementStore, ipAssetStore } from "@/lib/modules/m4/data/knowledge";
+import { agreementExpiryAlert, ipExpiryAlert } from "@/lib/modules/m4/knowledge";
 import { AGING_BUCKETS, agingBucket, contractAlerts, contractBalances, daysBetween, fmtVND, quotationTotal } from "@/lib/modules/m4/finance";
 import { byId } from "@/lib/platform/ref-options";
 import { fmtDateVN, todayISO } from "@/lib/platform/dates";
@@ -19,13 +21,15 @@ const REQUEST_SLA_DAYS = 2;
 type Alert = { href: string; code: string; who: string; text: string; tone: "red" | "amber" };
 
 export default async function M4OverviewPage() {
-  const [requests, quotations, contracts, payments, interactions, customers] = await Promise.all([
+  const [requests, quotations, contracts, payments, interactions, customers, ipAssets, agreements] = await Promise.all([
     serviceRequestStore.list(),
     quotationStore.list(),
     contractStore.list(),
     paymentStore.list(),
     interactionStore.list(),
     getCustomers(),
+    ipAssetStore.list(),
+    agreementStore.list(),
   ]);
   const today = todayISO();
   const customerById = byId(customers);
@@ -56,6 +60,14 @@ export default async function M4OverviewPage() {
     if (i.nextActionAt && i.nextAction && daysBetween(i.nextActionAt, today) >= 0) {
       alerts.push({ href: `/customers/${i.customerId}`, code: fmtDateVN(i.nextActionAt), who: name(i.customerId), text: `Việc chăm sóc đến hạn: ${i.nextAction}`, tone: "amber" });
     }
+  }
+  for (const a of ipAssets) {
+    const x = ipExpiryAlert(a, today);
+    if (x) alerts.push({ href: `/ip-assets?q=${encodeURIComponent(a.code)}`, code: a.code, who: a.title, text: `${x.kind} ${x.days} ngày`, tone: x.kind.startsWith("Văn bằng đã") ? "red" : "amber" });
+  }
+  for (const a of agreements) {
+    const x = agreementExpiryAlert(a, today);
+    if (x) alerts.push({ href: "/partners", code: a.code, who: a.title, text: `${x.kind} ${x.days} ngày`, tone: x.kind.endsWith("quá hạn") ? "red" : "amber" });
   }
   alerts.sort((a, b) => (a.tone === b.tone ? 0 : a.tone === "red" ? -1 : 1));
 
@@ -88,7 +100,7 @@ export default async function M4OverviewPage() {
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><Clock className="w-4 h-4" />Việc cần xử lý <span className="text-muted-foreground font-normal text-sm">({alerts.length})</span></CardTitle>
-              <CardDescription>Yêu cầu chậm, báo giá chờ duyệt / sắp hết hiệu lực, hợp đồng trễ hạn, công nợ quá hạn, lịch chăm sóc khách hàng</CardDescription>
+              <CardDescription>Yêu cầu chậm, báo giá chờ duyệt / sắp hết hiệu lực, hợp đồng trễ hạn, công nợ quá hạn, lịch chăm sóc khách hàng, văn bằng & thỏa thuận sắp hết hạn</CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="divide-y text-sm">

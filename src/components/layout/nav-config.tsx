@@ -67,6 +67,10 @@ import {
   Library,
   GraduationCap,
   PieChart,
+  BookOpen,
+  Layers,
+  Handshake,
+  Repeat,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -213,6 +217,22 @@ export const navModules: NavModule[] = [
           { href: "/field-trials", label: "Thí nghiệm đồng ruộng", icon: Sprout },
           { href: "/researchers", label: "Lý lịch khoa học", icon: GraduationCap },
           { href: "/research-stats", label: "Thống kê KH&CN", icon: PieChart },
+        ],
+      },
+      {
+        label: "Kho tri thức & dữ liệu nền",
+        items: [
+          { href: "/knowledge", label: "Kho tri thức số", icon: BookOpen },
+          { href: "/base-data", label: "Dữ liệu nền", icon: Layers },
+        ],
+      },
+      {
+        label: "Sở hữu trí tuệ & chuyển giao",
+        items: [
+          { href: "/ip-assets", label: "Tài sản trí tuệ", icon: ShieldCheck },
+          { href: "/partners", label: "Đối tác & hợp tác", icon: Handshake },
+          { href: "/tech-transfers", label: "Chuyển giao công nghệ", icon: Repeat },
+          { href: "/trainings", label: "Tập huấn", icon: Presentation },
         ],
       },
       {
