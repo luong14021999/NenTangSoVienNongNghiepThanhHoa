@@ -48,7 +48,7 @@ export default async function IndividualPage({ params }: { params: Promise<{ id:
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><GitBranch className="w-4 h-4" />Phả hệ 3 đời</CardTitle>
-              <CardDescription>Bố › Bố = ông nội, Mẹ › Bố = ông ngoại…</CardDescription>
+              <CardDescription>Bố › Bố = ông nội, Mẹ › Bố = ông ngoại… · <Link href={`/pedigree?id=${x.id}`} className="text-primary hover:underline">Xem cây phả hệ & ghép phối →</Link></CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-1 text-sm">

@@ -16,6 +16,7 @@ import {
   TestTube,
   Users2,
   Gauge,
+  Workflow,
   ChartGantt,
   SquareKanban,
   MailOpen,
@@ -363,7 +364,10 @@ export const navModules: NavModule[] = [
     groups: [
       {
         label: "Tổng quan",
-        items: [{ href: "/breed-overview", label: "Tổng quan giống", icon: LayoutDashboard }],
+        items: [
+          { href: "/breed-overview", label: "Tổng quan giống", icon: LayoutDashboard },
+          { href: "/seed-workbench", label: "Bàn sản xuất giống", icon: Workflow },
+        ],
       },
       {
         label: "Danh mục & hồ sơ giống",
@@ -376,6 +380,7 @@ export const navModules: NavModule[] = [
         label: "Nguồn giống gốc",
         items: [
           { href: "/source-stocks", label: "Cây đầu dòng, đàn giống", icon: TreePine },
+          { href: "/pedigree", label: "Cây phả hệ & ghép phối", icon: Network },
           { href: "/individuals", label: "Phả hệ & chọn lọc", icon: GitBranch },
         ],
       },
