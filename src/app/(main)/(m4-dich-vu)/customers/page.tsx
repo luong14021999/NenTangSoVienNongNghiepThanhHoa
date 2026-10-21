@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Users2,
   Filter,
@@ -217,7 +218,7 @@ export default async function CustomersPage({
                           {c.code}
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium text-sm">{c.name}</div>
+                          <Link href={`/customers/${c.id}`} className="font-medium text-sm text-primary hover:underline">{c.name}</Link>
                           <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                             <Phone className="w-3 h-3" />
                             {c.phone}

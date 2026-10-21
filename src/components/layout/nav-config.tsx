@@ -34,7 +34,6 @@ import {
   Telescope,
   ClipboardEdit,
   MessageSquare,
-  Briefcase,
   Award,
   ListChecks,
   FileStack,
@@ -64,6 +63,7 @@ import {
   Inbox,
   Tags,
   Globe,
+  Receipt,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -188,26 +188,28 @@ export const navModules: NavModule[] = [
     name: "Nghiên cứu – dịch vụ – tra cứu KH&CN",
     groups: [
       {
+        label: "Tổng quan",
+        items: [
+          { href: "/m4-overview", label: "Tổng quan dịch vụ", icon: Gauge },
+          { href: "/revenue", label: "Báo cáo doanh thu", icon: BarChart3 },
+        ],
+      },
+      {
         label: "Cổng dịch vụ trực tuyến",
         items: [
           { href: "/service-requests", label: "Yêu cầu dịch vụ", icon: Inbox },
-          { href: "/price-list", label: "Bảng giá dịch vụ", icon: Tags },
+          { href: "/price-list", label: "Bảng giá & định mức", icon: Tags },
           { href: "/public-content", label: "Nội dung công khai", icon: Globe },
         ],
       },
       {
-        label: "Khách hàng & thị trường",
+        label: "Khách hàng & giao dịch",
         items: [
           { href: "/customers", label: "Khách hàng", icon: Users2 },
-          { href: "/services", label: "Dịch vụ & Tư vấn", icon: Briefcase },
-        ],
-      },
-      {
-        label: "Báo giá – Hợp đồng – Thu tiền",
-        items: [
           { href: "/quotations", label: "Báo giá", icon: FileSpreadsheet },
           { href: "/contracts", label: "Hợp đồng & công nợ", icon: FileSignature },
           { href: "/payments", label: "Thanh toán", icon: Wallet },
+          { href: "/invoices", label: "Hóa đơn điện tử", icon: Receipt },
         ],
       },
     ],

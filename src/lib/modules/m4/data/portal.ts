@@ -84,6 +84,10 @@ export type PriceItem = {
   method: string;
   vilas: boolean;
   published: boolean;
+  costMaterials: number;
+  costLabor: number;
+  costDepreciation: number;
+  costOverhead: number;
   note: string;
 };
 
@@ -100,6 +104,10 @@ export const priceItemStore = createEntityStore<PriceItem>(
     method: "text",
     vilas: "bool",
     published: "bool",
+    costMaterials: "number",
+    costLabor: "number",
+    costDepreciation: "number",
+    costOverhead: "number",
     note: "text",
   }),
 );

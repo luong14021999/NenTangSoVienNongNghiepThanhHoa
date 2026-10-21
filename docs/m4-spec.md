@@ -18,8 +18,8 @@ Quản lý nhiệm vụ khoa học và công nghệ theo vòng đời, kết qu�
 
 | Đợt | Phạm vi | Trạng thái |
 |---|---|---|
-| 1 | M4.1 cổng tiếp nhận + M4.3 tra cứu công khai + M4.7 cho cổng | Đang làm |
-| 2 | Hoàn thiện M4.2 (định mức, phê duyệt báo giá, cảnh báo trễ hạn, trả kết quả, hóa đơn điện tử, báo cáo doanh thu) | Kế hoạch |
+| 1 | M4.1 cổng tiếp nhận + M4.3 tra cứu công khai + M4.7 cho cổng | Xong |
+| 2 | Hoàn thiện M4.2 (định mức, phê duyệt báo giá, cảnh báo trễ hạn, trả kết quả, hóa đơn điện tử, báo cáo doanh thu) | Đang làm |
 | 3 | M4.4 quản trị nhiệm vụ KH&CN | Kế hoạch |
 | 4 | M4.5 kho tri thức + M4.6 tài sản trí tuệ, hợp tác, chuyển giao | Kế hoạch |
 
@@ -62,3 +62,17 @@ Cán bộ có thể đổi đơn vị xử lý ở trang nội bộ `/service-re
   - HTTPS và header bảo mật đã có (M1.7).
   - Bật Vercel Firewall (WAF, Attack Challenge Mode) cho `/portal` và `/api/public/`.
   - Khi chuyển về Trung tâm dữ liệu tỉnh, dùng WAF và chống DDoS của Trung tâm.
+
+## Đợt 2 – thiết kế
+
+| Chức năng | Cách làm |
+|---|---|
+| Định mức | Mỗi dòng bảng giá (`m4.price_items`) có 4 khoản định mức: vật tư – hóa chất, nhân công, khấu hao, quản lý. Giá thành = tổng 4 khoản; tỷ suất = (đơn giá − giá thành) / đơn giá. **Đơn giá chưa gồm thuế GTGT**; định mức không công bố ra cổng |
+| Báo giá | Gồm các dòng trong `m4.quotation_lines`, lấy đơn giá và giá thành từ bảng giá tại thời điểm thêm dòng. Số tiền báo giá = tổng dòng (chưa thuế); thuế tính trên báo giá. Có bản in `/quotation-print/[id]` (có tổng tiền bằng chữ; ghi "BẢN NHÁP" khi chưa duyệt) |
+| Phê duyệt | Nháp → Chờ duyệt → Đã duyệt → Đã gửi → Được chấp nhận / Từ chối / Hết hạn. Duyệt hoặc trả lại cần quyền `services.approve` (Trưởng phòng, Quản trị); **người trình không được tự duyệt**. Từ lúc trình duyệt, báo giá bị khóa giá trị; trạng thái chỉ đổi qua nút quy trình; mỗi bước ghi vào nhật ký thay đổi |
+| Hợp đồng | Lập từ báo giá đã chấp nhận bằng 1 nút (số `HĐ-<năm>-<số>`, giá trị = tổng sau thuế). Thêm hạn trả kết quả, hạn thanh toán, ngày và hình thức trả kết quả, người nhận |
+| Cảnh báo | Trang `/m4-overview` gom: yêu cầu chưa xử lý ≥ 2 ngày, báo giá chờ duyệt / sắp hết hiệu lực, trễ trả kết quả, quá hạn thanh toán, hợp đồng sắp hết hạn, lịch chăm sóc khách hàng đến hạn |
+| Công nợ | Công nợ = giá trị hợp đồng − tổng thanh toán. Phân tuổi nợ theo số ngày quá hạn thanh toán: trong hạn, 1–30, 31–60, 61–90, > 90 ngày |
+| Hóa đơn điện tử | Bảng `m4.invoices`. **Không có chế độ mô phỏng** vì hóa đơn là chứng từ tài chính. Khi chưa nối nhà cung cấp (VNPT, Viettel, MISA, BKAV…), phát hành trên phần mềm hóa đơn hiện dùng rồi nhập số hóa đơn, ký hiệu, mã tra cứu. Bộ chuyển đổi API viết ở `src/lib/modules/m4/einvoice.ts` khi có hợp đồng với nhà cung cấp |
+| Quan hệ khách hàng | Trang `/customers/[id]` gom yêu cầu, báo giá, hợp đồng, đã thu, công nợ và nhật ký chăm sóc (`m4.customer_interactions`) |
+| Báo cáo doanh thu | Trang `/revenue`: giá trị ký kết và đã thu theo tháng; doanh thu, giá thành, tỷ suất theo nhóm dịch vụ; theo khách hàng. Xuất CSV qua `/api/m4-reports/revenue` (UTF-8 có BOM, chặn công thức Excel) |

@@ -6,10 +6,10 @@ import { EntityFormDialog, type CrudField } from "@/components/crud/entity-form-
 import { EntitySearchInput } from "@/components/crud/search-input";
 import { StatGrid, clip } from "@/components/common/stat-grid";
 import { getCustomers } from "@/lib/modules/m4/data/customers";
-import { CONTRACT_STATUSES, contractStore, paymentStore, quotationStore, type Contract } from "@/lib/modules/m4/data/sales";
-import { contractBalances, fmtVND } from "@/lib/modules/m4/finance";
+import { CONTRACT_STATUSES, DELIVERY_METHODS, contractStore, paymentStore, quotationStore, type Contract } from "@/lib/modules/m4/data/sales";
+import { contractAlerts, contractBalances, fmtVND } from "@/lib/modules/m4/finance";
 import { byId, matches, refOptions } from "@/lib/platform/ref-options";
-import { fmtDateVN } from "@/lib/platform/dates";
+import { fmtDateVN, todayISO } from "@/lib/platform/dates";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Hợp đồng & công nợ" };
@@ -47,6 +47,11 @@ export default async function ContractsPage({ searchParams }: { searchParams: Pr
     { name: "endAt", label: "Kết thúc", type: "date" },
     { name: "status", label: "Trạng thái", type: "select", options: [...CONTRACT_STATUSES] },
     { name: "owner", label: "Cán bộ phụ trách" },
+    { name: "resultDueAt", label: "Hạn trả kết quả", type: "date" },
+    { name: "paymentDueAt", label: "Hạn thanh toán", type: "date" },
+    { name: "deliveredAt", label: "Ngày đã trả kết quả", type: "date" },
+    { name: "deliveryMethod", label: "Hình thức trả kết quả", type: "select", options: ["", ...DELIVERY_METHODS] },
+    { name: "deliveryRecipient", label: "Người nhận kết quả", full: true },
     { name: "note", label: "Ghi chú", type: "textarea" },
   ];
 
@@ -57,6 +62,8 @@ export default async function ContractsPage({ searchParams }: { searchParams: Pr
   const active = all.filter(billable);
   const totalValue = active.reduce((s, c) => s + (Number(c.value) || 0), 0);
   const totalDebt = active.reduce((s, c) => s + (balances.get(c.id)?.debt ?? 0), 0);
+  const today = todayISO();
+  const alertsOf = (c: Contract) => contractAlerts(c, balances.get(c.id)?.debt ?? 0, today);
 
   return (
     <>
@@ -65,7 +72,7 @@ export default async function ContractsPage({ searchParams }: { searchParams: Pr
         <StatGrid
           stats={[
             { label: "Hợp đồng", value: all.length, icon: FileSignature, accent: "bg-blue-50 text-blue-600" },
-            { label: "Đang thực hiện", value: all.filter((c) => c.status === "Đang thực hiện").length, icon: PlayCircle, accent: "bg-amber-50 text-amber-600" },
+            { label: "Có cảnh báo thời hạn", value: all.filter((c) => alertsOf(c).length > 0).length, icon: PlayCircle, accent: "bg-amber-50 text-amber-600", hint: "trễ / sắp đến hạn" },
             { label: "Giá trị đã ký", value: fmtVND(totalValue), icon: Banknote, accent: "bg-emerald-50 text-emerald-700" },
             { label: "Công nợ phải thu", value: fmtVND(totalDebt), icon: AlertTriangle, accent: "bg-rose-50 text-rose-600" },
           ]}
@@ -80,7 +87,7 @@ export default async function ContractsPage({ searchParams }: { searchParams: Pr
           entity="contracts"
           editFields={fields}
           addNode={<EntityFormDialog mode="add" endpoint="/api/contracts" title="Thêm hợp đồng" fields={fields} addLabel="Thêm hợp đồng" />}
-          headers={["Số / ngày ký", "Khách hàng", "Hợp đồng", "Giá trị", "Đã thu / còn nợ", "Trạng thái"]}
+          headers={["Số / ngày ký", "Khách hàng", "Hợp đồng", "Giá trị", "Đã thu / còn nợ", "Thời hạn", "Trạng thái"]}
           emptyText={query ? "Không có hợp đồng phù hợp" : "Chưa có hợp đồng nào"}
           rows={rows.map((x) => {
             const b = balances.get(x.id) ?? { paid: 0, debt: 0 };
@@ -104,6 +111,16 @@ export default async function ContractsPage({ searchParams }: { searchParams: Pr
                 <div key="p" className="text-xs whitespace-nowrap">
                   <div>{fmtVND(b.paid)}</div>
                   {billable(x) && b.debt > 0 && <div className="text-rose-600 font-medium">nợ {fmtVND(b.debt)}</div>}
+                </div>,
+                <div key="d" className="text-[11px] whitespace-nowrap">
+                  {x.resultDueAt && <div>KQ: {fmtDateVN(x.resultDueAt)}{x.deliveredAt && ` · đã trả ${fmtDateVN(x.deliveredAt)}`}</div>}
+                  {x.paymentDueAt && <div>TT: {fmtDateVN(x.paymentDueAt)}</div>}
+                  {alertsOf(x).map((a) => (
+                    <div key={a.kind} className={a.kind.startsWith("Sắp") ? "text-amber-600" : "text-rose-600 font-medium"}>
+                      {a.kind} {a.days ? `${a.days} ngày` : "hôm nay"}
+                    </div>
+                  ))}
+                  {!x.resultDueAt && !x.paymentDueAt && <span className="text-muted-foreground">—</span>}
                 </div>,
                 <Badge key="s" variant={statusVariant[x.status] ?? "secondary"}>{x.status}</Badge>,
               ],

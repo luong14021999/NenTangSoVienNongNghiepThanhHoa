@@ -64,7 +64,7 @@ export default async function PortalPage() {
       desc: "Cổng tiếp nhận dịch vụ trực tuyến, tra cứu công khai, báo giá, hợp đồng, thanh toán, công nợ; nhiệm vụ KH&CN, kho tri thức, chuyển giao",
       icon: Handshake,
       color: "from-amber-500 to-orange-600",
-      href: "/service-requests",
+      href: "/m4-overview",
       status: "Đang xây dựng",
       stats: [{ label: "yêu cầu mới chờ xử lý", value: n.requests_new }, { label: "hợp đồng đang thực hiện", value: n.contracts_open }],
     },

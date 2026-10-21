@@ -126,7 +126,7 @@ export default async function PortalPage() {
                 </table>
               </div>
             ))}
-            <p className="text-[11px] text-muted-foreground">Giá đã gồm thuế. Giá chính thức theo báo giá gửi kèm từng yêu cầu.</p>
+            <p className="text-[11px] text-muted-foreground">Đơn giá chưa gồm thuế GTGT. Giá chính thức theo báo giá gửi kèm từng yêu cầu.</p>
           </div>
         )}
       </section>
