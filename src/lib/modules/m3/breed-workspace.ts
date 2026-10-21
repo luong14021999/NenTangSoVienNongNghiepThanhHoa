@@ -1,5 +1,5 @@
 // Màn hình làm việc M3.2 – cây phả hệ, ghép phối thử, bàn sản xuất & chứng nhận lô giống (hàm thuần).
-import { INBREEDING_WARN, inbreeding, type PedigreeNode } from "./breeding-rules";
+import { INBREEDING_WARN, SEED_LEVELS, inbreeding, type PedigreeNode } from "./breeding-rules";
 
 export type PedigreeSlot = { id: string | null; label: string };
 
@@ -102,4 +102,32 @@ export function nextLevel(level: string) {
     if (i >= 0) return c[Math.min(i + 1, c.length - 1)];
   }
   return level;
+}
+
+/**
+ * Bậc thang cấp giống của một giống: mỗi cấp có số lô giống, số lô đã chứng nhận, lượng còn lại theo đơn vị
+ * và số lô sản xuất đang làm; cấp cao xếp trên (theo thứ bậc SEED_LEVELS).
+ */
+export function levelSteps(
+  seedLots: { id: string; level: string; status: string; quantity: number; unit: string }[],
+  prodLots: { level: string; status: string }[],
+  deliveries: { seedLotId: string; quantity: number }[],
+) {
+  const levels = [...new Set([...seedLots.map((l) => l.level), ...prodLots.filter((p) => p.status !== "Hủy").map((p) => p.level)].filter(Boolean))];
+  const rank = (l: string) => {
+    const r = SEED_LEVELS.find((x) => x.level === l)?.rank ?? -1;
+    return r < 0 ? 99 : r;
+  };
+  return levels
+    .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b, "vi"))
+    .map((level) => {
+      const lots = seedLots.filter((l) => l.level === level);
+      return {
+        level,
+        lots: lots.length,
+        certified: lots.filter((l) => l.status === "Đã chứng nhận").length,
+        producing: prodLots.filter((p) => p.level === level && (p.status === "Kế hoạch" || p.status === "Đang sản xuất")).length,
+        left: lots.filter((l) => l.status === "Đạt" || l.status === "Đã chứng nhận").map((l) => ({ quantity: seedLotLeft(l, deliveries), unit: l.unit })),
+      };
+    });
 }

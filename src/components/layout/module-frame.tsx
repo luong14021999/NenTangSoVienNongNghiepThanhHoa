@@ -2,18 +2,18 @@
 
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
-import { BenchNav } from "@/components/layout/shells/bench-nav";
+import { TabShellNav } from "@/components/layout/shells/tab-shell-nav";
 import { moduleOf, shellOf } from "@/components/layout/nav-config";
 import { cn } from "@/lib/utils";
 
-/** Khung điều hướng theo từng phần mềm: menu dọc (phòng thí nghiệm) hoặc bàn làm việc dạng tab (nuôi cấy mô). */
+/** Khung điều hướng theo từng phần mềm: menu dọc (phòng thí nghiệm), bàn làm việc dạng tab (nuôi cấy mô) hoặc tab theo khu nghiệp vụ (giống). */
 export function ModuleFrame({ children }: { children: React.ReactNode }) {
   const shell = shellOf(moduleOf(usePathname()));
-  if (shell === "bench") {
+  if (shell === "bench" || shell === "hub") {
     return (
       <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
-        <BenchNav />
-        <div className={cn("flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden pb-16 md:pb-0")}>{children}</div>
+        <TabShellNav variant={shell} />
+        <div className={cn("flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden", shell === "bench" && "pb-16 md:pb-0")}>{children}</div>
       </div>
     );
   }

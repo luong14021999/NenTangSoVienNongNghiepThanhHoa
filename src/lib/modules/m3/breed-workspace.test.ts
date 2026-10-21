@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { commonAncestors, matingCandidates, nextLevel, pedigreeGrid, roleLabel, seedLotLeft } from "./breed-workspace";
+import { commonAncestors, levelSteps, matingCandidates, nextLevel, pedigreeGrid, roleLabel, seedLotLeft } from "./breed-workspace";
 
 // Phả hệ: S1 × D1 → A (đực), B (cái) – anh em ruột; X là đực ngoài dòng; C = con của A × B.
 const n = (id: string, sex: string, sireId = "", damId = "", status = "Đang sử dụng") => ({ id, code: id, sex, sireId, damId, status });
@@ -47,5 +47,22 @@ describe("lô giống", () => {
     expect(nextLevel("Xác nhận")).toBe("Xác nhận 2");
     expect(nextLevel("Giống ông bà")).toBe("Giống bố mẹ");
     expect(nextLevel("Khác")).toBe("Khác");
+  });
+});
+
+describe("bậc thang cấp giống", () => {
+  it("xếp cấp cao trên, đếm lô, lượng còn lại chỉ tính lô đạt", () => {
+    const steps = levelSteps(
+      [
+        { id: "a", level: "Nguyên chủng", status: "Đã chứng nhận", quantity: 100, unit: "kg" },
+        { id: "b", level: "Siêu nguyên chủng", status: "Chờ kiểm định", quantity: 20, unit: "kg" },
+        { id: "c", level: "Nguyên chủng", status: "Không đạt", quantity: 50, unit: "kg" },
+      ],
+      [{ level: "Xác nhận 1", status: "Đang sản xuất" }, { level: "Khác", status: "Hủy" }],
+      [{ seedLotId: "a", quantity: 30 }],
+    );
+    expect(steps.map((s) => s.level)).toEqual(["Siêu nguyên chủng", "Nguyên chủng", "Xác nhận 1"]);
+    expect(steps[1]).toEqual({ level: "Nguyên chủng", lots: 2, certified: 1, producing: 0, left: [{ quantity: 70, unit: "kg" }] });
+    expect(steps[2].producing).toBe(1);
   });
 });

@@ -57,11 +57,13 @@ function CatalogSheet({ groups, pathname, open, onOpenChange, trigger }: { group
 }
 
 /**
- * Khung "bàn làm việc" (M3.1): không có menu dọc.
- * Máy tính / máy tính bảng: thanh tab lớn + hàng tab con theo ngữ cảnh + nút Danh mục.
- * Điện thoại: thanh tab cố định dưới đáy + nút "Thêm".
+ * Khung điều hướng dạng tab (không có menu dọc), hai biến thể:
+ * - "bench" (M3.1, dùng tại phòng cấy): tab lớn cho màn hình cảm ứng; điện thoại có thanh tab dưới đáy + "Thêm".
+ * - "hub" (M3.2): tab ngang gọn theo khu nghiệp vụ, cuộn ngang trên điện thoại.
+ * Cả hai: hàng tab con theo ngữ cảnh, nút Danh mục cho các trang không thuộc tab nào.
  */
-export function BenchNav() {
+export function TabShellNav({ variant }: { variant: "bench" | "hub" }) {
+  const bench = variant === "bench";
   const pathname = usePathname();
   const mod = moduleOf(pathname);
   const [openDesk, setOpenDesk] = useState(false);
@@ -78,7 +80,7 @@ export function BenchNav() {
 
   return (
     <>
-      <nav aria-label={mod.name} className="hidden shrink-0 border-b bg-card md:block">
+      <nav aria-label={mod.name} className={cn("shrink-0 border-b bg-card", bench && "hidden md:block")}>
         <div className="flex items-stretch gap-1 overflow-x-auto px-3 scrollbar-thin lg:px-5">
           {tabs.map((t) => {
             const Icon = t.icon;
@@ -88,27 +90,31 @@ export function BenchNav() {
                 key={t.label}
                 href={t.items[0]?.href ?? mod.home}
                 aria-current={on ? "page" : undefined}
-                className={cn("flex min-h-14 min-w-24 shrink-0 flex-col items-center justify-center gap-0.5 border-b-[3px] px-3 text-sm font-medium transition-colors", on ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50")}
+                className={cn(
+                  "flex shrink-0 items-center justify-center font-medium transition-colors",
+                  bench ? "min-h-14 min-w-24 flex-col gap-0.5 border-b-[3px] px-3 text-sm" : "min-h-11 gap-2 border-b-2 px-3 text-sm",
+                  on ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                )}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className={bench ? "h-5 w-5" : "h-4 w-4"} />
                 {t.label}
               </Link>
             );
           })}
-          <div className="ml-auto flex items-center py-2 pl-2">
+          {catalog.length > 0 && <div className="ml-auto flex items-center py-2 pl-2">
             <CatalogSheet
               groups={catalog}
               pathname={pathname}
               open={openDesk}
               onOpenChange={setOpenDesk}
               trigger={
-                <button type="button" className={cn("inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 text-sm font-medium hover:bg-accent", inCatalog && "border-primary bg-primary/10 text-primary")}>
-                  <LayoutGrid className="h-5 w-5" />
+                <button type="button" className={cn("inline-flex items-center gap-2 rounded-xl border text-sm font-medium hover:bg-accent", bench ? "min-h-11 px-4" : "min-h-8 px-3", inCatalog && "border-primary bg-primary/10 text-primary")}>
+                  <LayoutGrid className={bench ? "h-5 w-5" : "h-4 w-4"} />
                   {currentCatalogItem ? currentCatalogItem.label : "Danh mục"}
                 </button>
               }
             />
-          </div>
+          </div>}
         </div>
         {active && active.items.length > 1 && (
           <div className="flex gap-1.5 overflow-x-auto border-t bg-muted/30 px-3 py-1.5 scrollbar-thin lg:px-5">
@@ -121,8 +127,8 @@ export function BenchNav() {
         )}
       </nav>
 
-      {/* Điện thoại: tab con ở trên, tab chính dưới đáy */}
-      {active && active.items.length > 1 && (
+      {/* Điện thoại (bàn làm việc): tab con ở trên, tab chính dưới đáy */}
+      {bench && active && active.items.length > 1 && (
         <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b bg-card px-3 py-1.5 md:hidden">
           {active.items.map((i) => (
             <Link key={i.href} href={i.href} className={cn("inline-flex h-8 shrink-0 items-center rounded-full px-3 text-xs font-medium", isActiveHref(i.href, pathname) ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
@@ -131,7 +137,7 @@ export function BenchNav() {
           ))}
         </div>
       )}
-      <nav aria-label={`${mod.name} – điện thoại`} className="fixed inset-x-0 bottom-0 z-40 grid border-t bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_8px_rgba(0,0,0,0.06)] md:hidden" style={{ gridTemplateColumns: `repeat(${mobileTabs.length + 1}, minmax(0, 1fr))` }}>
+      {bench && <nav aria-label={`${mod.name} – điện thoại`} className="fixed inset-x-0 bottom-0 z-40 grid border-t bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_8px_rgba(0,0,0,0.06)] md:hidden" style={{ gridTemplateColumns: `repeat(${mobileTabs.length + 1}, minmax(0, 1fr))` }}>
         {mobileTabs.map((t) => {
           const Icon = t.icon;
           const on = t === active;
@@ -154,7 +160,7 @@ export function BenchNav() {
             </button>
           }
         />
-      </nav>
+      </nav>}
     </>
   );
 }

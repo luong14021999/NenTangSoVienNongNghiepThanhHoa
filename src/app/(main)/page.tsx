@@ -84,7 +84,7 @@ export default async function PortalPage() {
       desc: "Lý lịch giống, nguồn gen, khảo nghiệm, chỉ thị phân tử, BLAST+, sản xuất giống, bản đồ cơ sở giống",
       icon: Sprout,
       color: "from-lime-500 to-green-700",
-      href: "/breed-overview",
+      href: "/varieties",
       status: "Đang xây dựng",
       stats: [{ label: "giống trong lý lịch", value: n.varieties }],
     },

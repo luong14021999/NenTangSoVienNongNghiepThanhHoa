@@ -98,9 +98,10 @@ export type NavGroup = { label: string; items: NavItem[] };
 export type NavTab = { label: string; icon: LucideIcon; hrefs: string[]; /** Hiện ở thanh dưới đáy trên điện thoại. */ mobile?: boolean };
 /**
  * Khung điều hướng: "sidebar" = menu dọc bên trái (phòng thí nghiệm);
- * "bench" = tab lớn + danh mục, thanh dưới đáy trên điện thoại (nuôi cấy mô – dùng tại phòng cấy).
+ * "bench" = tab lớn + danh mục, thanh dưới đáy trên điện thoại (nuôi cấy mô – dùng tại phòng cấy);
+ * "hub" = tab ngang theo khu nghiệp vụ, lấy hồ sơ làm trung tâm (giống).
  */
-export type ModuleShell = "sidebar" | "bench";
+export type ModuleShell = "sidebar" | "bench" | "hub";
 /** Khóa giao diện: chọn bộ màu `[data-module]` trong globals.css. */
 export type ModuleKey = "m1" | "m2" | "m3-1" | "m3-2" | "m4";
 /** Phân hệ của nền tảng: mỗi phân hệ gồm nhiều nhóm menu và có bản sắc giao diện riêng. */
@@ -379,7 +380,16 @@ export const navModules: NavModule[] = [
   },
   {
     code: "M3.2",
-    home: "/breed-overview",
+    home: "/varieties",
+    shell: "hub",
+    tabs: [
+      { label: "Giống", icon: Sprout, hrefs: ["/varieties", "/breed-overview", "/germplasm"] },
+      { label: "Nguồn gốc & chọn lọc", icon: GitBranch, hrefs: ["/source-stocks", "/pedigree", "/individuals"] },
+      { label: "Khảo nghiệm & chất lượng", icon: ClipboardCheck, hrefs: ["/breed-trials", "/breed-standards", "/seed-lots"] },
+      { label: "Sản xuất & cung ứng", icon: Tractor, hrefs: ["/seed-workbench", "/breed-production", "/breed-supply", "/breed-orders"] },
+      { label: "Di truyền", icon: Dna, hrefs: ["/genotypes", "/markers", "/blast"] },
+      { label: "Bản đồ & thị trường", icon: MapPinned, hrefs: ["/breed-facilities", "/breed-distributions", "/market-posts"] },
+    ],
     name: "Giống cây trồng, vật nuôi, thủy sản",
     key: "m3-2",
     icon: Sprout,
@@ -389,14 +399,14 @@ export const navModules: NavModule[] = [
       {
         label: "Tổng quan",
         items: [
-          { href: "/breed-overview", label: "Tổng quan giống", icon: LayoutDashboard },
+          { href: "/breed-overview", label: "Tổng quan", icon: LayoutDashboard },
           { href: "/seed-workbench", label: "Bàn sản xuất giống", icon: Workflow },
         ],
       },
       {
         label: "Danh mục & hồ sơ giống",
         items: [
-          { href: "/varieties", label: "Lý lịch & pháp lý giống", icon: Sprout },
+          { href: "/varieties", label: "Danh mục giống", icon: Sprout },
           { href: "/germplasm", label: "Nguồn gen", icon: Dna },
         ],
       },

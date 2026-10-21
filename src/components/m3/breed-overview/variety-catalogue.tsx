@@ -17,6 +17,10 @@ export type CatalogueVariety = {
   recognitionNo: string;
   protected: boolean;
   regions: string;
+  /** Cảnh báo ngắn (VD văn bản sắp hết hiệu lực). */
+  alert?: string;
+  /** Số liệu ngắn (VD 3 khảo nghiệm · 2 lô giống). */
+  facts?: string;
 };
 
 const statusVariant: Record<string, "warning" | "success" | "default" | "secondary"> = {
@@ -26,7 +30,8 @@ const statusVariant: Record<string, "warning" | "success" | "default" | "seconda
   "Ngừng sản xuất": "secondary",
 };
 
-function VarietyCard({ v }: { v: CatalogueVariety }) {
+/** Thẻ giống: ảnh nền luống, mã, nhóm, trạng thái pháp lý – bấm để mở hồ sơ giống. */
+export function VarietyCard({ v }: { v: CatalogueVariety }) {
   const author = [v.owner, v.origin].filter(Boolean).join(" · ");
   return (
     <li>
@@ -56,6 +61,8 @@ function VarietyCard({ v }: { v: CatalogueVariety }) {
               <MapPin className="mt-px w-3 h-3 shrink-0" aria-hidden /> <span className="line-clamp-1">{v.regions}</span>
             </p>
           )}
+          {v.facts && <p className="text-[11px] text-muted-foreground">{v.facts}</p>}
+          {v.alert && <p className="text-[11px] font-medium text-rose-600">{v.alert}</p>}
           <div className="mt-auto flex flex-wrap gap-1 pt-1">
             <Badge variant={statusVariant[v.status] ?? "secondary"} className="text-[10px] px-1.5">{v.status || "Chưa rõ"}</Badge>
             {v.circulationType && v.circulationType !== "Chưa lưu hành" && <Badge variant="outline" className="text-[10px] px-1.5">{v.circulationType}</Badge>}
