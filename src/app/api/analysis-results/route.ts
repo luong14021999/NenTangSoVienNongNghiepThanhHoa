@@ -10,6 +10,7 @@ import {
 import { buildResultColumns, validateInput, type ResultInput } from "@/lib/data/result-input";
 import { todayISO } from "@/lib/dates";
 import { loadReleaseContext } from "@/lib/data/release-rules";
+import { syncAssignment } from "@/lib/data/custody";
 import { authorize } from "@/lib/data/access";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +53,7 @@ export async function POST(req: Request) {
     raw_files: [],
   });
   const raw = body.rawFile?.content ? await saveRawFile(created.id, body.rawFile, actor.name) : null;
+  await syncAssignment(created.sampleCode, created.criterion, "Đang làm");
   await addAudit(created.id, {
     actor: actor.name,
     action: "Tạo kết quả",

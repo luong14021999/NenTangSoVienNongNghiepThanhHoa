@@ -38,6 +38,8 @@ const SCOPE: { prefix: string; fn: string; req: string }[] = [
   { prefix: "TC-IO", fn: "Đọc file dữ liệu thiết bị CSV/TXT", req: "M2.4" },
   { prefix: "TC-TF", fn: "Định dạng nhập biến, thành phần ngân sách, điểm chuẩn; kiểm tra công thức", req: "M2.4" },
   { prefix: "TC-CR", fn: "Tính kết quả toàn chuỗi: đường chuẩn → công thức → thống kê → U (đối chiếu tính độc lập)", req: "M2.4 · §7.5 · §7.6" },
+  { prefix: "TC-BC", fn: "Mã vạch Code 128-B trên nhãn mẫu: mã kiểm tra, ký tự ngoài bảng mã", req: "M2.1 · §7.4.2" },
+  { prefix: "TC-SA", fn: "Thống kê: tháng theo giờ VN, TAT, trung vị, doanh thu + VAT", req: "M2.7" },
 ];
 
 export default async function SoftwareValidationPage() {

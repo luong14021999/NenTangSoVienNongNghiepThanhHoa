@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Plus,
   Filter,
@@ -7,7 +8,7 @@ import {
   User,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
-import { todayISO } from "@/lib/dates";
+import { fmtDateVN, todayISO } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -205,6 +206,12 @@ export default async function SamplesPage({
                 <Download />
                 Xuất Excel
               </Button>
+              <Link
+                href={`/sample-labels?codes=${encodeURIComponent(samples.map((s) => s.code).join(","))}`}
+                className="h-9 px-3 inline-flex items-center gap-1.5 rounded-md border text-sm font-medium hover:bg-accent"
+              >
+                <QrCode className="w-4 h-4" /> In nhãn ({samples.length})
+              </Link>
               <AddSampleDialog />
             </div>
           </CardHeader>
@@ -248,17 +255,19 @@ export default async function SamplesPage({
                   {samples.map((s) => (
                     <TableRow key={s.id}>
                       <TableCell className="font-mono font-medium">
-                        {s.code}
+                        <Link href={`/samples/${encodeURIComponent(s.code)}`} className="text-primary hover:underline" title="Hồ sơ hành trình mẫu">
+                          {s.code}
+                        </Link>
                       </TableCell>
                       <TableCell className="max-w-[220px] truncate">
                         {s.customer}
                       </TableCell>
                       <TableCell>{s.type}</TableCell>
                       <TableCell className="text-muted-foreground">
-                        {s.receivedAt}
+                        {fmtDateVN(s.receivedAt)}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {s.dueAt}
+                        {fmtDateVN(s.dueAt)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5 text-sm">
@@ -280,11 +289,20 @@ export default async function SamplesPage({
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <DeleteEntityButton
-                          entity="samples"
-                          id={s.id}
-                          label={s.code}
-                        />
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Link
+                            href={`/sample-labels?codes=${encodeURIComponent(s.code)}`}
+                            className="h-8 px-2.5 inline-flex items-center gap-1 rounded-md border text-xs font-medium hover:bg-accent"
+                            title="In nhãn mã vạch / QR"
+                          >
+                            <QrCode className="w-3.5 h-3.5" /> Nhãn
+                          </Link>
+                          <DeleteEntityButton
+                            entity="samples"
+                            id={s.id}
+                            label={s.code}
+                          />
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

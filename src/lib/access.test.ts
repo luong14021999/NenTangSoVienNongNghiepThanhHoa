@@ -29,6 +29,9 @@ describe("Phân quyền theo vai trò", () => {
     expect(roleAllows(["Tiếp nhận mẫu"], permissionForEntity("equipment"))).toBe(false);
     expect(roleAllows(["Tiếp nhận mẫu"], permissionForEntity("nonconformities"))).toBe(true);
     expect(permissionForEntity("module-moi")).toBe("write.lab");
+    expect(roleAllows(["KTV"], permissionForEntity("assignments"))).toBe(false); // KTV không tự phân công
+    expect(roleAllows(["QA/QC"], permissionForEntity("assignments"))).toBe(true);
+    expect(roleAllows(["Tiếp nhận mẫu"], permissionForEntity("sample-events"))).toBe(true);
   });
   it("TC-AU-04 bật phân quyền lần đầu phải gán Quản trị cho chính mình (chống tự khoá)", () => {
     expect(validateBootstrap([{ email: "a@x.vn", roles: ["Quản trị"] }], "A@x.vn")).toBeNull();

@@ -58,6 +58,9 @@ export const ENTITY_LABELS: Record<string, string> = {
   "calibration-curves": "Đường chuẩn",
   "uncertainty-budgets": "Ngân sách ĐKĐBĐ",
   "raw-data-files": "File dữ liệu thô",
+  "sample-events": "Hành trình mẫu",
+  assignments: "Phân công",
+  notebook: "Sổ tay thí nghiệm",
   "system-incidents": "Sự cố hệ thống",
 };
 

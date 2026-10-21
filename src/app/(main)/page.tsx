@@ -21,7 +21,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { samples, dashboardKpis, equipments, chemicals } from "@/lib/mock-data";
+import { samplesStore } from "@/lib/data/samples";
+import { equipmentStore } from "@/lib/data/equipment";
+import { chemicalsStore } from "@/lib/data/chemicals";
+import { listReports } from "@/lib/data/reports";
+import { daysUntil, fmtDateVN, todayISO } from "@/lib/dates";
+import { lastMonths, monthKey, turnaroundDays } from "@/lib/stats";
+
+export const dynamic = "force-dynamic";
 
 const statusVariant = {
   "Đã tiếp nhận": "secondary",
@@ -31,17 +38,41 @@ const statusVariant = {
   "Đã trả KQ": "outline",
 } as const;
 
-export default function DashboardPage() {
-  const recent = samples.slice(0, 5);
+export default async function DashboardPage() {
+  const [samples, equipments, chemicals, reports] = await Promise.all([samplesStore.list(), equipmentStore.list(), chemicalsStore.list(), listReports()]);
+  const [prevMonth, thisMonth] = lastMonths(todayISO(), 2);
+  const inMonth = (m: string) => samples.filter((s) => s.receivedAt && monthKey(s.receivedAt) === m).length;
+  const sampleTotal = inMonth(thisMonth);
+  const prevTotal = inMonth(prevMonth);
+  const open = samples.filter((s) => s.status !== "Hoàn thành" && s.status !== "Đã trả KQ");
+  const dueSoon = open.filter((s) => s.dueAt && daysUntil(s.dueAt) <= 2).length;
+  const calibrationDue = equipments.filter((e) => e.status !== "Ngừng" && e.nextCalibration && daysUntil(e.nextCalibration) <= 60).length;
+  const lowStock = chemicals.filter((c) => c.minStock > 0 && c.stock < c.minStock);
+  const expiringSoon = chemicals.filter((c) => c.expiry && daysUntil(c.expiry) <= 30).length;
+  const trend = prevTotal ? `${sampleTotal >= prevTotal ? "+" : ""}${Math.round(((sampleTotal - prevTotal) / prevTotal) * 100)}% so với tháng trước` : `tháng trước: ${prevTotal}`;
+
+  const recent = [...samples].sort((a, b) => (b.receivedAt || "").localeCompare(a.receivedAt || "")).slice(0, 5);
   const upcomingCalibration = equipments
-    .filter((e) => e.status !== "Ngừng")
-    .sort(
-      (a, b) =>
-        new Date(a.nextCalibration).getTime() -
-        new Date(b.nextCalibration).getTime(),
-    )
+    .filter((e) => e.status !== "Ngừng" && e.nextCalibration)
+    .sort((a, b) => a.nextCalibration.localeCompare(b.nextCalibration))
     .slice(0, 4);
-  const lowStock = chemicals.filter((c) => c.stock < c.minStock);
+
+  // Tỷ lệ trả đúng hạn theo loại mẫu (lần phát hành đầu tiên ≤ hạn trả).
+  const firstIssue = new Map<string, string>();
+  for (const r of reports) {
+    const prev = firstIssue.get(r.sampleCode);
+    if (r.issuedAt && (!prev || r.issuedAt < prev)) firstIssue.set(r.sampleCode, r.issuedAt);
+  }
+  const perf = Object.entries(
+    samples
+      .filter((s) => firstIssue.has(s.code))
+      .reduce<Record<string, { n: number; ok: number }>>((acc, s) => {
+        const g = (acc[s.type || "Khác"] ??= { n: 0, ok: 0 });
+        g.n++;
+        if (!s.dueAt || turnaroundDays(s.dueAt, firstIssue.get(s.code)!) <= 0) g.ok++;
+        return acc;
+      }, {}),
+  ).map(([name, g]) => ({ name, value: Math.round((g.ok / g.n) * 100), n: g.n }));
 
   return (
     <>
@@ -78,29 +109,29 @@ export default function DashboardPage() {
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <KpiCard
             label="Mẫu trong tháng"
-            value={dashboardKpis.sampleTotal}
-            hint="+12% so với tháng trước"
+            value={sampleTotal}
+            hint={trend}
             icon={<ClipboardList className="w-5 h-5" />}
             accent="bg-blue-50 text-blue-600"
           />
           <KpiCard
             label="Đang phân tích"
-            value={dashboardKpis.sampleInProgress}
-            hint={`${dashboardKpis.sampleOverdue} mẫu sắp đến hạn`}
+            value={open.length}
+            hint={`${dueSoon} mẫu đến hạn trong 2 ngày`}
             icon={<FlaskConical className="w-5 h-5" />}
             accent="bg-amber-50 text-amber-600"
           />
           <KpiCard
             label="Thiết bị cần hiệu chuẩn"
-            value={dashboardKpis.equipmentCalibrationDue}
+            value={calibrationDue}
             hint="trong 60 ngày tới"
             icon={<Wrench className="w-5 h-5" />}
             accent="bg-violet-50 text-violet-600"
           />
           <KpiCard
             label="Hóa chất tồn thấp"
-            value={dashboardKpis.chemicalLowStock}
-            hint={`${dashboardKpis.chemicalExpiringSoon} sắp hết hạn`}
+            value={lowStock.length}
+            hint={`${expiringSoon} sắp hết hạn (30 ngày)`}
             icon={<Beaker className="w-5 h-5" />}
             accent="bg-rose-50 text-rose-600"
           />
@@ -131,8 +162,8 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm">{s.code}</span>
-                        <Badge variant={statusVariant[s.status]}>
+                        <Link href={`/samples/${encodeURIComponent(s.code)}`} className="font-medium text-sm hover:underline">{s.code}</Link>
+                        <Badge variant={statusVariant[s.status] ?? "secondary"}>
                           {s.status}
                         </Badge>
                       </div>
@@ -149,7 +180,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="hidden lg:flex items-center gap-1 text-xs text-muted-foreground w-32">
                       <Clock className="w-3.5 h-3.5" />
-                      <span>Hạn {s.dueAt}</span>
+                      <span>Hạn {fmtDateVN(s.dueAt?.slice(0, 10))}</span>
                     </div>
                   </li>
                 ))}
@@ -176,7 +207,7 @@ export default function DashboardPage() {
                       <Wrench className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                       <span className="truncate flex-1">{e.name}</span>
                       <span className="text-xs text-muted-foreground">
-                        {e.nextCalibration}
+                        {fmtDateVN(e.nextCalibration)}
                       </span>
                     </li>
                   ))}
@@ -216,19 +247,16 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle>Hiệu suất phòng thí nghiệm</CardTitle>
               <CardDescription>
-                Tỷ lệ hoàn thành đúng hạn theo nhóm chỉ tiêu
+                Tỷ lệ trả kết quả đúng hạn theo loại mẫu ·{" "}
+                <Link href="/statistics" className="text-primary hover:underline">Thống kê chi tiết →</Link>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {[
-                { name: "Đất & phân bón", value: 94 },
-                { name: "Nước tưới & môi trường", value: 90 },
-                { name: "Dư lượng BVTV & nông sản", value: 81 },
-                { name: "Vi sinh đất – Sinh học", value: 88 },
-              ].map((g) => (
+              {perf.length === 0 && <div className="text-sm text-muted-foreground">Chưa có phiếu kết quả nào được phát hành</div>}
+              {perf.map((g) => (
                 <div key={g.name}>
                   <div className="flex justify-between text-sm mb-1.5">
-                    <span>{g.name}</span>
+                    <span>{g.name} <span className="text-muted-foreground text-xs">({g.n} mẫu)</span></span>
                     <span className="font-medium">{g.value}%</span>
                   </div>
                   <Progress value={g.value} />

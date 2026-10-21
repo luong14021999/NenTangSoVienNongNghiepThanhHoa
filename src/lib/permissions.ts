@@ -12,6 +12,7 @@ export const PERMISSIONS = {
   "reports.issue": { label: "Phát hành phiếu kết quả (ký điện tử)", roles: ["Trưởng phòng", "QA/QC"] },
   "reports.revoke": { label: "Thu hồi phiếu kết quả (ký điện tử)", roles: ["Trưởng phòng"] },
   "rules.draft": { label: "Soạn quy tắc kiểm soát phát hành", roles: ["QA/QC", "Trưởng phòng"] },
+  "work.assign": { label: "Phân công chỉ tiêu cho KTV", roles: ["Trưởng phòng", "QA/QC"] },
   "rules.approve": { label: "Phê duyệt quy tắc kiểm soát phát hành", roles: ["Trưởng phòng"] },
   "write.personnel": { label: "Nhân sự, ủy quyền phép thử, cam kết", roles: ["Trưởng phòng", "Quản trị"] },
   "write.quality": { label: "Tài liệu, đánh giá nội bộ, xem xét lãnh đạo, rủi ro, quy tắc quyết định, nhà cung cấp, xác nhận PP", roles: ["QA/QC", "Trưởng phòng", "Quản trị"] },
@@ -41,6 +42,8 @@ const ENTITY_PERMISSION: Record<string, Permission> = {
   feedback: "write.reception",
   "calc-templates": "write.quality",
   "uncertainty-budgets": "write.quality",
+  "sample-events": "write.reception",
+  assignments: "work.assign",
   nonconformities: "write.any",
   "system-incidents": "write.any",
 };

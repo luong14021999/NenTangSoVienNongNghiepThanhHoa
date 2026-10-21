@@ -11,6 +11,9 @@ import {
   Users,
   TestTube,
   Users2,
+  UserCog,
+  NotebookPen,
+  BarChart3,
   Archive,
   Thermometer,
   ShieldCheck,
@@ -69,7 +72,9 @@ export const navGroups: NavGroup[] = [
       { href: "/campaigns", label: "Quan trắc theo đợt", icon: Telescope },
       { href: "/field", label: "Lấy mẫu hiện trường", icon: Smartphone },
       { href: "/samples", label: "Tiếp nhận mẫu", icon: ClipboardList },
+      { href: "/assignments", label: "Phân công công việc", icon: UserCog },
       { href: "/analysis", label: "Quy trình phân tích", icon: FlaskConical },
+      { href: "/notebook", label: "Sổ tay thí nghiệm", icon: NotebookPen },
     ],
   },
   {
@@ -114,6 +119,7 @@ export const navGroups: NavGroup[] = [
     label: "Khách hàng & Thị trường",
     items: [
       { href: "/customers", label: "Khách hàng", icon: Users2 },
+      { href: "/statistics", label: "Thống kê", icon: BarChart3 },
       { href: "/services", label: "Dịch vụ & Tư vấn", icon: Briefcase },
     ],
   },

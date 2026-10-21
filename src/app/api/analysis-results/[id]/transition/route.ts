@@ -11,6 +11,7 @@ import {
   type TransitionAction,
 } from "@/lib/data/results";
 import { loadReleaseContext } from "@/lib/data/release-rules";
+import { syncAssignment } from "@/lib/data/custody";
 import { blockers, warnings } from "@/lib/release-checks";
 
 export const dynamic = "force-dynamic";
@@ -96,6 +97,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (action === "manager_approve") patch.finished_at = new Date().toISOString();
 
   const item = await updateResult(id, patch);
+  if (action === "manager_approve") await syncAssignment(current.sampleCode, current.criterion, "Hoàn thành");
   await addAudit(id, {
     actor: actor.name,
     action: t.label,
