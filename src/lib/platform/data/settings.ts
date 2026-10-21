@@ -6,6 +6,7 @@ export const SETTINGS = {
   mfa_trust_hours: { label: "Ghi nhớ trình duyệt đã xác thực 2 lớp (giờ)", type: "number", default: 12 },
   api_default_rate_limit: { label: "Giới hạn mặc định cho khóa API mới (lượt / phút)", type: "number", default: 60 },
   backup_retention_days: { label: "Thời gian giữ nhật ký sức khỏe / sao lưu (ngày)", type: "number", default: 30 },
+  tissue_contamination_threshold: { label: "M3.1: ngưỡng cảnh báo tỷ lệ nhiễm mẫu nuôi cấy mô (%)", type: "number", default: 7 },
   maintenance_banner: { label: "Thông báo bảo trì hiển thị cho người dùng (để trống = tắt)", type: "text", default: "" },
 } as const;
 export type SettingKey = keyof typeof SETTINGS;

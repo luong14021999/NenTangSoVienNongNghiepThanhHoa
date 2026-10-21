@@ -71,6 +71,7 @@ import {
   Layers,
   Handshake,
   Repeat,
+  TreeDeciduous,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -252,11 +253,28 @@ export const navModules: NavModule[] = [
     name: "Nuôi cấy mô & truy xuất",
     groups: [
       {
+        label: "Tổng quan",
+        items: [{ href: "/tissue-stats", label: "Thống kê tỷ lệ nhiễm", icon: BarChart3 }],
+      },
+      {
+        label: "Nguồn giống & vật liệu",
+        items: [
+          { href: "/mother-plants", label: "Cây mẹ & nguồn giống", icon: TreeDeciduous },
+          { href: "/tissue-materials", label: "Vật liệu khởi đầu", icon: Leaf },
+        ],
+      },
+      {
+        label: "Môi trường nuôi cấy",
+        items: [
+          { href: "/media-recipes", label: "Công thức & định mức", icon: FlaskConicalOff },
+          { href: "/media-batches", label: "Lô môi trường", icon: Beaker },
+        ],
+      },
+      {
         label: "Nuôi cấy",
         items: [
-          { href: "/tissue-materials", label: "Vật liệu khởi đầu", icon: Leaf },
-          { href: "/media-recipes", label: "Công thức môi trường", icon: FlaskConicalOff },
           { href: "/culture-batches", label: "Mẻ cấy & cấy chuyển", icon: Boxes },
+          { href: "/growth-rooms", label: "Tủ cấy & phòng nuôi", icon: Thermometer },
         ],
       },
       {

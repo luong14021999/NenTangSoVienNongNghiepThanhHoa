@@ -10,6 +10,7 @@ export const API_SCOPES = {
   "stats:read": "Đọc số liệu thống kê tổng hợp",
   "warehouse:read": "Đọc tập dữ liệu kho dữ liệu dùng chung",
   "lgsp:inbound": "Gửi thông điệp vào hệ thống qua LGSP/NDXP",
+  "m3:readings": "Thiết bị đo (hạng mục I.1.4) gửi nhiệt độ, độ ẩm, ánh sáng phòng nuôi cấy mô",
 } as const;
 export type ApiScope = keyof typeof API_SCOPES;
 

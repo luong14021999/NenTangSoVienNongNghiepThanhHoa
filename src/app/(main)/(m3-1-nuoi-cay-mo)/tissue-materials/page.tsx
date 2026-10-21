@@ -5,25 +5,13 @@ import { CrudTableCard } from "@/components/crud/crud-table-card";
 import { EntityFormDialog, type CrudField } from "@/components/crud/entity-form-dialog";
 import { EntitySearchInput } from "@/components/crud/search-input";
 import { StatGrid, clip } from "@/components/common/stat-grid";
-import { EXPLANT_TYPES, MATERIAL_STATUSES, tissueMaterialStore, type TissueMaterial } from "@/lib/modules/m3/data/tissue";
-import { matches } from "@/lib/platform/ref-options";
+import { EXPLANT_TYPES, MATERIAL_STATUSES, motherPlantStore, tissueMaterialStore, type TissueMaterial } from "@/lib/modules/m3/data/tissue";
+import { diseaseVariant } from "@/lib/modules/m3/ui";
+import { byId, matches, refOptions } from "@/lib/platform/ref-options";
 import { fmtDateVN } from "@/lib/platform/dates";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Vật liệu khởi đầu" };
-
-const FIELDS: CrudField[] = [
-  { name: "code", label: "Mã vật liệu", required: true, mono: true, placeholder: "VD: VL-2026-001" },
-  { name: "species", label: "Loài", required: true, placeholder: "VD: Chuối, Lan, Mía…" },
-  { name: "variety", label: "Giống" },
-  { name: "source", label: "Nguồn (cây mẹ / nơi lấy)" },
-  { name: "collectedAt", label: "Ngày lấy mẫu", type: "date" },
-  { name: "explantType", label: "Loại mẫu cấy", type: "select", options: [...EXPLANT_TYPES] },
-  { name: "quantity", label: "Số mẫu đưa vào", type: "number" },
-  { name: "status", label: "Trạng thái", type: "select", options: [...MATERIAL_STATUSES] },
-  { name: "sterilization", label: "Quy trình khử trùng (hóa chất, nồng độ, thời gian)", type: "textarea" },
-  { name: "note", label: "Ghi chú", type: "textarea" },
-];
 
 const statusVariant: Record<TissueMaterial["status"], "warning" | "success" | "destructive"> = {
   "Đang khử trùng": "warning",
@@ -33,7 +21,23 @@ const statusVariant: Record<TissueMaterial["status"], "warning" | "success" | "d
 
 export default async function TissueMaterialsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q = "" } = await searchParams;
-  const all = (await tissueMaterialStore.list()).sort((a, b) => b.code.localeCompare(a.code));
+  const [materials, mothers] = await Promise.all([tissueMaterialStore.list(), motherPlantStore.list()]);
+  const all = materials.sort((a, b) => b.code.localeCompare(a.code));
+  const motherById = byId(mothers);
+  const FIELDS: CrudField[] = [
+      { name: "motherPlantId", label: "Cây mẹ (cây nhiễm bệnh bị chặn)", type: "select", full: true, options: refOptions(mothers, (m) => `${m.code} · ${m.species} ${m.variety} – ${m.diseaseStatus}`) },
+    { name: "code", label: "Mã vật liệu", required: true, mono: true, placeholder: "VD: VL-2026-001" },
+    { name: "species", label: "Loài", required: true, placeholder: "VD: Chuối, Lan, Mía…" },
+    { name: "variety", label: "Giống" },
+    { name: "source", label: "Nguồn (cây mẹ / nơi lấy)" },
+    { name: "collectedAt", label: "Ngày lấy mẫu", type: "date" },
+    { name: "explantType", label: "Loại mẫu cấy", type: "select", options: [...EXPLANT_TYPES] },
+    { name: "quantity", label: "Số mẫu đưa vào", type: "number" },
+    { name: "status", label: "Trạng thái", type: "select", options: [...MATERIAL_STATUSES] },
+    { name: "sterilization", label: "Quy trình khử trùng (hóa chất, nồng độ, thời gian)", type: "textarea" },
+    { name: "note", label: "Ghi chú", type: "textarea" },
+  ];
+
   const query = q.trim().toLowerCase();
   const rows = all.filter((x) => matches(query, x.code, x.species, x.variety, x.source));
   const count = (s: TissueMaterial["status"]) => all.filter((x) => x.status === s).length;
@@ -55,12 +59,12 @@ export default async function TissueMaterialsPage({ searchParams }: { searchPara
         </div>
         <CrudTableCard
           title="Danh sách vật liệu khởi đầu"
-          description="Điểm đầu của chuỗi truy xuất: vật liệu → mẻ cấy → lô cây giống"
+          description="Chuỗi truy xuất: cây mẹ → vật liệu → mẻ cấy → lô cây giống"
           endpoint="/api/tissue-materials"
           entity="tissue-materials"
           editFields={FIELDS}
           addNode={<EntityFormDialog mode="add" endpoint="/api/tissue-materials" title="Thêm vật liệu" fields={FIELDS} addLabel="Thêm vật liệu" />}
-          headers={["Mã / ngày lấy", "Loài – giống", "Nguồn", "Mẫu cấy", "Khử trùng", "Trạng thái"]}
+          headers={["Mã / ngày lấy", "Loài – giống", "Cây mẹ · nguồn", "Mẫu cấy", "Khử trùng", "Trạng thái"]}
           emptyText={query ? "Không có vật liệu phù hợp" : "Chưa có vật liệu nào"}
           rows={rows.map((x) => ({
             id: x.id,
@@ -75,7 +79,17 @@ export default async function TissueMaterialsPage({ searchParams }: { searchPara
                 <div className="text-sm font-medium">{x.species}</div>
                 <div className="text-[11px] text-muted-foreground">{x.variety || "—"}</div>
               </div>,
-              <span key="n" className="text-xs">{x.source || "—"}</span>,
+              <div key="n" className="text-xs">
+                {motherById.get(x.motherPlantId) ? (
+                  <span className="inline-flex items-center gap-1">
+                    <span className="font-mono">{motherById.get(x.motherPlantId)!.code}</span>
+                    <Badge variant={diseaseVariant[motherById.get(x.motherPlantId)!.diseaseStatus] ?? "secondary"}>{motherById.get(x.motherPlantId)!.diseaseStatus}</Badge>
+                  </span>
+                ) : (
+                  <span className="text-amber-600">chưa gắn cây mẹ</span>
+                )}
+                <div className="text-muted-foreground">{x.source}</div>
+              </div>,
               <span key="e" className="text-xs whitespace-nowrap">{x.explantType} · {x.quantity}</span>,
               <span key="k" className="text-xs text-muted-foreground">{clip(x.sterilization || "—", 60)}</span>,
               <Badge key="st" variant={statusVariant[x.status] ?? "secondary"}>{x.status}</Badge>,

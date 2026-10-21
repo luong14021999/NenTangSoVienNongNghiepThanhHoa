@@ -74,7 +74,7 @@ export default async function PortalPage() {
       desc: "Vật liệu khởi đầu, công thức môi trường, theo dõi mẻ cấy, nhiễm mẫu, ra ngôi, xuất bán và truy xuất nguồn gốc cây giống",
       icon: Microscope,
       color: "from-violet-500 to-purple-700",
-      href: "/culture-batches",
+      href: "/tissue-stats",
       status: "Đang xây dựng",
       stats: [{ label: "mẻ cấy đang nuôi", value: n.batches_growing }],
     },

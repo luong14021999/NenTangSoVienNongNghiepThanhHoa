@@ -1,9 +1,11 @@
+import { NextResponse } from "next/server";
 import { cultureBatchStore, type CultureBatch } from "@/lib/modules/m3/data/tissue";
 import { collectionRoutes } from "@/lib/platform/api/crud";
+import { checkCultureBatch } from "./check";
 
 export const dynamic = "force-dynamic";
 
-export const { GET, POST } = collectionRoutes<CultureBatch>(
+const routes = collectionRoutes<CultureBatch>(
   cultureBatchStore,
   {
     code: "",
@@ -19,8 +21,24 @@ export const { GET, POST } = collectionRoutes<CultureBatch>(
     room: "",
     operator: "",
     status: "Đang nuôi",
+    parentBatchId: "",
+    mediaBatchId: "",
+    cabinetId: "",
+    roomId: "",
+    explants: 0,
+    survived: 0,
     note: "",
   },
-  (b) =>
-    !b.code ? "Thiếu mã mẻ cấy" : Number(b.contaminated) > Number(b.vessels) ? "Số bình nhiễm không được lớn hơn số bình cấy" : null,
+  (b) => (!b.code ? "Thiếu mã mẻ cấy" : null),
 );
+
+export const GET = routes.GET;
+
+export async function POST(req: Request) {
+  const body = (await req.json().catch(() => ({}))) as Partial<CultureBatch>;
+  const err = await checkCultureBatch(body);
+  if (err) return NextResponse.json({ error: err }, { status: 400 });
+  const headers = new Headers(req.headers);
+  headers.delete("content-length");
+  return routes.POST(new Request(req.url, { method: "POST", headers, body: JSON.stringify(body) }));
+}

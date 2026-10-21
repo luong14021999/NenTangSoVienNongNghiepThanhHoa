@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FlaskConicalOff, Sprout, TestTube, PauseCircle } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +54,7 @@ export default async function MediaRecipesPage({ searchParams }: { searchParams:
         </div>
         <CrudTableCard
           title="Danh sách công thức"
-          description="Mỗi mẻ cấy ghi rõ công thức đã dùng để truy xuất"
+          description="Bấm mã công thức để nhập định mức hóa chất và tính lượng cần khi pha"
           endpoint="/api/media-recipes"
           entity="media-recipes"
           editFields={FIELDS}
@@ -65,7 +66,7 @@ export default async function MediaRecipesPage({ searchParams }: { searchParams:
             label: x.code,
             initial: x,
             cells: [
-              <span key="c" className="font-mono text-xs font-semibold">{x.code}</span>,
+              <Link key="c" href={`/media-recipes/${x.id}`} className="font-mono text-xs font-semibold text-primary hover:underline">{x.code}</Link>,
               <div key="n">
                 <div className="text-sm font-medium">{x.name}</div>
                 <div className="text-[11px] text-muted-foreground">{x.stage}</div>
