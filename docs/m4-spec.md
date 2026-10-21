@@ -19,8 +19,8 @@ Quản lý nhiệm vụ khoa học và công nghệ theo vòng đời, kết qu�
 | Đợt | Phạm vi | Trạng thái |
 |---|---|---|
 | 1 | M4.1 cổng tiếp nhận + M4.3 tra cứu công khai + M4.7 cho cổng | Xong |
-| 2 | Hoàn thiện M4.2 (định mức, phê duyệt báo giá, cảnh báo trễ hạn, trả kết quả, hóa đơn điện tử, báo cáo doanh thu) | Đang làm |
-| 3 | M4.4 quản trị nhiệm vụ KH&CN | Kế hoạch |
+| 2 | Hoàn thiện M4.2 (định mức, phê duyệt báo giá, cảnh báo trễ hạn, trả kết quả, hóa đơn điện tử, báo cáo doanh thu) | Xong |
+| 3 | M4.4 quản trị nhiệm vụ KH&CN | Đang làm |
 | 4 | M4.5 kho tri thức + M4.6 tài sản trí tuệ, hợp tác, chuyển giao | Kế hoạch |
 
 ## Đợt 1 – thiết kế
@@ -76,3 +76,16 @@ Cán bộ có thể đổi đơn vị xử lý ở trang nội bộ `/service-re
 | Hóa đơn điện tử | Bảng `m4.invoices`. **Không có chế độ mô phỏng** vì hóa đơn là chứng từ tài chính. Khi chưa nối nhà cung cấp (VNPT, Viettel, MISA, BKAV…), phát hành trên phần mềm hóa đơn hiện dùng rồi nhập số hóa đơn, ký hiệu, mã tra cứu. Bộ chuyển đổi API viết ở `src/lib/modules/m4/einvoice.ts` khi có hợp đồng với nhà cung cấp |
 | Quan hệ khách hàng | Trang `/customers/[id]` gom yêu cầu, báo giá, hợp đồng, đã thu, công nợ và nhật ký chăm sóc (`m4.customer_interactions`) |
 | Báo cáo doanh thu | Trang `/revenue`: giá trị ký kết và đã thu theo tháng; doanh thu, giá thành, tỷ suất theo nhóm dịch vụ; theo khách hàng. Xuất CSV qua `/api/m4-reports/revenue` (UTF-8 có BOM, chặn công thức Excel) |
+
+## Đợt 3 – thiết kế
+
+| Chức năng | Cách làm |
+|---|---|
+| Nhiệm vụ & vòng đời | Bảng `m4.research_tasks`. Trạng thái: Đề xuất → Đang xét duyệt → Được phê duyệt → Đang thực hiện → Chờ nghiệm thu → Đã nghiệm thu (hoặc Không phê duyệt / Dừng). Từ "Được phê duyệt" trở đi bắt buộc có số và ngày quyết định; "Đã nghiệm thu" bắt buộc có kết quả và ngày nghiệm thu. Quyền ghi `write.research` (vai trò Quản lý khoa học, Trưởng phòng, Quản trị) |
+| Tiến độ, kinh phí, thành viên | Mốc công việc (`task_milestones`), giải ngân (`task_expenses`), thành viên (`task_members`). Cảnh báo: mốc trễ hạn, quá hạn kết thúc, sắp kết thúc (≤ 30 ngày), vượt kinh phí |
+| Chống trùng lặp | Danh mục đề tài, dự án trên địa bàn tỉnh (`provincial_projects`). So khớp tên (70%) và từ khóa (30%) bằng hệ số Dice, sau khi bỏ dấu tiếng Việt và bỏ các từ chung chung (nghiên cứu, ứng dụng, Thanh Hóa…). Từ 50% trở lên: "Nghi trùng cao"; 30–50%: "Cần xem xét". Có công cụ kiểm tra ý tưởng trước khi đề xuất, và mục kiểm tra ngay trên trang chi tiết nhiệm vụ |
+| Thí nghiệm đồng ruộng | `field_trials`: kiểu bố trí, công thức × nhắc lại, diện tích ô, địa điểm, tọa độ (mở OpenStreetMap), vụ, kết quả. Khảo nghiệm giống VCU/DUS vẫn quản lý ở M3.2 |
+| Lý lịch khoa học | `researchers`: học vị, học hàm, chuyên ngành, công trình; gắn mã nhân sự M2; đếm số nhiệm vụ tham gia |
+| Dữ liệu từ M2 | `task_samples` gắn mã mẫu (kiểm tra mẫu có thật trong M2). Kết quả chỉ hiện giá trị khi trạng thái là **Đã duyệt** (đã qua QA/QC và Trưởng phòng) |
+| Thống kê định kỳ | `/research-stats`: theo cấp, lĩnh vực, trạng thái, kết quả nghiệm thu, nhân lực theo học vị, giải ngân theo nội dung chi; xuất CSV `/api/m4-reports/research` |
+| CSDL quốc gia | Dịch vụ `nhiem-vu-khcn` của bộ kết nối M1, gửi qua NDXP. Chỉ gửi thông tin công bố của nhiệm vụ, không gửi liên hệ cá nhân. Chưa cấu hình `NDXP_BASE_URL` / `NDXP_TOKEN` thì chạy chế độ mô phỏng; mã tiếp nhận chỉ được lưu khi gửi thật |

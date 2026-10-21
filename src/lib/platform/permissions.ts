@@ -1,8 +1,8 @@
 // Phân quyền theo vai trò (ISO/IEC 17025:2017 §7.11.3, §6.2.6): hàm thuần, kiểm thử được.
 // Nguyên tắc tách nhiệm vụ: người nhập ≠ người duyệt ≠ người phê duyệt; Quản trị hệ thống không duyệt kết quả.
 
-// "Dịch vụ – Kế toán" (M4), "Nuôi cấy mô" (M3.1), "Giống" (M3.2): vai trò riêng của từng phân hệ.
-export const ROLES = ["Quản trị", "Trưởng phòng", "QA/QC", "KTV", "Tiếp nhận mẫu", "Dịch vụ – Kế toán", "Nuôi cấy mô", "Giống", "Chỉ xem"] as const;
+// "Dịch vụ – Kế toán", "Quản lý khoa học" (M4), "Nuôi cấy mô" (M3.1), "Giống" (M3.2): vai trò riêng của từng phân hệ.
+export const ROLES = ["Quản trị", "Trưởng phòng", "QA/QC", "KTV", "Tiếp nhận mẫu", "Dịch vụ – Kế toán", "Quản lý khoa học", "Nuôi cấy mô", "Giống", "Chỉ xem"] as const;
 export type Role = (typeof ROLES)[number];
 
 export const PERMISSIONS = {
@@ -23,6 +23,7 @@ export const PERMISSIONS = {
   "write.reception": { label: "Khách hàng, phiếu yêu cầu, tiếp nhận mẫu, mẫu lưu, ý kiến KH", roles: ["Tiếp nhận mẫu", "KTV", "QA/QC", "Trưởng phòng", "Quản trị"] },
   "write.requests": { label: "M4.1: xử lý yêu cầu dịch vụ từ cổng trực tuyến / trực tiếp", roles: ["Tiếp nhận mẫu", "Dịch vụ – Kế toán", "Nuôi cấy mô", "Giống", "Trưởng phòng", "Quản trị"] },
   "write.services": { label: "M4: bảng giá, nội dung cổng công khai, báo giá, hợp đồng, thanh toán", roles: ["Dịch vụ – Kế toán", "Trưởng phòng", "Quản trị"] },
+  "write.research": { label: "M4.4: nhiệm vụ KH&CN, lý lịch khoa học, thí nghiệm đồng ruộng, danh mục đề tài tỉnh", roles: ["Quản lý khoa học", "Trưởng phòng", "Quản trị"] },
   "services.approve": { label: "M4: phê duyệt báo giá", roles: ["Trưởng phòng", "Quản trị"] },
   "write.tissue": { label: "M3.1: vật liệu, công thức môi trường, mẻ cấy, lô cây giống", roles: ["Nuôi cấy mô", "Trưởng phòng", "Quản trị"] },
   "write.breeding": { label: "M3.2: lý lịch giống, nguồn gen, khảo nghiệm", roles: ["Giống", "Trưởng phòng", "Quản trị"] },
@@ -63,6 +64,14 @@ const ENTITY_PERMISSION: Record<string, Permission> = {
   "quotation-lines": "write.services",
   invoices: "write.services",
   "customer-interactions": "write.requests",
+  researchers: "write.research",
+  "research-tasks": "write.research",
+  "task-members": "write.research",
+  "task-milestones": "write.research",
+  "task-expenses": "write.research",
+  "task-samples": "write.research",
+  "provincial-projects": "write.research",
+  "field-trials": "write.research",
   contracts: "write.services",
   payments: "write.services",
   "tissue-materials": "write.tissue",

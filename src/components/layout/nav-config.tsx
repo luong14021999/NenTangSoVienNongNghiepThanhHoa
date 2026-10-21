@@ -64,6 +64,9 @@ import {
   Tags,
   Globe,
   Receipt,
+  Library,
+  GraduationCap,
+  PieChart,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -200,6 +203,16 @@ export const navModules: NavModule[] = [
           { href: "/service-requests", label: "Yêu cầu dịch vụ", icon: Inbox },
           { href: "/price-list", label: "Bảng giá & định mức", icon: Tags },
           { href: "/public-content", label: "Nội dung công khai", icon: Globe },
+        ],
+      },
+      {
+        label: "Nhiệm vụ KH&CN",
+        items: [
+          { href: "/research-tasks", label: "Nhiệm vụ (đề tài, dự án)", icon: FlaskRound },
+          { href: "/provincial-projects", label: "Đề tài tỉnh & chống trùng lặp", icon: Library },
+          { href: "/field-trials", label: "Thí nghiệm đồng ruộng", icon: Sprout },
+          { href: "/researchers", label: "Lý lịch khoa học", icon: GraduationCap },
+          { href: "/research-stats", label: "Thống kê KH&CN", icon: PieChart },
         ],
       },
       {
