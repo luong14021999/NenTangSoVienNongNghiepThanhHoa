@@ -1,9 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
-import { ArrowRight, Boxes, FlaskConical, Handshake, Microscope, Sprout } from "lucide-react";
+import { Boxes, FlaskConical, Handshake, Microscope, Sprout } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Header } from "@/components/layout/header";
-import { Badge } from "@/components/ui/badge";
 import { dbQuery } from "@/lib/platform/db";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +11,8 @@ type Mod = {
   name: string;
   desc: string;
   icon: LucideIcon;
+  /** Màu nền ô vuông (gradient Tailwind). */
+  color: string;
   href?: string;
   status: "Đang vận hành" | "Kế hoạch";
   stats?: { label: string; value: string | number }[];
@@ -37,6 +36,7 @@ export default async function PortalPage() {
       name: "Nền tảng dùng chung",
       desc: "Đăng nhập & xác thực 2 lớp, danh mục dùng chung, API và kết nối LGSP/NDXP, kho dữ liệu, điều hành, dự báo, an toàn thông tin",
       icon: Boxes,
+      color: "from-sky-500 to-blue-700",
       href: "/executive",
       status: "Đang vận hành",
       stats: [{ label: "danh mục", value: k.catalogs }, { label: "khóa API hoạt động", value: k.api_keys }],
@@ -47,6 +47,7 @@ export default async function PortalPage() {
       name: "Phòng thí nghiệm (LIMS)",
       desc: "Phòng phân tích Đất, nước, phân bón và môi trường – VILAS 1501: tiếp nhận mẫu, phân tích, QA/QC, phiếu kết quả theo ISO/IEC 17025",
       icon: FlaskConical,
+      color: "from-emerald-500 to-teal-700",
       href: "/lims",
       status: "Đang vận hành",
       stats: [{ label: "mẫu chưa trả kết quả", value: k.samples_open }, { label: "phiếu đã phát hành", value: k.reports }],
@@ -57,6 +58,7 @@ export default async function PortalPage() {
       name: "Dịch vụ KH&CN & khách hàng",
       desc: "Cổng tiếp nhận dịch vụ trực tuyến, báo giá, hợp đồng, thanh toán, công nợ, quan hệ khách hàng",
       icon: Handshake,
+      color: "from-amber-500 to-orange-600",
       href: "/customers",
       status: "Kế hoạch",
       stats: [{ label: "khách hàng", value: k.customers }, { label: "yêu cầu chờ báo giá / chấp nhận", value: k.requests_open }],
@@ -67,6 +69,7 @@ export default async function PortalPage() {
       name: "Nuôi cấy mô & truy xuất nguồn gốc",
       desc: "Vật liệu khởi đầu, công thức môi trường, theo dõi mẻ cấy, nhiễm mẫu, ra ngôi, xuất bán và truy xuất nguồn gốc cây giống",
       icon: Microscope,
+      color: "from-violet-500 to-purple-700",
       status: "Kế hoạch",
     },
     {
@@ -74,57 +77,42 @@ export default async function PortalPage() {
       name: "Giống cây trồng, vật nuôi, thủy sản",
       desc: "Lý lịch giống, nguồn gen, khảo nghiệm, chỉ thị phân tử, BLAST+, sản xuất giống, bản đồ cơ sở giống",
       icon: Sprout,
+      color: "from-lime-500 to-green-700",
       status: "Kế hoạch",
     },
   ];
   return (
     <>
-      <Header title="Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa" description="Chọn phân hệ – một tài khoản, một lần đăng nhập cho tất cả" />
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 scrollbar-thin">
-        <section className="rounded-xl border bg-primary/5 p-4 sm:p-5 flex items-center gap-4">
-          <Image src="/logo-vnnth.png" alt="Viện Nông nghiệp tỉnh Thanh Hóa" width={56} height={56} className="w-14 h-14 rounded-full bg-white object-contain ring-1 ring-primary/20" priority />
-          <div className="min-w-0">
-            <div className="text-sm font-semibold">Viện Nông nghiệp tỉnh Thanh Hóa</div>
-            <div className="text-xs text-muted-foreground">271 Nguyễn Thục, phường Đông Quang, tỉnh Thanh Hoá · ĐT 02373.952.119</div>
-          </div>
-        </section>
-        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 scrollbar-thin">
+        <section className="grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4 sm:gap-6">
           {modules.map((m) => {
             const body = (
               <>
-                <div className="flex items-start gap-3">
-                  <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 ${m.href ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                    <m.icon className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-xs font-bold">{m.code}</span>
-                      <Badge variant={m.status === "Đang vận hành" ? "success" : "secondary"}>{m.status}</Badge>
-                    </div>
-                    <div className="font-semibold mt-0.5">{m.name}</div>
-                  </div>
-                  {m.href && <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0" />}
+                <div className="flex items-start justify-between gap-2">
+                  <span className="font-mono text-sm sm:text-base font-bold opacity-90">{m.code}</span>
+                  <span className="text-[10px] sm:text-xs font-medium rounded-full bg-white/20 px-2 py-0.5 text-right">{m.href ? m.status : "Sắp ra mắt"}</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">{m.desc}</p>
-                {m.stats && (
-                  <div className="flex gap-4 mt-3">
-                    {m.stats.map((s) => (
-                      <div key={s.label}><div className="text-xl font-semibold">{s.value}</div><div className="text-[11px] text-muted-foreground">{s.label}</div></div>
-                    ))}
-                  </div>
-                )}
+                <div className="flex-1 flex items-center justify-center">
+                  <m.icon className="w-14 h-14 sm:w-20 sm:h-20 transition-transform group-hover:scale-110" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <div className="font-semibold text-sm sm:text-lg leading-tight">{m.name}</div>
+                  {m.stats?.[0] && (
+                    <div className="text-[11px] sm:text-xs opacity-80 mt-1">
+                      <span className="font-semibold">{m.stats[0].value}</span> {m.stats[0].label}
+                    </div>
+                  )}
+                </div>
               </>
             );
-            return (
-              <div key={m.code} className={`group rounded-xl border bg-card p-4 flex flex-col ${m.href ? "hover:border-primary/50 hover:shadow-sm" : "opacity-70"}`}>
-                {m.href ? <Link href={m.href} className="block">{body}</Link> : body}
-                {m.links && (
-                  <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t">
-                    {m.links.map((l) => (
-                      <Link key={l.href} href={l.href} className="text-xs rounded-full border px-2.5 py-1 hover:bg-accent">{l.label}</Link>
-                    ))}
-                  </div>
-                )}
+            const cls = `group aspect-square rounded-2xl p-4 sm:p-5 flex flex-col text-white shadow-sm bg-gradient-to-br ${m.color}`;
+            return m.href ? (
+              <Link key={m.code} href={m.href} title={m.desc} className={`${cls} transition hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring`}>
+                {body}
+              </Link>
+            ) : (
+              <div key={m.code} title={m.desc} aria-disabled className={`${cls} opacity-50 grayscale-[40%] cursor-not-allowed`}>
+                {body}
               </div>
             );
           })}

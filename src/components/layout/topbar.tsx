@@ -16,7 +16,9 @@ function subtitleFor(pathname: string) {
 }
 
 export function TopBar() {
-  const subtitle = subtitleFor(usePathname());
+  const pathname = usePathname();
+  const subtitle = subtitleFor(pathname);
+  const hasSidebar = !!moduleOf(pathname);
   return (
     <header
       className="relative h-16 sm:h-20 shrink-0 text-white pl-2 pr-2 sm:pr-5 lg:pl-5 lg:pr-7 flex items-center gap-2 sm:gap-3 lg:gap-4 shadow-md"
@@ -35,9 +37,11 @@ export function TopBar() {
       />
 
       {/* Mobile nav trigger */}
-      <div className="relative z-10 md:hidden">
-        <MobileSidebar />
-      </div>
+      {hasSidebar && (
+        <div className="relative z-10 md:hidden">
+          <MobileSidebar />
+        </div>
+      )}
 
       {/* Brand */}
       <Link

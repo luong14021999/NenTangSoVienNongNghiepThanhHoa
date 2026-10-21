@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
   LayoutDashboard,
-  ChevronDown,
+  ArrowLeft,
   ClipboardList,
   FlaskConical,
   Wrench,
@@ -62,17 +61,18 @@ export type NavGroup = { label: string; items: NavItem[] };
 /** Phân hệ của nền tảng: mỗi phân hệ gồm nhiều nhóm menu. */
 export type NavModule = { code: string; name: string; groups: NavGroup[] };
 
-/** Luôn hiện trên cùng, ngoài các phân hệ. */
-export const navHome: NavItem[] = [
-  { href: "/", label: "Trang chủ – các phân hệ", icon: LayoutDashboard },
-  { href: "/executive", label: "Bảng điều hành", icon: Gauge },
-];
+/** Trang chủ: chọn phần mềm (không có sidebar). */
+export const navHome: NavItem[] = [{ href: "/", label: "Trang chủ – các phần mềm", icon: LayoutDashboard }];
 
 export const navModules: NavModule[] = [
   {
     code: "M1",
     name: "Nền tảng dùng chung",
     groups: [
+      {
+        label: "Tổng quan",
+        items: [{ href: "/executive", label: "Bảng điều hành", icon: Gauge }],
+      },
       {
         label: "Tài khoản & bảo mật",
         items: [
@@ -252,8 +252,7 @@ export function SidebarNav({
   pathname: string;
   onNavigate?: () => void;
 }) {
-  const activeModule = moduleOf(pathname)?.code;
-  const [toggled, setToggled] = useState<Record<string, boolean>>({});
+  const current = moduleOf(pathname);
   const item = (it: NavItem) => {
     const active = isActiveHref(it.href, pathname);
     const Icon = it.icon;
@@ -277,31 +276,28 @@ export function SidebarNav({
   };
   return (
     <nav className="flex-1 overflow-y-auto px-3 py-4 scrollbar-thin">
-      <ul className="space-y-0.5 mb-4">{navHome.map(item)}</ul>
-      {navModules.map((m) => {
-        const open = toggled[m.code] ?? m.code === activeModule;
-        return (
-          <div key={m.code} className="mb-2">
-            <button
-              type="button"
-              onClick={() => setToggled((t) => ({ ...t, [m.code]: !open }))}
-              aria-expanded={open}
-              className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-left hover:bg-sidebar-accent/40"
-            >
-              <span className="text-[10px] font-bold font-mono rounded bg-white/15 text-white px-1.5 py-0.5">{m.code}</span>
-              <span className="flex-1 text-[13px] font-semibold text-white">{m.name}</span>
-              <ChevronDown className={cn("w-4 h-4 text-sidebar-foreground/60 transition-transform", open && "rotate-180")} />
-            </button>
-            {open &&
-              m.groups.map((group) => (
-                <div key={group.label} className="mt-2 mb-3 pl-1">
-                  <div className="px-2 mb-1 text-[10.5px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">{group.label}</div>
-                  <ul className="space-y-0.5">{group.items.map(item)}</ul>
-                </div>
-              ))}
+      <Link
+        href="/"
+        onClick={onNavigate}
+        className="flex items-center gap-2 px-2.5 py-2 mb-3 rounded-md text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+      >
+        <ArrowLeft className="w-4 h-4 shrink-0" />
+        <span>Về trang chủ – các phần mềm</span>
+      </Link>
+      {current && (
+        <>
+          <div className="flex items-center gap-2 px-2 pb-3 mb-1 border-b border-sidebar-border">
+            <span className="text-[10px] font-bold font-mono rounded bg-white/15 text-white px-1.5 py-0.5">{current.code}</span>
+            <span className="flex-1 text-[13px] font-semibold text-white">{current.name}</span>
           </div>
-        );
-      })}
+          {current.groups.map((group) => (
+            <div key={group.label} className="mt-3 mb-3 pl-1">
+              <div className="px-2 mb-1 text-[10.5px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">{group.label}</div>
+              <ul className="space-y-0.5">{group.items.map(item)}</ul>
+            </div>
+          ))}
+        </>
+      )}
     </nav>
   );
 }
