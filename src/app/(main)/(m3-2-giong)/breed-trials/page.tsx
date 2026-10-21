@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ClipboardCheck, Hourglass, CheckCircle2, XCircle } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Badge } from "@/components/ui/badge";
@@ -5,7 +6,7 @@ import { CrudTableCard } from "@/components/crud/crud-table-card";
 import { EntityFormDialog, type CrudField } from "@/components/crud/entity-form-dialog";
 import { EntitySearchInput } from "@/components/crud/search-input";
 import { StatGrid, clip } from "@/components/common/stat-grid";
-import { TRIAL_KINDS, TRIAL_RESULTS, breedTrialStore, varietyStore, type BreedTrial } from "@/lib/modules/m3/data/breeding";
+import { TRIAL_KINDS, TRIAL_RESULTS, breedStandardStore, breedTrialStore, varietyStore, type BreedTrial } from "@/lib/modules/m3/data/breeding";
 import { byId, matches, refOptions } from "@/lib/platform/ref-options";
 import { fmtDateVN } from "@/lib/platform/dates";
 
@@ -20,12 +21,13 @@ const resultVariant: Record<BreedTrial["result"], "warning" | "success" | "destr
 
 export default async function BreedTrialsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q = "" } = await searchParams;
-  const [all, varieties] = await Promise.all([breedTrialStore.list(), varietyStore.list()]);
+  const [all, varieties, standards] = await Promise.all([breedTrialStore.list(), varietyStore.list(), breedStandardStore.list()]);
   const varietyById = byId(varieties);
   const fields: CrudField[] = [
     { name: "code", label: "Mã khảo nghiệm", required: true, mono: true, placeholder: "VD: KN-2026-001" },
     { name: "varietyId", label: "Giống", type: "select", required: true, options: refOptions(varieties, (v) => `${v.code} · ${v.name}`) },
     { name: "kind", label: "Loại", type: "select", options: [...TRIAL_KINDS] },
+    { name: "standardId", label: "Bộ chỉ tiêu đánh giá", type: "select", options: refOptions(standards, (x) => `${x.code} · ${x.name}`) },
     { name: "season", label: "Vụ / đợt", placeholder: "VD: Vụ Xuân 2026" },
     { name: "site", label: "Địa điểm", full: true },
     { name: "startAt", label: "Bắt đầu", type: "date" },
@@ -59,7 +61,7 @@ export default async function BreedTrialsPage({ searchParams }: { searchParams: 
         </div>
         <CrudTableCard
           title="Danh sách khảo nghiệm"
-          description="Kết quả Đạt là căn cứ đề nghị công nhận giống (trang Lý lịch giống)"
+          description="Bấm mã khảo nghiệm để nhập số đo và tự đối chiếu với bộ chỉ tiêu; kết quả Đạt là căn cứ đề nghị công nhận giống"
           endpoint="/api/breed-trials"
           entity="breed-trials"
           editFields={fields}
@@ -74,7 +76,7 @@ export default async function BreedTrialsPage({ searchParams }: { searchParams: 
               initial: x,
               cells: [
                 <div key="c">
-                  <div className="font-mono text-xs font-semibold">{x.code}</div>
+                  <Link href={`/breed-trials/${x.id}`} className="font-mono text-xs font-semibold text-primary hover:underline">{x.code}</Link>
                   <div className="text-[11px] text-muted-foreground">{x.kind}</div>
                 </div>,
                 <div key="v">

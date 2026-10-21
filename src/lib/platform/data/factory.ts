@@ -36,8 +36,8 @@ export type DbMapping<T> = {
 export const dateOrNull = (v?: string | null) =>
   v && v !== "" ? v : null;
 
-/** ref = khóa ngoại uuid: "" (chưa chọn) → null. */
-export type ColumnKind = "text" | "number" | "bool" | "date" | "json" | "ref";
+/** ref = khóa ngoại uuid: "" (chưa chọn) → null. optnum = số có thể trống (null = không có giá trị, khác 0). */
+export type ColumnKind = "text" | "number" | "bool" | "date" | "json" | "ref" | "optnum";
 
 const toSnake = (k: string) => k.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 const emptyOf: Record<ColumnKind, unknown> = {
@@ -47,6 +47,7 @@ const emptyOf: Record<ColumnKind, unknown> = {
   date: "",
   json: [],
   ref: "",
+  optnum: null,
 };
 
 /**
@@ -71,7 +72,7 @@ export function columnsMapping<T extends { id: string }>(
       for (const [k, kind] of entries) {
         const v = (entity as Record<string, unknown>)[k];
         if (v === undefined) continue;
-        r[toSnake(k)] = kind === "date" || kind === "ref" ? dateOrNull(v as string) : v;
+        r[toSnake(k)] = kind === "date" || kind === "ref" ? dateOrNull(v as string) : kind === "optnum" ? (v === "" || v == null ? null : Number(v)) : v;
       }
       return r;
     },

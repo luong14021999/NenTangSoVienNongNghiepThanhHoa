@@ -29,6 +29,8 @@ export type CrudField = {
   mono?: boolean;
   full?: boolean; // chiếm cả 2 cột
   defaultValue?: string | number; // bool: 0 = mặc định sai
+  /** Ô số được để trống → gửi null (VD ngưỡng "không giới hạn"); mặc định trống = 0. */
+  nullable?: boolean;
   /** Nhãn [đúng, sai] cho ô bool; mặc định Đạt / Không đạt. */
   boolLabels?: [string, string];
 };
@@ -70,7 +72,7 @@ export function EntityFormDialog({
     for (const f of fields) {
       const raw = formData.get(f.name);
       if (f.type === "number") {
-        payload[f.name] = Number(raw ?? 0);
+        payload[f.name] = f.nullable && String(raw ?? "").trim() === "" ? null : Number(raw ?? 0);
       } else if (f.type === "bool") {
         payload[f.name] = String(raw ?? "") === boolPair(f)[0];
       } else {

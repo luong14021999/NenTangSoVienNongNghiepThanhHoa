@@ -16,6 +16,7 @@ export const { GET, POST } = collectionRoutes<BreedTrial>(
     yield: "",
     result: "Đang theo dõi",
     leader: "",
+    standardId: "",
     note: "",
   },
   (b) => (!b.code ? "Thiếu mã khảo nghiệm" : !b.varietyId ? "Chọn giống khảo nghiệm" : null),

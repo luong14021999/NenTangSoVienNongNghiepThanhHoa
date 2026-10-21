@@ -60,8 +60,8 @@ Mở rộng phạm vi quản lý sang toàn bộ giống do Viện nghiên cứu
 | Đợt | Phạm vi | Trạng thái |
 |---|---|---|
 | A | M3.1.1–M3.1.4: cây mẹ, lô môi trường, mẻ cấy (mẻ cha – con, hệ số nhân), thống kê nhiễm, phòng nuôi | Xong |
-| B | M3.1.5–M3.1.6: đơn hàng, kế hoạch, vườn ươm; truy xuất từ cây mẹ; giá thành; xuất bán; phản hồi; báo cáo | Đang làm |
-| C | M3.2.1–M3.2.3, M3.2.6: hồ sơ pháp lý, nguồn giống gốc, phả hệ, kiểm định – chứng nhận, sản xuất giống theo cấp | Kế hoạch |
+| B | M3.1.5–M3.1.6: đơn hàng, kế hoạch, vườn ươm; truy xuất từ cây mẹ; giá thành; xuất bán; phản hồi; báo cáo | Xong |
+| C | M3.2.1–M3.2.3, M3.2.6: hồ sơ pháp lý, nguồn giống gốc, phả hệ, kiểm định – chứng nhận, sản xuất giống theo cấp | Đang làm |
 | D | M3.2.4, M3.2.5, M3.2.7, M3.2.8: BLAST+ (máy chủ nội bộ), chỉ thị phân tử, bản đồ số, kết nối cung – cầu | Kế hoạch |
 
 ## Đợt A – thiết kế
@@ -89,3 +89,16 @@ Mở rộng phạm vi quản lý sang toàn bộ giống do Viện nghiên cứu
 | Xuất bán | `lot_sales`: một lô xuất nhiều lần; không xuất quá số cây sống còn lại; khách hàng và đơn giá lấy theo đơn hàng nếu để trống. Dữ liệu xuất cũ ghi trên lô được chuyển thành phiếu `PX-CU-<mã lô>` |
 | Phản hồi | `lot_feedback`: cán bộ ghi hoặc khách gửi từ trang QR (`POST /api/public/lot-feedback`, honeypot, giới hạn 5 lần/giờ/IP và 200 lần/ngày) |
 | Báo cáo | `/tissue-reports`: cây ra ngôi, đã bán, doanh thu theo tháng; theo giống; giá thành – lãi theo lô; tỷ lệ giao đúng hạn; hài lòng. Xuất CSV `/api/m3-reports/tissue` |
+
+## Đợt C – thiết kế
+
+| Chức năng | Cách làm |
+|---|---|
+| Hồ sơ pháp lý (M3.2.1) | `varieties` thêm phạm vi (giống của Viện / giống trên địa bàn tỉnh), hình thức lưu hành, số và ngày lưu hành, văn bằng bảo hộ (liên kết `m4.ip_assets`), vùng khuyến cáo, diện tích. `variety_documents`: quyết định công nhận, lưu hành, bản tự công bố, văn bằng, hợp quy…; cảnh báo trước 90 ngày khi hết hiệu lực. Trang hồ sơ giống `/varieties/[id]` gom văn bản, nguồn giống gốc, khảo nghiệm, lô sản xuất, lô giống |
+| Nguồn giống gốc (M3.2.2) | `source_stocks`: cây đầu dòng, vườn đầu dòng, đàn giống gốc / ông bà / bố mẹ / hậu bị, quyết định công nhận và hiệu lực. `individuals`: cá thể có bố, mẹ, thế hệ. Bố phải là Đực, mẹ phải là Cái, không trùng, không tạo vòng. **Hệ số cận huyết Wright** = hệ số thân thuộc của bố và mẹ (thuật toán đệ quy có ghi nhớ); cảnh báo từ 6,25%. Phả hệ 3 đời, đời con. `selection_records`: chỉ tiêu chọn lọc theo thời gian, quyết định chọn / loại |
+| Bộ chỉ tiêu (M3.2.3) | `standards` + `standard_criteria` (tối thiểu / tối đa; để trống = không giới hạn, 0 là đúng bằng 0 – form hỗ trợ ô số để trống nhờ kiểu cột `optnum`). Viện tự nhập số hiệu quy chuẩn, tiêu chuẩn đang áp dụng |
+| Khảo nghiệm (M3.2.3) | `trials` gắn bộ chỉ tiêu; `trial_observations` ghi số đo; tự đối chiếu (khớp tên không dấu, không phân biệt hoa thường) → Đạt / Không đạt / Chưa đủ số liệu |
+| Kiểm định, chứng nhận (M3.2.3) | `seed_lots`: cấp giống, lô sản xuất nguồn, bộ chỉ tiêu, **mã mẫu M2** (chỉ dùng kết quả đã duyệt để đối chiếu), kiểm định ruộng / đàn, giấy chứng nhận, hợp quy và hiệu lực. "Đã chứng nhận" bắt buộc có số và ngày chứng nhận |
+| Sản xuất theo cấp (M3.2.6) | `production_lots`: cấp sản xuất ra, nguồn là lô giống cấp trên hoặc nguồn giống gốc. **Lô nguồn phải cùng giống, đã đạt kiểm định và ở cấp cao hơn** (thứ bậc: tác giả → siêu nguyên chủng → nguyên chủng → xác nhận 1 / xác nhận → xác nhận 2; cụ kỵ → ông bà → bố mẹ → thương phẩm). `production_logs`: nhật ký, chi phí. Năng suất = sản lượng ÷ quy mô; giá thành = (chi phí lô + chi phí nhật ký) ÷ sản lượng |
+| Cung ứng (M3.2.6) | `demands` theo địa phương, mùa vụ; cân đối với sản lượng kế hoạch / thực tế theo giống – mùa vụ – đơn vị. `orders` + `deliveries`: **chỉ giao lô Đạt / Đã chứng nhận, còn hiệu lực hợp quy, không vượt lượng còn lại** |
+| Truy xuất QR | Cùng trang `/trace/[mã]`: không phải lô cây giống nuôi cấy mô thì tra `seed_lots`, hiện giống, cấp, công nhận, lưu hành, chứng nhận, hợp quy, chuỗi cấp giống đến nguồn giống gốc. Tem QR `/seed-lot-labels` |

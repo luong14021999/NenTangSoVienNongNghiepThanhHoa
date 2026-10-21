@@ -3,6 +3,8 @@ import { CheckCircle2, XCircle, TreeDeciduous, Leaf, Boxes, Sprout, ShieldCheck 
 import { publicLotTrace } from "@/lib/modules/m3/data/trace";
 import { fmtPct, survivalRate } from "@/lib/modules/m3/rates";
 import { LotFeedbackForm } from "@/components/m3/lot-feedback-form";
+import { SeedTraceView } from "@/components/m3/seed-trace-view";
+import { publicSeedTrace } from "@/lib/modules/m3/data/breeding";
 import { fmtDateVN } from "@/lib/platform/dates";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +29,16 @@ const Row = ({ k, v }: { k: string; v: React.ReactNode }) => (
 export default async function TracePage({ params }: { params: Promise<{ code: string }> }) {
   const code = decodeURIComponent((await params).code);
   const t = await publicLotTrace(code);
+  // Không phải lô cây giống nuôi cấy mô → tra lô giống M3.2 (cùng hệ thống mã QR).
+  const seed = t ? null : await publicSeedTrace(code);
+  if (seed) {
+    return (
+      <div className="space-y-4">
+        <SeedTraceView t={seed} />
+        <div className="max-w-2xl mx-auto"><Link href="/trace" className="text-sm text-primary hover:underline">← Tra cứu mã khác</Link></div>
+      </div>
+    );
+  }
 
   if (!t) {
     return (

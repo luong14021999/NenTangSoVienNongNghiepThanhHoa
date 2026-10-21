@@ -74,6 +74,9 @@ import {
   TreeDeciduous,
   CalendarDays,
   Package,
+  TreePine,
+  GitBranch,
+  Tractor,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -309,11 +312,33 @@ export const navModules: NavModule[] = [
     name: "Giống cây trồng, vật nuôi, thủy sản",
     groups: [
       {
-        label: "Giống & nguồn gen",
+        label: "Danh mục & hồ sơ giống",
         items: [
-          { href: "/varieties", label: "Lý lịch giống", icon: Sprout },
+          { href: "/varieties", label: "Lý lịch & pháp lý giống", icon: Sprout },
           { href: "/germplasm", label: "Nguồn gen", icon: Dna },
+        ],
+      },
+      {
+        label: "Nguồn giống gốc",
+        items: [
+          { href: "/source-stocks", label: "Cây đầu dòng, đàn giống", icon: TreePine },
+          { href: "/individuals", label: "Phả hệ & chọn lọc", icon: GitBranch },
+        ],
+      },
+      {
+        label: "Khảo nghiệm – kiểm định – chứng nhận",
+        items: [
+          { href: "/breed-standards", label: "Bộ chỉ tiêu", icon: ListChecks },
           { href: "/breed-trials", label: "Khảo nghiệm", icon: ClipboardCheck },
+          { href: "/seed-lots", label: "Lô giống & chứng nhận", icon: ShieldCheck },
+        ],
+      },
+      {
+        label: "Sản xuất & cung ứng",
+        items: [
+          { href: "/breed-production", label: "Sản xuất theo cấp", icon: Tractor },
+          { href: "/breed-supply", label: "Nhu cầu & cân đối", icon: Scale },
+          { href: "/breed-orders", label: "Đơn hàng & giao nhận", icon: Truck },
         ],
       },
     ],
