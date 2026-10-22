@@ -10,7 +10,7 @@ export const PERMISSIONS = {
   "admin.users": { label: "Quản lý tài khoản & phân quyền", roles: ["Quản trị"] },
   "admin.system": { label: "Cấu hình hệ thống, khóa API, tích hợp LGSP/NDXP, sao lưu", roles: ["Quản trị"] },
   "admin.view": { label: "Vào khu Quản trị hệ thống (bảng quản trị, bảo mật, tích hợp, giám sát, nhật ký, cấu hình)", roles: ["Quản trị"] },
-  "view.executive": { label: "Xem bảng điều hành, phân tích – dự báo, kho dữ liệu tổng hợp", roles: ["Lãnh đạo Viện", "Trưởng phòng", "Quản trị"] },
+  "view.executive": { label: "Xem bảng điều hành, phân tích – dự báo, kho dữ liệu tổng hợp (chỉ Ban lãnh đạo Viện)", roles: ["Lãnh đạo Viện"] },
   "write.mdm": { label: "Danh mục dùng chung (MDM)", roles: ["Quản trị", "Quản lý danh mục", "QA/QC", "Trưởng phòng"] },
   "results.enter": { label: "Nhập / sửa / nộp kết quả phân tích", roles: ["KTV", "Trưởng phòng"] },
   "results.qa": { label: "QA/QC duyệt hoặc trả lại kết quả", roles: ["QA/QC", "Trưởng phòng"] },

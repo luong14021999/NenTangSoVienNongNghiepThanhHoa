@@ -33,12 +33,11 @@ describe("Phân quyền theo vai trò", () => {
     expect(roleAllows(["QA/QC"], permissionForEntity("assignments"))).toBe(true);
     expect(roleAllows(["Tiếp nhận mẫu"], permissionForEntity("sample-events"))).toBe(true);
   });
-  it("TC-AU-05 khu Quản trị chỉ cho Quản trị; Điều hành cho lãnh đạo; đầu mối danh mục chỉ sửa danh mục", () => {
+  it("TC-AU-05 khu Quản trị chỉ cho Quản trị; Điều hành chỉ Lãnh đạo Viện; đầu mối danh mục chỉ sửa danh mục", () => {
     expect(roleAllows(["Quản trị"], "admin.view")).toBe(true);
     for (const r of ["Lãnh đạo Viện", "Trưởng phòng", "Quản lý danh mục", "QA/QC", "KTV"]) expect(roleAllows([r], "admin.view")).toBe(false);
     expect(roleAllows(["Lãnh đạo Viện"], "view.executive")).toBe(true);
-    expect(roleAllows(["Trưởng phòng"], "view.executive")).toBe(true);
-    expect(roleAllows(["KTV"], "view.executive")).toBe(false);
+    for (const r of ["Trưởng phòng", "Quản trị", "KTV"]) expect(roleAllows([r], "view.executive")).toBe(false);
     // Lãnh đạo chỉ xem: không ghi được dữ liệu nghiệp vụ nào
     for (const p of Object.keys(PERMISSIONS) as (keyof typeof PERMISSIONS)[]) if (p !== "view.executive") expect(roleAllows(["Lãnh đạo Viện"], p)).toBe(false);
     expect(roleAllows(["Quản lý danh mục"], "write.mdm")).toBe(true);

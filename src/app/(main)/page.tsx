@@ -42,7 +42,7 @@ export default async function PortalPage() {
        (select count(*)::int from m3_breed.varieties) varieties`,
   ).catch(() => [{ requests_new: "—", contracts_open: "—", batches_growing: "—", varieties: "—" }]);
   // M1 (hạ tầng) không là ô ở trang chủ: quản trị vào bằng nút ⚙ trên thanh trên cùng.
-  // Ô "Điều hành" chỉ hiện với Ban lãnh đạo, trưởng phòng, quản trị.
+  // Ô "Điều hành" chỉ hiện với Ban lãnh đạo Viện.
   const { can } = await currentAccess();
   const executive: Mod[] = can("view.executive")
     ? [
