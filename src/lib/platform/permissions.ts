@@ -2,13 +2,16 @@
 // Nguyên tắc tách nhiệm vụ: người nhập ≠ người duyệt ≠ người phê duyệt; Quản trị hệ thống không duyệt kết quả.
 
 // "Dịch vụ – Kế toán", "Quản lý khoa học" (M4), "Nuôi cấy mô" (M3.1), "Giống" (M3.2): vai trò riêng của từng phân hệ.
-export const ROLES = ["Quản trị", "Trưởng phòng", "QA/QC", "KTV", "Tiếp nhận mẫu", "Dịch vụ – Kế toán", "Quản lý khoa học", "Nuôi cấy mô", "Giống", "Chỉ xem"] as const;
+// "Lãnh đạo Viện": xem bảng điều hành; "Quản lý danh mục": đầu mối danh mục dùng chung của từng phòng (M1.2).
+export const ROLES = ["Quản trị", "Lãnh đạo Viện", "Trưởng phòng", "QA/QC", "KTV", "Tiếp nhận mẫu", "Dịch vụ – Kế toán", "Quản lý khoa học", "Nuôi cấy mô", "Giống", "Quản lý danh mục", "Chỉ xem"] as const;
 export type Role = (typeof ROLES)[number];
 
 export const PERMISSIONS = {
   "admin.users": { label: "Quản lý tài khoản & phân quyền", roles: ["Quản trị"] },
   "admin.system": { label: "Cấu hình hệ thống, khóa API, tích hợp LGSP/NDXP, sao lưu", roles: ["Quản trị"] },
-  "write.mdm": { label: "Danh mục dùng chung (MDM)", roles: ["Quản trị", "QA/QC", "Trưởng phòng"] },
+  "admin.view": { label: "Vào khu Quản trị hệ thống (bảng quản trị, bảo mật, tích hợp, giám sát, nhật ký, cấu hình)", roles: ["Quản trị"] },
+  "view.executive": { label: "Xem bảng điều hành, phân tích – dự báo, kho dữ liệu tổng hợp", roles: ["Lãnh đạo Viện", "Trưởng phòng", "Quản trị"] },
+  "write.mdm": { label: "Danh mục dùng chung (MDM)", roles: ["Quản trị", "Quản lý danh mục", "QA/QC", "Trưởng phòng"] },
   "results.enter": { label: "Nhập / sửa / nộp kết quả phân tích", roles: ["KTV", "Trưởng phòng"] },
   "results.qa": { label: "QA/QC duyệt hoặc trả lại kết quả", roles: ["QA/QC", "Trưởng phòng"] },
   "results.approve": { label: "Phê duyệt kết quả (ký điện tử)", roles: ["Trưởng phòng"] },

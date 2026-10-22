@@ -33,6 +33,17 @@ describe("Phân quyền theo vai trò", () => {
     expect(roleAllows(["QA/QC"], permissionForEntity("assignments"))).toBe(true);
     expect(roleAllows(["Tiếp nhận mẫu"], permissionForEntity("sample-events"))).toBe(true);
   });
+  it("TC-AU-05 khu Quản trị chỉ cho Quản trị; Điều hành cho lãnh đạo; đầu mối danh mục chỉ sửa danh mục", () => {
+    expect(roleAllows(["Quản trị"], "admin.view")).toBe(true);
+    for (const r of ["Lãnh đạo Viện", "Trưởng phòng", "Quản lý danh mục", "QA/QC", "KTV"]) expect(roleAllows([r], "admin.view")).toBe(false);
+    expect(roleAllows(["Lãnh đạo Viện"], "view.executive")).toBe(true);
+    expect(roleAllows(["Trưởng phòng"], "view.executive")).toBe(true);
+    expect(roleAllows(["KTV"], "view.executive")).toBe(false);
+    // Lãnh đạo chỉ xem: không ghi được dữ liệu nghiệp vụ nào
+    for (const p of Object.keys(PERMISSIONS) as (keyof typeof PERMISSIONS)[]) if (p !== "view.executive") expect(roleAllows(["Lãnh đạo Viện"], p)).toBe(false);
+    expect(roleAllows(["Quản lý danh mục"], "write.mdm")).toBe(true);
+    for (const p of Object.keys(PERMISSIONS) as (keyof typeof PERMISSIONS)[]) if (p !== "write.mdm") expect(roleAllows(["Quản lý danh mục"], p)).toBe(false);
+  });
   it("TC-AU-04 bật phân quyền lần đầu phải gán Quản trị cho chính mình (chống tự khoá)", () => {
     expect(validateBootstrap([{ email: "a@x.vn", roles: ["Quản trị"] }], "A@x.vn")).toBeNull();
     expect(validateBootstrap([{ email: "a@x.vn", roles: ["KTV"] }], "a@x.vn")).not.toBeNull();

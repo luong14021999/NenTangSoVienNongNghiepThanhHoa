@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { Database, Settings } from "lucide-react";
 import { HeaderUser } from "@/components/layout/header-user";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
 import { usePathname } from "next/navigation";
 import { moduleOf, shellOf } from "@/components/layout/nav-config";
 
-export function TopBar() {
+/** Thanh trên cùng dùng chung; nút Quản trị / Danh mục chỉ hiện với người có quyền. */
+export function TopBar({ canAdmin = false, canCatalog = false }: { canAdmin?: boolean; canCatalog?: boolean }) {
   const pathname = usePathname();
   const mod = moduleOf(pathname);
   const hasSidebar = shellOf(mod) === "sidebar";
@@ -79,8 +81,23 @@ export function TopBar() {
         )}
       </Link>
 
-      {/* Logout */}
-      <div className="relative z-10 ml-auto shrink-0">
+      <div className="relative z-10 ml-auto flex shrink-0 items-center gap-2">
+        {canAdmin ? (
+          <Link
+            href="/admin"
+            aria-label="Quản trị hệ thống"
+            title="Quản trị hệ thống"
+            className={`flex h-10 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors ${mod?.key === "m1" ? "border-white bg-white/25 text-white" : "border-white/25 bg-white/10 text-white/90 hover:bg-white/20 hover:text-white"}`}
+          >
+            <Settings className="h-4 w-4" />
+            <span className="hidden lg:inline">Quản trị</span>
+          </Link>
+        ) : canCatalog ? (
+          <Link href="/master-data" title="Danh mục dùng chung" aria-label="Danh mục dùng chung" className="flex h-10 items-center gap-2 rounded-lg border border-white/25 bg-white/10 px-3 text-sm font-medium text-white/90 hover:bg-white/20 hover:text-white">
+            <Database className="h-4 w-4" />
+            <span className="hidden lg:inline">Danh mục</span>
+          </Link>
+        ) : null}
         <HeaderUser />
       </div>
     </header>

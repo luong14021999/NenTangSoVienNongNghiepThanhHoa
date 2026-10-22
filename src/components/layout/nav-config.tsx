@@ -105,7 +105,7 @@ export type NavTab = { label: string; icon: LucideIcon; hrefs: string[]; /** Hi�
  */
 export type ModuleShell = "sidebar" | "bench" | "hub" | "areas" | "console";
 /** Khóa giao diện: chọn bộ màu `[data-module]` trong globals.css. */
-export type ModuleKey = "m1" | "m2" | "m3-1" | "m3-2" | "m4";
+export type ModuleKey = "dh" | "m1" | "m2" | "m3-1" | "m3-2" | "m4";
 /** Phân hệ của nền tảng: mỗi phân hệ gồm nhiều nhóm menu và có bản sắc giao diện riêng. */
 export type NavModule = {
   code: string;
@@ -129,18 +129,43 @@ export const navHome: NavItem[] = [{ href: "/", label: "Trang chủ – các ph�
 
 export const navModules: NavModule[] = [
   {
-    code: "M1",
+    code: "ĐH",
     home: "/executive",
+    shell: "hub",
+    tabs: [
+      { label: "Bảng điều hành", icon: Gauge, hrefs: ["/executive"] },
+      { label: "Phân tích & dự báo", icon: TrendingUp, hrefs: ["/forecast"] },
+      { label: "Kho dữ liệu", icon: Warehouse, hrefs: ["/data-warehouse"] },
+    ],
+    name: "Điều hành",
+    key: "dh",
+    icon: Gauge,
+    tagline: "Thông tin điều hành dành cho Ban lãnh đạo Viện",
+    searchHint: "Tìm chỉ số, báo cáo...",
+    groups: [
+      {
+        label: "Điều hành",
+        items: [
+          { href: "/executive", label: "Bảng điều hành", icon: Gauge },
+          { href: "/forecast", label: "Phân tích & dự báo", icon: TrendingUp },
+          { href: "/data-warehouse", label: "Kho dữ liệu", icon: Warehouse },
+        ],
+      },
+    ],
+  },
+  {
+    code: "M1",
+    home: "/admin",
     shell: "console",
-    name: "Nền tảng dùng chung",
+    name: "Quản trị hệ thống",
     key: "m1",
     icon: Boxes,
-    tagline: "Hạ tầng, dữ liệu dùng chung & điều hành",
+    tagline: "Nền tảng dùng chung: tài khoản, danh mục, tích hợp, vận hành",
     searchHint: "Tìm danh mục, khóa API, sự cố...",
     groups: [
       {
         label: "Tổng quan",
-        items: [{ href: "/executive", label: "Bảng điều hành", icon: Gauge }],
+        items: [{ href: "/admin", label: "Bảng quản trị", icon: Gauge }],
       },
       {
         label: "Tài khoản & bảo mật",
@@ -150,11 +175,9 @@ export const navModules: NavModule[] = [
         ],
       },
       {
-        label: "Dữ liệu dùng chung",
+        label: "Dữ liệu dùng chung & tích hợp",
         items: [
           { href: "/master-data", label: "Danh mục dùng chung", icon: Database },
-          { href: "/data-warehouse", label: "Kho dữ liệu", icon: Warehouse },
-          { href: "/forecast", label: "Phân tích & dự báo", icon: TrendingUp },
           { href: "/integration", label: "Tích hợp & API (LGSP/NDXP)", icon: Network },
         ],
       },

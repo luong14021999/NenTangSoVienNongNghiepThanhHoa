@@ -100,7 +100,7 @@
 }
 
 /* ===== Bản sắc giao diện theo từng phần mềm (khóa ở nav-config.tsx) ===== */
-/* M1 · Nền tảng dùng chung: xanh dương, cảm giác hạ tầng – điều hành */
+/* M1 · Quản trị hệ thống (nền tảng dùng chung): xanh dương, cảm giác hạ tầng */
 [data-module="m1"] {
   --primary: 217 68% 42%;
   --primary-foreground: 0 0% 100%;
@@ -125,6 +125,33 @@
 .dark [data-module="m1"], .dark[data-module="m1"] {
   --primary: 217 68% 62%;
   --ring: 217 68% 62%;
+}
+
+/* Điều hành (M1.4–M1.6, Ban lãnh đạo): đỏ son theo logo Viện */
+[data-module="dh"] {
+  --primary: 352 62% 40%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 352 62% 40%;
+  --secondary: 352 40% 96%;
+  --secondary-foreground: 352 45% 18%;
+  --muted: 352 25% 96.5%;
+  --muted-foreground: 352 10% 40%;
+  --accent: 352 40% 94%;
+  --accent-foreground: 352 45% 18%;
+  --border: 352 18% 88%;
+  --input: 352 18% 88%;
+  --sidebar: 352 40% 20%;
+  --sidebar-foreground: 352 30% 92%;
+  --sidebar-accent: 352 55% 34%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 352 40% 15%;
+  --brand-from: 352 65% 38%;
+  --brand-via: 348 58% 27%;
+  --brand-to: 344 55% 17%;
+}
+.dark [data-module="dh"], .dark[data-module="dh"] {
+  --primary: 352 62% 62%;
+  --ring: 352 62% 62%;
 }
 
 /* M2 · LIMS: xanh ngọc, phòng thí nghiệm */

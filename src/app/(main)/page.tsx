@@ -1,8 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Boxes, FlaskConical, Handshake, Microscope, Sprout } from "lucide-react";
+import { FlaskConical, Gauge, Handshake, Microscope, Sprout } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { dbQuery } from "@/lib/platform/db";
+import { currentAccess } from "@/lib/platform/data/access";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Nền tảng số – Viện Nông nghiệp tỉnh Thanh Hóa" };
@@ -29,8 +30,6 @@ export default async function PortalPage() {
     `select
        (select count(*)::int from analytics.fact_samples where first_issued_at is null) samples_open,
        (select count(*)::int from public.test_reports where status = 'Đã phát hành') reports,
-       (select count(*)::int from public.mdm_catalogs) catalogs,
-       (select count(*)::int from public.api_clients where active) api_keys,
        (select count(*)::int from public.customers) customers,
        (select count(*)::int from public.test_requests where status in ('Yêu cầu mới', 'Đã báo giá')) requests_open`,
   );
@@ -42,17 +41,25 @@ export default async function PortalPage() {
        (select count(*)::int from m3_tissue.culture_batches where status = 'Đang nuôi') batches_growing,
        (select count(*)::int from m3_breed.varieties) varieties`,
   ).catch(() => [{ requests_new: "—", contracts_open: "—", batches_growing: "—", varieties: "—" }]);
+  // M1 (hạ tầng) không là ô ở trang chủ: quản trị vào bằng nút ⚙ trên thanh trên cùng.
+  // Ô "Điều hành" chỉ hiện với Ban lãnh đạo, trưởng phòng, quản trị.
+  const { can } = await currentAccess();
+  const executive: Mod[] = can("view.executive")
+    ? [
+        {
+          code: "ĐH",
+          name: "Điều hành",
+          desc: "Bảng thông tin điều hành dành cho Ban lãnh đạo Viện: chỉ số nghiệp vụ các phần mềm, xu hướng, phân tích và dự báo",
+          icon: Gauge,
+          color: "from-rose-600 to-red-800",
+          href: "/executive",
+          status: "Đang vận hành",
+          stats: [{ label: "yêu cầu dịch vụ mới", value: n.requests_new }],
+        },
+      ]
+    : [];
   const modules: Mod[] = [
-    {
-      code: "M1",
-      name: "Nền tảng dùng chung",
-      desc: "Đăng nhập & xác thực 2 lớp, danh mục dùng chung, API và kết nối LGSP/NDXP, kho dữ liệu, điều hành, dự báo, an toàn thông tin",
-      icon: Boxes,
-      color: "from-sky-500 to-blue-700",
-      href: "/executive",
-      status: "Đang vận hành",
-      stats: [{ label: "danh mục", value: k.catalogs }, { label: "khóa API hoạt động", value: k.api_keys }],
-    },
+    ...executive,
     {
       code: "M2",
       name: "Phòng thí nghiệm (LIMS)",

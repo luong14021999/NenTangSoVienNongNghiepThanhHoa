@@ -11,11 +11,22 @@ import { CatalogSheet } from "@/components/layout/shells/tab-shell-nav";
  * Khung "bảng điều khiển" (M1 – quản trị): không có menu dọc. Bảng điều hành là trang trung tâm,
  * mỗi trang quản trị có đường dẫn quay về và nút mở toàn bộ chức năng quản trị.
  */
-export function ConsoleBar() {
+export function ConsoleBar({ canAdmin }: { canAdmin: boolean }) {
   const pathname = usePathname();
   const mod = moduleOf(pathname);
   const [open, setOpen] = useState(false);
   if (!mod) return null;
+  // Đầu mối danh mục (không phải quản trị) chỉ vào được Danh mục dùng chung – không hiện lối sang trang quản trị.
+  if (!canAdmin) {
+    const here = mod.groups.flatMap((g) => g.items).find((i) => isActiveHref(i.href, pathname));
+    return (
+      <nav aria-label="Đường dẫn" className="flex h-12 shrink-0 items-center gap-2 border-b bg-card px-3 lg:px-5">
+        <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">Trang chủ</Link>
+        <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden />
+        <span className="text-sm font-semibold">{here?.label ?? mod.name}</span>
+      </nav>
+    );
+  }
   const atHome = isActiveHref(mod.home, pathname);
   const group = mod.groups.find((g) => g.items.some((i) => isActiveHref(i.href, pathname)));
   const item = group?.items.find((i) => isActiveHref(i.href, pathname));
@@ -24,7 +35,7 @@ export function ConsoleBar() {
   return (
     <nav aria-label="Đường dẫn quản trị" className="flex h-12 shrink-0 items-center gap-2 border-b bg-card px-3 lg:px-5">
       <Link href={mod.home} className={`inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-sm font-medium ${atHome ? "text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}>
-        <Gauge className="h-4 w-4" />Bảng điều hành
+        <Gauge className="h-4 w-4" />Bảng quản trị
       </Link>
       {!atHome && item && (
         <>
