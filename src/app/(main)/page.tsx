@@ -16,6 +16,8 @@ type Mod = {
   color: string;
   /** Ảnh nền ô vuông (trong /public); không có thì hiện biểu tượng. */
   image?: string;
+  /** Vị trí cắt ảnh trong ô vuông (lớp Tailwind object-position), mặc định giữa. */
+  imagePosition?: string;
   href?: string;
   status: "Đang vận hành" | "Đang xây dựng" | "Kế hoạch";
   stats?: { label: string; value: string | number }[];
@@ -68,6 +70,9 @@ export default async function PortalPage() {
       desc: "Cổng tiếp nhận dịch vụ trực tuyến, tra cứu công khai, báo giá, hợp đồng, thanh toán, công nợ; nhiệm vụ KH&CN, kho tri thức, chuyển giao",
       icon: Handshake,
       color: "from-amber-500 to-orange-600",
+      image: "/modules/m4-nghien-cuu-dich-vu.jpg",
+      // Ảnh dọc: giữ phần người và máy phân tích, cắt bớt đáy.
+      imagePosition: "object-[50%_30%]",
       href: "/m4-overview",
       status: "Đang xây dựng",
       stats: [{ label: "yêu cầu mới chờ xử lý", value: n.requests_new }, { label: "hợp đồng đang thực hiện", value: n.contracts_open }],
@@ -102,7 +107,7 @@ export default async function PortalPage() {
               <>
                 {m.image && (
                   <>
-                    <Image src={m.image} alt="" fill sizes="(min-width: 1536px) 20vw, (min-width: 1024px) 33vw, 50vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <Image src={m.image} alt="" fill sizes="(min-width: 1536px) 20vw, (min-width: 1024px) 33vw, 50vw" className={`object-cover ${m.imagePosition ?? "object-center"} transition-transform duration-500 group-hover:scale-105`} />
                     {/* Lớp phủ: tối ở trên và dưới để chữ trắng luôn đọc được */}
                     <span aria-hidden className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/5 to-black/75" />
                   </>
