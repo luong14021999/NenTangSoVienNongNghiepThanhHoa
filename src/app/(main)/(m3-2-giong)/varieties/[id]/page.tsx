@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { CrudTableCard } from "@/components/crud/crud-table-card";
 import { EntityFormDialog, type CrudField } from "@/components/crud/entity-form-dialog";
 import { DossierSection, DossierTabs, MiniTable, type DossierTab } from "@/components/m3/dossier/dossier-parts";
-import { KindIcon, furrowStyle, qtyByUnit } from "@/components/m3/breed-overview/shared";
+import { qtyByUnit } from "@/components/m3/breed-overview/shared";
 import {
   breedDemandStore,
   breedOrderStore,
@@ -399,10 +399,8 @@ export default async function VarietyDossierPage({ params, searchParams }: { par
     <>
       <Header title={`${v.code} · ${v.name}`} description={`Hồ sơ giống · ${v.kind}${v.species ? ` · ${v.species}` : ""} · ${v.scope}`} />
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin">
-        <section className="relative overflow-hidden rounded-2xl border bg-card">
-          <div className="absolute inset-y-0 right-0 w-1/3 opacity-80" style={furrowStyle} aria-hidden />
+        <section className="relative overflow-hidden rounded-md border border-t-[3px] border-t-primary bg-card">
           <div className="relative flex flex-wrap items-start gap-4 p-4 sm:p-5">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><KindIcon kind={v.kind} className="h-8 w-8" /></span>
             <div className="min-w-0 flex-1">
               <Link href="/varieties" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="h-3.5 w-3.5" />Danh mục giống</Link>
               <h2 className="text-xl font-bold tracking-tight">{v.name} <span className="font-mono text-sm font-semibold text-primary">{v.code}</span></h2>

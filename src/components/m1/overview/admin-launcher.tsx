@@ -22,12 +22,11 @@ export function AdminLauncher({ stats }: { stats: Record<string, LauncherStat> }
             <h3 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</h3>
             <ul className="space-y-1">
               {g.items.map((i) => {
-                const Icon = i.icon;
                 const st = stats[i.href];
                 return (
                   <li key={i.href}>
                     <Link href={i.href} className="flex items-center gap-3 rounded-lg p-2 hover:bg-accent">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4" /></span>
+                      
                       <span className="min-w-0 leading-tight">
                         <span className="block text-sm font-medium">{i.label}</span>
                         {st && <span className={cn("block truncate text-[11px]", toneCls[st.tone ?? "muted"])}>{st.text}</span>}

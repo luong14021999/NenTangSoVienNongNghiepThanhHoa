@@ -116,7 +116,6 @@ export function PipelineBoard({ columns }: { columns: PipelineColumn[] }) {
       </div>
       <ol className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 scrollbar-thin sm:mx-0 sm:px-0">
         {columns.map((col) => {
-          const Icon = col.icon;
           const share = col.total !== null ? Math.max(4, Math.round(((col.total ?? 0) / maxTotal) * 100)) : 0;
           return (
             <li
@@ -127,9 +126,7 @@ export function PipelineBoard({ columns }: { columns: PipelineColumn[] }) {
               <header className="space-y-2 rounded-t-xl border-b border-border bg-card p-3">
                 <div className="flex items-center justify-between gap-2">
                   <Link href={col.href} className="flex min-w-0 items-center gap-2 hover:text-primary">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                      <Icon className="h-4 w-4" aria-hidden />
-                    </span>
+                    <span className="h-5 w-1 shrink-0 rounded-full bg-primary" aria-hidden />
                     <span className="truncate text-sm font-semibold">{col.title}</span>
                   </Link>
                   <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold tabular-nums text-primary-foreground">{col.count}</span>

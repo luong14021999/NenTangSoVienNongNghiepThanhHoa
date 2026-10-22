@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Globe, Inbox, MessageSquareReply, Phone } from "lucide-react";
+import { Globe, MessageSquareReply, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { initials } from "./format";
 
@@ -22,9 +22,7 @@ export function PortalInbox({ items, total, slaDays }: { items: InboxItem[]; tot
     <section aria-labelledby="inbox-title" className="rounded-xl border border-border bg-card">
       <header className="flex items-center justify-between gap-2 border-b border-border p-4">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <Inbox className="h-4 w-4" aria-hidden />
-          </span>
+          <span className="h-8 w-1 shrink-0 rounded-full bg-primary" aria-hidden />
           <div className="min-w-0">
             <h2 id="inbox-title" className="text-sm font-semibold">Hộp thư cổng dịch vụ</h2>
             <p className="truncate text-xs text-muted-foreground">

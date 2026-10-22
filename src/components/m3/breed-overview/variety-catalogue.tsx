@@ -2,7 +2,7 @@ import Link from "next/link";
 import { MapPin, ShieldCheck, UserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EmptyNote, KindIcon, furrowStyle } from "./shared";
+import { EmptyNote } from "./shared";
 
 export type CatalogueVariety = {
   id: string;
@@ -37,14 +37,11 @@ export function VarietyCard({ v }: { v: CatalogueVariety }) {
     <li>
       <Link
         href={`/varieties/${v.id}`}
-        className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition hover:-translate-y-0.5 hover:shadow-md hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="group flex h-full flex-col overflow-hidden rounded-md border border-border bg-card transition hover:shadow-md hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <div className="relative h-24 sm:h-28" style={furrowStyle} aria-hidden>
-          <KindIcon kind={v.kind} className="absolute right-3 bottom-2 w-14 h-14 text-primary/25 transition group-hover:text-primary/40" strokeWidth={1.25} />
-          <span className="absolute left-3 top-3 rounded-md bg-card/90 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-primary">{v.code}</span>
-          <span className="absolute left-3 bottom-3 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
-            <KindIcon kind={v.kind} className="w-3 h-3" /> {v.kind}
-          </span>
+        <div className="flex items-center justify-between gap-2 border-b border-t-[3px] border-t-primary bg-muted/40 px-3 py-2">
+          <span className="font-mono text-[11px] font-semibold text-primary">{v.code}</span>
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{v.kind}</span>
         </div>
         <div className="flex flex-1 flex-col gap-2 p-3">
           <div>
@@ -94,7 +91,6 @@ export function VarietyCatalogue({ varieties, kinds }: { varieties: CatalogueVar
           {tabs.map((t) => {
             return (
               <TabsTrigger key={t.value} value={t.value} className="gap-1.5">
-                {t.value !== "all" && <KindIcon kind={t.value} className="w-3.5 h-3.5" />}
                 {t.label} <span className="text-[10px] opacity-70">{t.items.length}</span>
               </TabsTrigger>
             );

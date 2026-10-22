@@ -41,13 +41,12 @@ export function qtyByUnit(rows: { quantity: number; unit: string }[]) {
   return [...m].sort((a, b) => b[1] - a[1]).map(([u, q]) => `${fmtNum(q)} ${u}`).join(" · ");
 }
 
-export function SectionHeading({ id, icon: Icon, title, description, href, linkLabel = "Xem tất cả" }: { id: string; icon: LucideIcon; title: string; description?: string; href?: string; linkLabel?: string }) {
+/** Tiêu đề khối: vạch màu bên trái (không biểu tượng trang trí). `icon` giữ để tương thích. */
+export function SectionHeading({ id, title, description, href, linkLabel = "Xem tất cả" }: { id: string; icon?: LucideIcon; title: string; description?: string; href?: string; linkLabel?: string }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-2">
       <div className="flex items-start gap-2.5 min-w-0">
-        <span className="mt-0.5 grid place-items-center w-8 h-8 shrink-0 rounded-lg bg-primary/10 text-primary" aria-hidden>
-          <Icon className="w-4 h-4" />
-        </span>
+        <span className="mt-0.5 h-8 w-1 shrink-0 rounded-full bg-primary" aria-hidden />
         <div className="min-w-0">
           <h2 id={id} className="text-base font-semibold leading-tight">{title}</h2>
           {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}

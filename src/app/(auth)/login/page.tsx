@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Image from "next/image";
-import { FlaskConical, Handshake, KeyRound, Microscope, ShieldCheck, Sprout, type LucideIcon } from "lucide-react";
+import { FlaskConical, Handshake, Microscope, Sprout, type LucideIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 import { auth, getSessionSafe } from "@/lib/platform/auth/server";
 import { DongSonDrum } from "@/components/brand/dong-son-drum";
@@ -69,12 +69,12 @@ export default async function LoginPage() {
           </div>
 
           <div className="mt-10 pt-6 border-t border-border space-y-2 text-xs text-muted-foreground">
-            <p className="flex items-start gap-2"><KeyRound className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />Một tài khoản dùng cho tất cả phần mềm; quyền truy cập theo vai trò được giao.</p>
-            <p className="flex items-start gap-2"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />Hỗ trợ xác thực 2 lớp; mọi thao tác được ghi nhật ký.</p>
+            <p className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 bg-[hsl(var(--gov-red))]" aria-hidden />Một tài khoản dùng cho tất cả phần mềm; quyền truy cập theo vai trò được giao.</p>
+            <p className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 bg-[hsl(var(--gov-red))]" aria-hidden />Hỗ trợ xác thực 2 lớp; mọi thao tác được ghi nhật ký.</p>
             {/* Điện thoại: không có panel phải – liệt kê ngắn các phần mềm */}
             <div className="flex flex-wrap gap-1.5 pt-2 lg:hidden">
               {SOFTWARE.map((m) => (
-                <span key={m.code} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5"><m.icon className="h-3 w-3 text-primary" />{m.code}</span>
+                <span key={m.code} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5">{m.code}</span>
               ))}
             </div>
           </div>
@@ -109,10 +109,7 @@ export default async function LoginPage() {
 
           <ul className="mt-8 grid max-w-xl gap-2.5">
             {SOFTWARE.map((m) => (
-              <li key={m.code} className="flex items-center gap-3 rounded-xl bg-white/[0.08] px-3 py-2.5 ring-1 ring-white/15 backdrop-blur-sm">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-[hsl(var(--gov-gold)/0.6)] bg-white/5 text-[hsl(var(--gov-gold-light))]">
-                  <m.icon className="h-5 w-5" strokeWidth={1.75} />
-                </span>
+              <li key={m.code} className="flex items-center gap-3 rounded-sm border-l-[3px] border-[hsl(var(--gov-gold))] bg-white/[0.07] px-3 py-2.5">
                 <span className="min-w-0 leading-tight">
                   <span className="flex items-center gap-2 text-sm font-semibold">
                     <span className="rounded bg-white/15 px-1.5 py-px font-mono text-[10px]">{m.code}</span>

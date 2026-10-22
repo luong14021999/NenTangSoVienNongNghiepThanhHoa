@@ -8,10 +8,9 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-  TrendingUp,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
-import { iconTone } from "@/components/common/stat-grid";
+import { statEdge } from "@/components/common/stat-grid";
 import {
   Card,
   CardContent,
@@ -306,39 +305,14 @@ export default async function DashboardPage() {
   );
 }
 
-function KpiCard({
-  label,
-  value,
-  hint,
-  icon,
-  accent,
-}: {
-  label: string;
-  value: number;
-  hint: string;
-  icon: React.ReactNode;
-  accent: string;
-}) {
+/** Ô chỉ số của bảng điều khiển PTN – cùng kiểu ô số liệu chung (không biểu tượng trang trí). */
+function KpiCard({ label, value, hint, accent }: { label: string; value: number; hint: string; icon?: React.ReactNode; accent: string }) {
   return (
-    <Card>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-              {label}
-            </div>
-            <div className="text-3xl font-semibold mt-1.5">{value}</div>
-            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" />
-              {hint}
-            </div>
-          </div>
-          <div
-            className={`w-10 h-10 rounded-md border flex items-center justify-center ${iconTone(accent)}`}
-          >
-            {icon}
-          </div>
-        </div>
+    <Card className={`rounded-md border-t-[3px] ${statEdge(accent)}`}>
+      <CardContent className="p-4 sm:p-5">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+        <div className="mt-1.5 text-2xl font-bold tabular-nums sm:text-3xl">{value}</div>
+        <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
       </CardContent>
     </Card>
   );

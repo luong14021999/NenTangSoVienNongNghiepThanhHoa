@@ -1,44 +1,33 @@
-import type { LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import type { LucideIcon } from "lucide-react";
 
 export type Stat = {
   label: string;
   value: number | string;
-  icon: LucideIcon;
+  /** Không còn hiển thị (phong cách cơ quan nhà nước: số liệu không kèm biểu tượng trang trí); giữ để tương thích. */
+  icon?: LucideIcon;
+  /** Chỉ dùng để suy ra mức cảnh báo: đỏ/hồng = có vấn đề, vàng/cam = cần chú ý, còn lại = bình thường. */
   accent: string;
   hint?: string;
 };
 
-/**
- * Màu ô biểu tượng theo ý nghĩa, không theo sắc màu trang trí: đỏ = có vấn đề, vàng = cần chú ý,
- * còn lại dùng màu chủ đạo của phần mềm (đơn sắc, viền mảnh – phong cách văn bản hành chính).
- */
-export function iconTone(accent: string) {
-  if (/rose|red/.test(accent)) return "border-rose-200 text-rose-700 bg-rose-50/60";
-  if (/amber|orange|yellow/.test(accent)) return "border-amber-200 text-amber-700 bg-amber-50/60";
-  return "border-primary/20 text-primary bg-primary/5";
+/** Vạch màu mép trên ô số liệu theo ý nghĩa: đỏ = có vấn đề, vàng = cần chú ý, còn lại màu chủ đạo của phần mềm. */
+export function statEdge(accent: string) {
+  if (/rose|red/.test(accent)) return "border-t-rose-600";
+  if (/amber|orange|yellow/.test(accent)) return "border-t-amber-500";
+  return "border-t-primary";
 }
 
+/** Dãy ô số liệu: tên chỉ số (chữ hoa nhỏ), con số, ghi chú – không biểu tượng trang trí. */
 export function StatGrid({ stats }: { stats: Stat[] }) {
   return (
     <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {stats.map((s) => (
-        <Card key={s.label}>
-          <CardContent className="p-5 flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                {s.label}
-              </div>
-              <div className="text-3xl font-semibold mt-1.5">{s.value}</div>
-              {s.hint && (
-                <div className="text-xs text-muted-foreground mt-0.5">{s.hint}</div>
-              )}
-            </div>
-            <div
-              className={`w-10 h-10 rounded-md border flex items-center justify-center shrink-0 ${iconTone(s.accent)}`}
-            >
-              <s.icon className="w-5 h-5" strokeWidth={1.75} />
-            </div>
+        <Card key={s.label} className={`rounded-md border-t-[3px] ${statEdge(s.accent)}`}>
+          <CardContent className="p-4 sm:p-5">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</div>
+            <div className="mt-1.5 text-2xl font-bold tabular-nums sm:text-3xl">{s.value}</div>
+            {s.hint && <div className="mt-0.5 text-xs text-muted-foreground">{s.hint}</div>}
           </CardContent>
         </Card>
       ))}
