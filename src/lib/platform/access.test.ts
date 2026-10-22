@@ -1,6 +1,6 @@
 // Xác nhận giá trị sử dụng (§7.11.2): phân quyền (§7.11.3) và chữ ký điện tử (M2.6).
 import { describe, expect, it } from "vitest";
-import { PERMISSIONS, permissionForEntity, roleAllows, validateBootstrap } from "./permissions";
+import { PERMISSIONS, isLeaderOnly, permissionForEntity, roleAllows, validateBootstrap } from "./permissions";
 import { contentHash, reportSignedContent, resultSignedContent } from "./signature";
 
 describe("Phân quyền theo vai trò", () => {
@@ -33,13 +33,17 @@ describe("Phân quyền theo vai trò", () => {
     expect(roleAllows(["QA/QC"], permissionForEntity("assignments"))).toBe(true);
     expect(roleAllows(["Tiếp nhận mẫu"], permissionForEntity("sample-events"))).toBe(true);
   });
-  it("TC-AU-05 khu Quản trị chỉ cho Quản trị; Điều hành chỉ Lãnh đạo Viện; đầu mối danh mục chỉ sửa danh mục", () => {
+  it("TC-AU-05 khu Quản trị cho Quản trị và Lãnh đạo Viện (chỉ xem); Điều hành chỉ Lãnh đạo Viện; đầu mối danh mục chỉ sửa danh mục", () => {
     expect(roleAllows(["Quản trị"], "admin.view")).toBe(true);
-    for (const r of ["Lãnh đạo Viện", "Trưởng phòng", "Quản lý danh mục", "QA/QC", "KTV"]) expect(roleAllows([r], "admin.view")).toBe(false);
+    expect(roleAllows(["Lãnh đạo Viện"], "admin.view")).toBe(true);
+    for (const r of ["Trưởng phòng", "Quản lý danh mục", "QA/QC", "KTV"]) expect(roleAllows([r], "admin.view")).toBe(false);
     expect(roleAllows(["Lãnh đạo Viện"], "view.executive")).toBe(true);
     for (const r of ["Trưởng phòng", "Quản trị", "KTV"]) expect(roleAllows([r], "view.executive")).toBe(false);
-    // Lãnh đạo chỉ xem: không ghi được dữ liệu nghiệp vụ nào
-    for (const p of Object.keys(PERMISSIONS) as (keyof typeof PERMISSIONS)[]) if (p !== "view.executive") expect(roleAllows(["Lãnh đạo Viện"], p)).toBe(false);
+    // Lãnh đạo chỉ xem: không sửa cấu hình, phân quyền, không ghi dữ liệu nghiệp vụ nào
+    for (const p of Object.keys(PERMISSIONS) as (keyof typeof PERMISSIONS)[]) if (p !== "view.executive" && p !== "admin.view") expect(roleAllows(["Lãnh đạo Viện"], p)).toBe(false);
+    expect(isLeaderOnly(["Lãnh đạo Viện"])).toBe(true);
+    expect(isLeaderOnly(["Lãnh đạo Viện", "Trưởng phòng"])).toBe(false);
+    expect(isLeaderOnly([])).toBe(false); // chưa bật phân quyền → không chuyển hướng
     expect(roleAllows(["Quản lý danh mục"], "write.mdm")).toBe(true);
     for (const p of Object.keys(PERMISSIONS) as (keyof typeof PERMISSIONS)[]) if (p !== "write.mdm") expect(roleAllows(["Quản lý danh mục"], p)).toBe(false);
   });

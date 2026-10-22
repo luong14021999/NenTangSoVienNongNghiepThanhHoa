@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import Image from "next/image";
 import { FlaskConical, Gauge, Handshake, Microscope, Sprout } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { dbQuery } from "@/lib/platform/db";
 import { currentAccess } from "@/lib/platform/data/access";
+import { isLeaderOnly } from "@/lib/platform/permissions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Nền tảng số – Viện Nông nghiệp tỉnh Thanh Hóa" };
@@ -26,6 +28,9 @@ type Mod = {
 
 /** Trang chủ: chọn phân hệ của nền tảng số Viện. */
 export default async function PortalPage() {
+  // Lãnh đạo Viện không dùng các phần mềm nghiệp vụ: vào thẳng bảng quản trị hệ thống.
+  const { can, roles } = await currentAccess();
+  if (isLeaderOnly(roles)) redirect("/admin");
   const [k] = await dbQuery(
     `select
        (select count(*)::int from analytics.fact_samples where first_issued_at is null) samples_open,
@@ -43,7 +48,6 @@ export default async function PortalPage() {
   ).catch(() => [{ requests_new: "—", contracts_open: "—", batches_growing: "—", varieties: "—" }]);
   // M1 (hạ tầng) không là ô ở trang chủ: quản trị vào bằng nút ⚙ trên thanh trên cùng.
   // Ô "Điều hành" chỉ hiện với Ban lãnh đạo Viện.
-  const { can } = await currentAccess();
   const executive: Mod[] = can("view.executive")
     ? [
         {

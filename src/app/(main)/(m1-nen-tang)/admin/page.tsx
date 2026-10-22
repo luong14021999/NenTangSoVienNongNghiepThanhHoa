@@ -38,7 +38,7 @@ const hourVN = (iso: string) =>
 const incidentLevel = (i: SystemIncident): Level =>
   i.status === "Đã khắc phục" ? "ok" : i.status === "Mở" && (i.category === "Truy cập trái phép" || i.category === "Mất / sai dữ liệu") ? "down" : "warn";
 
-/** M1 – bảng quản trị (chỉ vai trò Quản trị): sức khỏe hệ thống, tích hợp, an toàn thông tin, sự cố, chức năng quản trị. */
+/** M1 – bảng quản trị (Quản trị; Lãnh đạo Viện chỉ xem, vào thẳng trang này sau đăng nhập): sức khỏe hệ thống, tích hợp, an toàn thông tin, sự cố, chức năng quản trị. */
 export default async function AdminConsolePage() {
   const now = nowMs();
 
@@ -235,7 +235,7 @@ export default async function AdminConsolePage() {
 
   return (
     <>
-      <Header title="Bảng quản trị hệ thống" description="Dành cho quản trị viên: sức khỏe hệ thống, tích hợp LGSP/NDXP, an toàn thông tin, sự cố, sao lưu và các chức năng quản trị" />
+      <Header title="Bảng quản trị hệ thống" description="Dành cho Ban lãnh đạo Viện và quản trị viên: sức khỏe hệ thống, tích hợp LGSP/NDXP, an toàn thông tin, sự cố, sao lưu và các chức năng quản trị" />
       <main className="relative flex-1 overflow-y-auto scrollbar-thin">
         <div
           aria-hidden

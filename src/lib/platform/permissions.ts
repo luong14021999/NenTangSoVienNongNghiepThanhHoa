@@ -2,14 +2,15 @@
 // Nguyên tắc tách nhiệm vụ: người nhập ≠ người duyệt ≠ người phê duyệt; Quản trị hệ thống không duyệt kết quả.
 
 // "Dịch vụ – Kế toán", "Quản lý khoa học" (M4), "Nuôi cấy mô" (M3.1), "Giống" (M3.2): vai trò riêng của từng phân hệ.
-// "Lãnh đạo Viện": xem bảng điều hành; "Quản lý danh mục": đầu mối danh mục dùng chung của từng phòng (M1.2).
+// "Lãnh đạo Viện": chỉ xem khu Quản trị hệ thống (vào thẳng bảng quản trị) và bảng điều hành, không sửa gì;
+// "Quản lý danh mục": đầu mối danh mục dùng chung của từng phòng (M1.2).
 export const ROLES = ["Quản trị", "Lãnh đạo Viện", "Trưởng phòng", "QA/QC", "KTV", "Tiếp nhận mẫu", "Dịch vụ – Kế toán", "Quản lý khoa học", "Nuôi cấy mô", "Giống", "Quản lý danh mục", "Chỉ xem"] as const;
 export type Role = (typeof ROLES)[number];
 
 export const PERMISSIONS = {
   "admin.users": { label: "Quản lý tài khoản & phân quyền", roles: ["Quản trị"] },
   "admin.system": { label: "Cấu hình hệ thống, khóa API, tích hợp LGSP/NDXP, sao lưu", roles: ["Quản trị"] },
-  "admin.view": { label: "Vào khu Quản trị hệ thống (bảng quản trị, bảo mật, tích hợp, giám sát, nhật ký, cấu hình)", roles: ["Quản trị"] },
+  "admin.view": { label: "Vào khu Quản trị hệ thống (bảng quản trị, bảo mật, tích hợp, giám sát, nhật ký, cấu hình) – Lãnh đạo Viện chỉ xem", roles: ["Quản trị", "Lãnh đạo Viện"] },
   "view.executive": { label: "Xem bảng điều hành, phân tích – dự báo, kho dữ liệu tổng hợp (chỉ Ban lãnh đạo Viện)", roles: ["Lãnh đạo Viện"] },
   "write.mdm": { label: "Danh mục dùng chung (MDM)", roles: ["Quản trị", "Quản lý danh mục", "QA/QC", "Trưởng phòng"] },
   "results.enter": { label: "Nhập / sửa / nộp kết quả phân tích", roles: ["KTV", "Trưởng phòng"] },
@@ -127,6 +128,9 @@ const ENTITY_PERMISSION: Record<string, Permission> = {
 };
 
 export const permissionForEntity = (collection: string): Permission => ENTITY_PERMISSION[collection] ?? "write.lab";
+
+/** Tài khoản chỉ mang vai trò Lãnh đạo Viện: vào thẳng bảng quản trị, không hiện các phần mềm nghiệp vụ. */
+export const isLeaderOnly = (roles: readonly string[]) => roles.length > 0 && roles.every((r) => r === "Lãnh đạo Viện");
 
 export function roleAllows(roles: readonly string[], perm: Permission) {
   const allowed = PERMISSIONS[perm].roles as readonly string[];
