@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Boxes, FlaskConical, Handshake, Microscope, Sprout } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { dbQuery } from "@/lib/platform/db";
@@ -13,6 +14,8 @@ type Mod = {
   icon: LucideIcon;
   /** Màu nền ô vuông (gradient Tailwind). */
   color: string;
+  /** Ảnh nền ô vuông (trong /public); không có thì hiện biểu tượng. */
+  image?: string;
   href?: string;
   status: "Đang vận hành" | "Đang xây dựng" | "Kế hoạch";
   stats?: { label: string; value: string | number }[];
@@ -54,6 +57,7 @@ export default async function PortalPage() {
       desc: "Phòng phân tích Đất, nước, phân bón và môi trường – VILAS 1501: tiếp nhận mẫu, phân tích, QA/QC, phiếu kết quả theo ISO/IEC 17025",
       icon: FlaskConical,
       color: "from-emerald-500 to-teal-700",
+      image: "/modules/m2-phong-thi-nghiem.jpg",
       href: "/lims",
       status: "Đang vận hành",
       stats: [{ label: "mẫu chưa trả kết quả", value: k.samples_open }, { label: "phiếu đã phát hành", value: k.reports }],
@@ -96,14 +100,21 @@ export default async function PortalPage() {
           {modules.map((m) => {
             const body = (
               <>
-                <div className="flex items-start justify-between gap-2">
+                {m.image && (
+                  <>
+                    <Image src={m.image} alt="" fill sizes="(min-width: 1536px) 20vw, (min-width: 1024px) 33vw, 50vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                    {/* Lớp phủ: tối ở trên và dưới để chữ trắng luôn đọc được */}
+                    <span aria-hidden className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/5 to-black/75" />
+                  </>
+                )}
+                <div className="relative flex items-start justify-between gap-2">
                   <span className="font-mono text-sm sm:text-base font-bold opacity-90">{m.code}</span>
                   <span className="text-[10px] sm:text-xs font-medium rounded-full bg-white/20 px-2 py-0.5 text-right">{m.href ? m.status : "Sắp ra mắt"}</span>
                 </div>
-                <div className="flex-1 flex items-center justify-center">
-                  <m.icon className="w-14 h-14 sm:w-20 sm:h-20 transition-transform group-hover:scale-110" strokeWidth={1.5} />
+                <div className="relative flex-1 flex items-center justify-center">
+                  {!m.image && <m.icon className="w-14 h-14 sm:w-20 sm:h-20 transition-transform group-hover:scale-110" strokeWidth={1.5} />}
                 </div>
-                <div>
+                <div className="relative">
                   <div className="font-semibold text-sm sm:text-lg leading-tight">{m.name}</div>
                   {m.stats?.[0] && (
                     <div className="text-[11px] sm:text-xs opacity-80 mt-1">
@@ -113,7 +124,7 @@ export default async function PortalPage() {
                 </div>
               </>
             );
-            const cls = `group aspect-square rounded-2xl p-4 sm:p-5 flex flex-col text-white shadow-sm bg-gradient-to-br ${m.color}`;
+            const cls = `group relative overflow-hidden aspect-square rounded-2xl p-4 sm:p-5 flex flex-col text-white shadow-sm bg-gradient-to-br ${m.color}`;
             return m.href ? (
               <Link key={m.code} href={m.href} title={m.desc} className={`${cls} transition hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring`}>
                 {body}
