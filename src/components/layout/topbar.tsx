@@ -1,85 +1,50 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Database, Settings } from "lucide-react";
 import { HeaderUser } from "@/components/layout/header-user";
+import { DongSonDrum } from "@/components/brand/dong-son-drum";
+import { GovGoldRule, GovIdentity } from "@/components/brand/gov-identity";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
 import { usePathname } from "next/navigation";
 import { moduleOf, shellOf } from "@/components/layout/nav-config";
 
-/** Thanh trên cùng dùng chung; nút Quản trị / Danh mục chỉ hiện với người có quyền. */
+/**
+ * Thanh trên cùng dùng chung, phong cách cơ quan nhà nước: nền đỏ son, họa tiết trống đồng Đông Sơn,
+ * dòng cơ quan chủ quản + tên Viện; phần mềm đang mở hiện thành nhãn theo màu riêng.
+ * Nút Quản trị / Danh mục chỉ hiện với người có quyền.
+ */
 export function TopBar({ canAdmin = false, canCatalog = false }: { canAdmin?: boolean; canCatalog?: boolean }) {
   const pathname = usePathname();
   const mod = moduleOf(pathname);
   const hasSidebar = shellOf(mod) === "sidebar";
   const ModIcon = mod?.icon;
   return (
-    <header
-      className="relative h-16 sm:h-20 shrink-0 text-white pl-2 pr-2 sm:pr-5 lg:pl-5 lg:pr-7 flex items-center gap-2 sm:gap-3 lg:gap-4 shadow-md"
-      style={{
-        background:
-          "linear-gradient(120deg, hsl(var(--brand-from)) 0%, hsl(var(--brand-via)) 55%, hsl(var(--brand-to)) 100%)",
-      }}
-    >
-      {/* subtle decorative overlay */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.12]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 85% -20%, white 0%, transparent 40%)",
-        }}
-      />
+    <header className="relative shrink-0 text-white shadow-md">
+      <div className="gov-banner relative flex h-16 items-center gap-2 overflow-hidden pl-2 pr-2 sm:h-20 sm:gap-3 sm:pr-5 lg:gap-4 lg:pl-5 lg:pr-7">
+        {/* Họa tiết mặt trống đồng – vàng đồng, mờ */}
+        <DongSonDrum className="pointer-events-none absolute -right-10 top-1/2 h-56 w-56 -translate-y-1/2 text-[hsl(var(--gov-gold-light))] opacity-[0.16] sm:h-72 sm:w-72" />
+        <DongSonDrum className="pointer-events-none absolute left-[38%] top-1/2 hidden h-40 w-40 -translate-y-1/2 text-[hsl(var(--gov-gold-light))] opacity-[0.06] lg:block" />
 
-      {/* Mobile nav trigger */}
-      {hasSidebar && (
-        <div className="relative z-10 md:hidden">
-          <MobileSidebar />
-        </div>
-      )}
-
-      {/* Brand */}
-      <Link
-        href="/"
-        className="relative z-10 flex items-center gap-2.5 sm:gap-3.5 min-w-0 group"
-      >
-        <div className="w-11 h-11 sm:w-16 sm:h-16 rounded-full bg-white ring-2 ring-white/50 shadow-lg flex items-center justify-center overflow-hidden shrink-0 transition-transform sm:group-hover:scale-105">
-          <Image
-            src="/logo-vnnth.png"
-            alt="Viện Nông nghiệp tỉnh Thanh Hóa"
-            width={64}
-            height={64}
-            className="w-11 h-11 sm:w-16 sm:h-16 object-contain"
-            priority
-          />
-        </div>
-        {mod && ModIcon ? (
-          <>
-            <div className="hidden sm:flex w-11 h-11 rounded-xl bg-white/15 ring-1 ring-white/30 items-center justify-center shrink-0">
-              <ModIcon className="w-6 h-6 text-white" />
-            </div>
-            <div className="leading-tight min-w-0">
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/65 truncate">
-                <span className="font-mono rounded bg-white/15 px-1.5 py-px text-white">{mod.code}</span>
-                <span className="truncate">Viện Nông nghiệp tỉnh Thanh Hóa</span>
-              </div>
-              <div className="text-base sm:text-xl font-bold tracking-tight text-white drop-shadow-sm truncate sm:mt-0.5">
-                {mod.name}
-              </div>
-              <div className="hidden md:block text-xs text-white/70 font-medium mt-0.5 truncate">{mod.tagline}</div>
-            </div>
-          </>
-        ) : (
-          <div className="leading-tight min-w-0">
-            <div className="text-base sm:text-xl font-bold tracking-tight text-white drop-shadow-sm truncate">
-              Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa
-            </div>
-            <div className="hidden sm:block text-xs lg:text-[13px] text-white/70 font-medium mt-0.5 truncate">
-              Một tài khoản cho tất cả phân hệ
-            </div>
+        {hasSidebar && (
+          <div className="relative z-10 md:hidden">
+            <MobileSidebar />
           </div>
         )}
-      </Link>
+
+        <Link href="/" className="relative z-10 min-w-0" aria-label="Trang chủ nền tảng số">
+          <GovIdentity subtitle={<span className="hidden sm:inline">Nền tảng số – một tài khoản cho tất cả phần mềm</span>} />
+        </Link>
+
+        {mod && ModIcon && (
+          <span className="relative z-10 ml-1 hidden min-w-0 items-center gap-2 rounded-lg bg-white px-2.5 py-1.5 text-primary shadow-sm ring-1 ring-[hsl(var(--gov-gold))] md:flex">
+            <ModIcon className="h-5 w-5 shrink-0" />
+            <span className="min-w-0 leading-tight">
+              <span className="block font-mono text-[10px] font-bold opacity-70">{mod.code}</span>
+              <span className="block max-w-[16rem] truncate text-sm font-semibold">{mod.name}</span>
+            </span>
+          </span>
+        )}
 
       <div className="relative z-10 ml-auto flex shrink-0 items-center gap-2">
         {canAdmin ? (
@@ -100,6 +65,8 @@ export function TopBar({ canAdmin = false, canCatalog = false }: { canAdmin?: bo
         ) : null}
         <HeaderUser />
       </div>
+      </div>
+      <GovGoldRule />
     </header>
   );
 }

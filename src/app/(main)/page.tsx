@@ -6,6 +6,9 @@ import type { LucideIcon } from "lucide-react";
 import { dbQuery } from "@/lib/platform/db";
 import { currentAccess } from "@/lib/platform/data/access";
 import { isConsoleOnly } from "@/lib/platform/permissions";
+import { GovFooter } from "@/components/brand/gov-identity";
+import { DongSonDrum } from "@/components/brand/dong-son-drum";
+import { labInfo } from "@/lib/modules/m2/accreditation";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Nền tảng số – Viện Nông nghiệp tỉnh Thanh Hóa" };
@@ -116,8 +119,14 @@ export default async function PortalPage() {
   ];
   return (
     <>
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 scrollbar-thin">
-        <section className="grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4 sm:gap-6">
+      <main className="flex flex-1 flex-col overflow-y-auto scrollbar-thin">
+        <div className="relative flex-1 p-4 sm:p-6">
+        <DongSonDrum className="pointer-events-none absolute -right-24 -top-24 hidden h-[28rem] w-[28rem] text-[hsl(var(--gov-red))] opacity-[0.04] lg:block" />
+        <div className="relative mb-5 flex flex-wrap items-end gap-3 border-b-2 border-[hsl(var(--gov-gold))] pb-2">
+          <h1 className="border-l-4 border-[hsl(var(--gov-red))] pl-3 text-base font-bold uppercase tracking-wide text-[hsl(var(--gov-red-dark))] sm:text-lg">Hệ thống phần mềm nghiệp vụ</h1>
+          <p className="text-xs text-muted-foreground sm:ml-auto">Chọn phần mềm để làm việc · dữ liệu dùng chung, một tài khoản đăng nhập</p>
+        </div>
+        <section className="relative grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4 sm:gap-6">
           {modules.map((m) => {
             const body = (
               <>
@@ -157,6 +166,8 @@ export default async function PortalPage() {
             );
           })}
         </section>
+        </div>
+        <GovFooter email={labInfo.email} />
       </main>
     </>
   );

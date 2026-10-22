@@ -1,8 +1,10 @@
 import { Suspense } from "react";
 import Image from "next/image";
-import { Boxes, FlaskConical, Handshake, KeyRound, Microscope, ShieldCheck, Sprout, type LucideIcon } from "lucide-react";
+import { FlaskConical, Handshake, KeyRound, Microscope, ShieldCheck, Sprout, type LucideIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 import { auth, getSessionSafe } from "@/lib/platform/auth/server";
+import { DongSonDrum } from "@/components/brand/dong-son-drum";
+import { GOV } from "@/components/brand/gov-identity";
 import { LoginForm } from "./login-form";
 
 export const dynamic = "force-dynamic";
@@ -11,9 +13,8 @@ export const metadata = {
   title: "Đăng nhập – Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa",
 };
 
-/** 5 phần mềm của nền tảng – màu đồng bộ với ô vuông ở trang chủ. */
+/** 4 phần mềm nghiệp vụ của nền tảng (M1 là lớp lõi, không hiện như một phần mềm) – màu đồng bộ với ô vuông ở trang chủ. */
 const SOFTWARE: { code: string; name: string; desc: string; icon: LucideIcon; tone: string }[] = [
-  { code: "M1", name: "Nền tảng dùng chung", desc: "Tài khoản, danh mục, kết nối LGSP/NDXP, điều hành", icon: Boxes, tone: "from-sky-400 to-blue-600" },
   { code: "M2", name: "Phòng thí nghiệm (LIMS)", desc: "Phân tích đất, nước, phân bón – VILAS 1501", icon: FlaskConical, tone: "from-emerald-400 to-teal-600" },
   { code: "M3.1", name: "Nuôi cấy mô & truy xuất", desc: "Nhân giống in vitro, vườn ươm, mã QR nguồn gốc", icon: Microscope, tone: "from-violet-400 to-purple-600" },
   { code: "M3.2", name: "Giống cây trồng, vật nuôi, thủy sản", desc: "Hồ sơ giống, khảo nghiệm, sản xuất theo cấp", icon: Sprout, tone: "from-lime-400 to-green-600" },
@@ -34,28 +35,24 @@ export default async function LoginPage() {
       {/* LEFT: form panel */}
       <div className="flex-1 lg:max-w-[560px] flex flex-col justify-center px-6 sm:px-12 py-10 bg-background">
         <div className="w-full max-w-sm mx-auto">
-          <div className="flex flex-col items-center text-center gap-4 mb-10">
-            <div className="w-40 h-40 rounded-full bg-white ring-1 ring-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
-              <Image
-                src="/logo-vnnth.png"
-                alt="Viện Nông nghiệp tỉnh Thanh Hóa"
-                width={160}
-                height={160}
-                className="w-40 h-40 object-contain"
-                priority
-              />
+          {/* Khối nhận diện cơ quan: chủ quản → đơn vị → hệ thống */}
+          <div className="mb-8 flex flex-col items-center gap-3 text-center">
+            <div className="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-md ring-4 ring-[hsl(var(--gov-gold))]">
+              <Image src="/logo-vnnth.png" alt={GOV.unit} width={128} height={128} className="h-32 w-32 object-contain" priority />
             </div>
             <div className="leading-tight">
-              <div className="text-xl font-bold text-foreground">
-                Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa
+              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[hsl(var(--gov-red))]">{GOV.parent}</div>
+              <div className="gov-serif mt-1 whitespace-nowrap text-lg font-bold uppercase tracking-wide text-[hsl(var(--gov-red-dark))] sm:text-[1.3rem]">{GOV.unit}</div>
+              <div className="mx-auto my-2 flex items-center justify-center gap-2" aria-hidden>
+                <span className="h-px w-12 bg-[hsl(var(--gov-gold))]" />
+                <span className="text-[hsl(var(--gov-gold))]">★</span>
+                <span className="h-px w-12 bg-[hsl(var(--gov-gold))]" />
               </div>
-              <div className="text-sm text-muted-foreground">
-                Một tài khoản cho tất cả phần mềm
-              </div>
+              <div className="text-sm font-semibold uppercase tracking-wider text-foreground/80">Nền tảng số</div>
             </div>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="border-l-4 border-[hsl(var(--gov-red))] pl-3 text-xl font-bold uppercase tracking-wide text-foreground sm:text-2xl">
             Đăng nhập hệ thống
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -72,7 +69,7 @@ export default async function LoginPage() {
           </div>
 
           <div className="mt-10 pt-6 border-t border-border space-y-2 text-xs text-muted-foreground">
-            <p className="flex items-start gap-2"><KeyRound className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />Một tài khoản dùng cho cả 5 phần mềm; quyền truy cập theo vai trò được giao.</p>
+            <p className="flex items-start gap-2"><KeyRound className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />Một tài khoản dùng cho tất cả phần mềm; quyền truy cập theo vai trò được giao.</p>
             <p className="flex items-start gap-2"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />Hỗ trợ xác thực 2 lớp; mọi thao tác được ghi nhật ký.</p>
             {/* Điện thoại: không có panel phải – liệt kê ngắn các phần mềm */}
             <div className="flex flex-wrap gap-1.5 pt-2 lg:hidden">
@@ -84,8 +81,8 @@ export default async function LoginPage() {
         </div>
       </div>
 
-      {/* RIGHT: ảnh hoạt động của Viện + 5 phần mềm (ẩn trên điện thoại) */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden bg-[hsl(152_55%_14%)]">
+      {/* RIGHT: ảnh hoạt động của Viện + 4 phần mềm nghiệp vụ (ẩn trên điện thoại) */}
+      <div className="hidden lg:flex flex-1 relative overflow-hidden bg-[hsl(var(--gov-red-deep))]">
         <div className="absolute inset-0 grid grid-cols-2 grid-rows-2" aria-hidden>
           {PHOTOS.map((src) => (
             <div key={src} className="relative">
@@ -93,15 +90,18 @@ export default async function LoginPage() {
             </div>
           ))}
         </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(150_60%_20%/0.92)] via-[hsl(152_55%_16%/0.88)] to-[hsl(158_60%_10%/0.95)]" aria-hidden />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--gov-red)/0.93)] via-[hsl(var(--gov-red-dark)/0.9)] to-[hsl(var(--gov-red-deep)/0.96)]" aria-hidden />
+        <DongSonDrum className="pointer-events-none absolute -right-40 top-1/2 h-[46rem] w-[46rem] -translate-y-1/2 text-[hsl(var(--gov-gold-light))] opacity-[0.13]" />
+        <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-[hsl(var(--gov-gold))] via-[hsl(var(--gov-gold-light))] to-[hsl(var(--gov-gold))]" aria-hidden />
 
         <div className="relative z-10 flex flex-1 flex-col justify-center px-12 xl:px-20 py-12 text-white">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">Viện Nông nghiệp tỉnh Thanh Hóa</div>
-          <h2 className="mt-2 text-3xl xl:text-4xl font-bold leading-tight">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[hsl(var(--gov-gold-light))]">{GOV.parent}</div>
+          <h2 className="gov-serif mt-2 text-3xl font-bold uppercase leading-tight xl:text-4xl">
             Nền tảng số
             <br />
             Viện Nông nghiệp Thanh Hóa
           </h2>
+          <div className="mt-3 h-1 w-24 bg-[hsl(var(--gov-gold))]" aria-hidden />
           <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/80">
             Hệ thống thống nhất phục vụ nghiên cứu, phân tích – thử nghiệm, nhân giống và chuyển giao khoa học công nghệ:
             dữ liệu dùng chung giữa các đơn vị, một lần đăng nhập.
@@ -126,7 +126,7 @@ export default async function LoginPage() {
         </div>
 
         <div className="absolute bottom-6 left-0 right-0 z-10 text-center text-[11px] text-white/55">
-          © {new Date().getFullYear()} Viện Nông nghiệp tỉnh Thanh Hóa · 271 Nguyễn Thục, phường Đông Quang, tỉnh Thanh Hoá · ĐT 02373.952.119
+          Cơ quan chủ quản: {GOV.parent} · {GOV.unit} · {GOV.address} · ĐT {GOV.phone}
         </div>
       </div>
     </div>

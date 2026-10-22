@@ -15,9 +15,9 @@ export function Header({ title, description }: HeaderProps) {
   return (
     <header className="h-14 sm:h-16 shrink-0 border-b border-border bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/60 px-3 sm:px-6 flex items-center gap-3 sm:gap-4">
       <div className="min-w-0 flex-1">
-        <h1 className="text-sm sm:text-lg font-semibold truncate">{title}</h1>
+        <h1 className="truncate border-l-4 border-primary pl-2.5 text-sm font-semibold sm:text-lg">{title}</h1>
         {description && (
-          <p className="hidden sm:block text-xs text-muted-foreground truncate">
+          <p className="hidden sm:block truncate pl-3.5 text-xs text-muted-foreground">
             {description}
           </p>
         )}
