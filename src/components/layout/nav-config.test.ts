@@ -8,6 +8,9 @@ describe("khung điều hướng theo phần mềm", () => {
       expect(moduleOf(m.home)?.code).toBe(m.code);
     }
   });
+  it("mỗi phần mềm có khung riêng theo mục đích; chỉ phòng thí nghiệm giữ menu dọc", () => {
+    expect(Object.fromEntries(navModules.map((m) => [m.code, shellOf(m)]))).toEqual({ M1: "console", M2: "sidebar", M4: "areas", "M3.1": "bench", "M3.2": "hub" });
+  });
   it.each([
     ["M3.1", "bench"],
     ["M3.2", "hub"],

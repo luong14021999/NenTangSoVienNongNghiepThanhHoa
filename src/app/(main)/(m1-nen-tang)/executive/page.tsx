@@ -1,6 +1,7 @@
 import { Activity, BarChart3, Database, DatabaseBackup, KeyRound, Layers, Network, RadioTower, ServerCrash, Waypoints } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { ConsolePanel } from "@/components/m1/overview/console-panel";
+import { AdminLauncher, type LauncherStat } from "@/components/m1/overview/admin-launcher";
 import { EventTimeline, type TimelineItem } from "@/components/m1/overview/event-timeline";
 import { HealthStrip, SystemStatusBanner, type Subsystem } from "@/components/m1/overview/health-strip";
 import { IntegrationPanel, type ChannelRow, type HourBucket } from "@/components/m1/overview/integration-panel";
@@ -13,7 +14,7 @@ import { isAuthConfigured } from "@/lib/platform/auth/server";
 import { ENTITY_LABELS, listChanges } from "@/lib/platform/data/change-log";
 import { apiCallStats, listApiClients, listMessages } from "@/lib/platform/data/integration";
 import { listAuthEvents, securityCounters } from "@/lib/platform/data/security";
-import { getSetting } from "@/lib/platform/data/settings";
+import { SETTINGS, getSetting, getSettings } from "@/lib/platform/data/settings";
 import { listBackups, listHealth } from "@/lib/platform/data/system";
 import { dbQuery, isDbConfigured } from "@/lib/platform/db";
 import { daysUntil, fmtDateVN, todayISO } from "@/lib/platform/dates";
@@ -49,7 +50,7 @@ export default async function ExecutivePage() {
   const year = today.slice(0, 4);
   const months = lastMonths(today, 12);
 
-  const [dbUp, health, backups, incidents, changes, sec, mfaRequired, authEvents, clients, callStats, hourly, messages, kpiRows, monthly, byType, pulseRows] =
+  const [dbUp, health, backups, incidents, changes, sec, mfaRequired, authEvents, clients, callStats, hourly, messages, kpiRows, monthly, byType, pulseRows, settings] =
     await Promise.all([
       safe(() => dbQuery(`select 1`).then(() => true), false),
       safe(() => listHealth(30), []),
@@ -113,6 +114,7 @@ export default async function ExecutivePage() {
           ),
         [],
       ),
+      safe(() => getSettings(), null),
     ]);
 
   const security: SecurityStats = sec ? { ...sec, mfaRequired } : null;
@@ -282,6 +284,18 @@ export default async function ExecutivePage() {
     { code: "M3.2", name: "Giống cây trồng, vật nuôi, thủy sản", value: show(n.varieties), label: "giống trong lý lịch", href: "/breed-overview" },
   ];
 
+  // ── Dòng trạng thái trên lưới chức năng quản trị ────────────────
+  const settingsSet = settings ? Object.keys(settings._meta).length : NaN;
+  const launcher: Record<string, LauncherStat> = {
+    "/security": sec ? { text: `${sec.mfaOn}/${sec.accounts} tài khoản bật 2 lớp${mfaRequired ? " · bắt buộc" : ""}`, tone: mfaRequired || sec.mfaOn >= sec.accounts ? "ok" : "warn" } : { text: "chưa có số liệu" },
+    "/integration": { text: `${activeKeys}/${clients.length} khóa API · ${callStats.total} lượt 24h${callStats.denied ? ` · ${callStats.denied} bị chặn` : ""}`, tone: callStats.denied ? "warn" : "muted" },
+    "/system": last ? { text: `${last.ok ? "Tốt" : "Lỗi"} · kiểm tra ${ago(last.at, now)}${lastBackup ? ` · sao lưu ${ago(lastBackup.at, now)}` : " · chưa sao lưu"}`, tone: !last.ok ? "down" : !lastBackup || backupAge > 30 ? "warn" : "ok" } : { text: "chưa kiểm tra sức khỏe", tone: "warn" },
+    "/system-incidents": openIncidents.length ? { text: `${openIncidents.length} sự cố đang mở`, tone: openIncidents.some((i) => incidentLevel(i) === "down") ? "down" : "warn" } : { text: "Không có sự cố mở", tone: "ok" },
+    "/change-log": changes[0] ? { text: `gần nhất ${ago(changes[0].at, now)} · ${changes[0].actor || "hệ thống"}` } : { text: "chưa có thay đổi" },
+    "/settings": { text: Number.isNaN(settingsSet) ? "chưa đọc được" : `${settingsSet}/${Object.keys(SETTINGS).length} tham số đã đặt` },
+    "/data-warehouse": { text: `${show(k.samples_year)} mẫu năm ${year}` },
+  };
+
   const sampleSeries = months.map((m) => Number(monthly.find((r) => r.month === m)?.samples ?? 0));
   const revenueSeries = months.map((m) => Number(monthly.find((r) => r.month === m)?.revenue ?? 0));
 
@@ -312,6 +326,8 @@ export default async function ExecutivePage() {
           />
 
           <HealthStrip items={subsystems} />
+
+          <AdminLauncher stats={launcher} />
 
           <section aria-label="Tích hợp, an toàn thông tin, sự cố" className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
             <IntegrationPanel

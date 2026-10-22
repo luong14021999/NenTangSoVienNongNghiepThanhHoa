@@ -1,16 +1,25 @@
 // Cấu hình hệ thống (M1.8): khóa → giá trị JSON, có người sửa và thời điểm sửa.
 import { dbQuery, isDbConfigured } from "@/lib/platform/db";
 
+/** Nhóm cấu hình – cột trái của trang Cấu hình. */
+export const SETTING_GROUPS = {
+  security: { label: "Bảo mật & đăng nhập", hint: "Xác thực 2 lớp, ghi nhớ trình duyệt" },
+  integration: { label: "Tích hợp & API", hint: "Khóa API, giới hạn tần suất" },
+  operations: { label: "Vận hành & thông báo", hint: "Lưu giữ nhật ký, thông báo bảo trì" },
+  tissue: { label: "Nuôi cấy mô (M3.1)", hint: "Ngưỡng nhiễm, định mức giá thành" },
+} as const;
+export type SettingGroup = keyof typeof SETTING_GROUPS;
+
 export const SETTINGS = {
-  mfa_required: { label: "Bắt buộc xác thực 2 lớp cho mọi tài khoản", type: "bool", default: false },
-  mfa_trust_hours: { label: "Ghi nhớ trình duyệt đã xác thực 2 lớp (giờ)", type: "number", default: 12 },
-  api_default_rate_limit: { label: "Giới hạn mặc định cho khóa API mới (lượt / phút)", type: "number", default: 60 },
-  backup_retention_days: { label: "Thời gian giữ nhật ký sức khỏe / sao lưu (ngày)", type: "number", default: 30 },
-  tissue_contamination_threshold: { label: "M3.1: ngưỡng cảnh báo tỷ lệ nhiễm mẫu nuôi cấy mô (%)", type: "number", default: 7 },
-  tissue_labor_per_vessel: { label: "M3.1 giá thành: nhân công cấy mỗi bình (VND)", type: "number", default: 0 },
-  tissue_overhead_per_vessel: { label: "M3.1 giá thành: chi phí chung mỗi bình – điện, khấu hao phòng nuôi (VND)", type: "number", default: 0 },
-  tissue_nursery_per_plant: { label: "M3.1 giá thành: chi phí vườn ươm mỗi cây – bầu, giá thể, chăm sóc (VND)", type: "number", default: 0 },
-  maintenance_banner: { label: "Thông báo bảo trì hiển thị cho người dùng (để trống = tắt)", type: "text", default: "" },
+  mfa_required: { label: "Bắt buộc xác thực 2 lớp cho mọi tài khoản", type: "bool", group: "security", default: false },
+  mfa_trust_hours: { label: "Ghi nhớ trình duyệt đã xác thực 2 lớp (giờ)", type: "number", group: "security", default: 12 },
+  api_default_rate_limit: { label: "Giới hạn mặc định cho khóa API mới (lượt / phút)", type: "number", group: "integration", default: 60 },
+  backup_retention_days: { label: "Thời gian giữ nhật ký sức khỏe / sao lưu (ngày)", type: "number", group: "operations", default: 30 },
+  tissue_contamination_threshold: { label: "M3.1: ngưỡng cảnh báo tỷ lệ nhiễm mẫu nuôi cấy mô (%)", type: "number", group: "tissue", default: 7 },
+  tissue_labor_per_vessel: { label: "M3.1 giá thành: nhân công cấy mỗi bình (VND)", type: "number", group: "tissue", default: 0 },
+  tissue_overhead_per_vessel: { label: "M3.1 giá thành: chi phí chung mỗi bình – điện, khấu hao phòng nuôi (VND)", type: "number", group: "tissue", default: 0 },
+  tissue_nursery_per_plant: { label: "M3.1 giá thành: chi phí vườn ươm mỗi cây – bầu, giá thể, chăm sóc (VND)", type: "number", group: "tissue", default: 0 },
+  maintenance_banner: { label: "Thông báo bảo trì hiển thị cho người dùng (để trống = tắt)", type: "text", group: "operations", default: "" },
 } as const;
 export type SettingKey = keyof typeof SETTINGS;
 export type SettingValue<K extends SettingKey> = (typeof SETTINGS)[K]["default"] extends boolean ? boolean : (typeof SETTINGS)[K]["default"] extends number ? number : string;

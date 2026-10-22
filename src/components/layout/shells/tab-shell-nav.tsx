@@ -9,7 +9,7 @@ import { catalogOf, isActiveHref, moduleOf, tabsOf, type NavGroup } from "@/comp
 import { cn } from "@/lib/utils";
 
 /** Bảng "Danh mục": ô lớn theo nhóm – dễ bấm trên máy tính bảng ở phòng cấy. */
-function CatalogSheet({ groups, pathname, open, onOpenChange, trigger }: { groups: NavGroup[]; pathname: string; open: boolean; onOpenChange: (v: boolean) => void; trigger: React.ReactNode }) {
+export function CatalogSheet({ groups, pathname, open, onOpenChange, trigger, title = "Danh mục & các trang khác" }: { groups: NavGroup[]; pathname: string; open: boolean; onOpenChange: (v: boolean) => void; trigger: React.ReactNode; title?: string }) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
@@ -17,7 +17,7 @@ function CatalogSheet({ groups, pathname, open, onOpenChange, trigger }: { group
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
         <Dialog.Content aria-describedby={undefined} className="fixed inset-x-0 bottom-0 z-50 max-h-[85dvh] overflow-y-auto rounded-t-2xl border bg-card p-4 shadow-xl sm:inset-x-auto sm:left-1/2 sm:top-24 sm:bottom-auto sm:w-[min(48rem,92vw)] sm:-translate-x-1/2 sm:rounded-2xl sm:p-6">
           <div className="mb-4 flex items-center gap-2">
-            <Dialog.Title className="text-base font-semibold">Danh mục & các trang khác</Dialog.Title>
+            <Dialog.Title className="text-base font-semibold">{title}</Dialog.Title>
             <Dialog.Close asChild>
               <button aria-label="Đóng" className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-lg hover:bg-accent"><X className="h-5 w-5" /></button>
             </Dialog.Close>

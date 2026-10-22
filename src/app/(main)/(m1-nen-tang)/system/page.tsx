@@ -1,10 +1,10 @@
+import Link from "next/link";
 import { Activity, DatabaseBackup, HardDrive, HeartPulse, Download, RefreshCw } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatGrid } from "@/components/common/stat-grid";
 import { ActionButton } from "@/components/platform/action-button";
-import { SettingsForm } from "@/components/platform/settings-form";
 import { currentAccess } from "@/lib/platform/data/access";
 import { SETTINGS, getSettings, type SettingKey } from "@/lib/platform/data/settings";
 import { listBackups, listHealth, tableStats } from "@/lib/platform/data/system";
@@ -42,8 +42,11 @@ export default async function SystemPage() {
         />
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card>
-            <CardHeader><CardTitle className="text-base">Cấu hình hệ thống</CardTitle><CardDescription>{admin ? "Mọi thay đổi được ghi vào nhật ký thay đổi" : "Chỉ Quản trị được sửa"}</CardDescription></CardHeader>
-            <CardContent><SettingsForm defs={defs} disabled={!admin} /></CardContent>
+            <CardHeader><CardTitle className="text-base">Cấu hình hệ thống</CardTitle><CardDescription>Đã chuyển sang trang Cấu hình (theo nhóm, có lịch sử thay đổi)</CardDescription></CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p className="text-muted-foreground">{defs.filter((d) => d.updatedBy).length}/{defs.length} tham số đã được đặt khác mặc định.</p>
+              <Link href="/settings" className="inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium hover:bg-accent">Mở trang Cấu hình →</Link>
+            </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-start justify-between space-y-0 gap-2">

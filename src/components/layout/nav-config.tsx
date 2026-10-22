@@ -100,9 +100,10 @@ export type NavTab = { label: string; icon: LucideIcon; hrefs: string[]; /** Hi�
  * Khung điều hướng: "sidebar" = menu dọc bên trái (phòng thí nghiệm);
  * "bench" = tab lớn + danh mục, thanh dưới đáy trên điện thoại (nuôi cấy mô – dùng tại phòng cấy);
  * "hub" = tab ngang theo khu nghiệp vụ, lấy hồ sơ làm trung tâm (giống);
- * "areas" = chọn khu làm việc cho từng nhóm người dùng, mỗi khu một hàng tab trang (dịch vụ – KH&CN).
+ * "areas" = chọn khu làm việc cho từng nhóm người dùng, mỗi khu một hàng tab trang (dịch vụ – KH&CN);
+ * "console" = bảng điều khiển quản trị: bảng điều hành là trung tâm, các trang có đường dẫn quay về (nền tảng dùng chung).
  */
-export type ModuleShell = "sidebar" | "bench" | "hub" | "areas";
+export type ModuleShell = "sidebar" | "bench" | "hub" | "areas" | "console";
 /** Khóa giao diện: chọn bộ màu `[data-module]` trong globals.css. */
 export type ModuleKey = "m1" | "m2" | "m3-1" | "m3-2" | "m4";
 /** Phân hệ của nền tảng: mỗi phân hệ gồm nhiều nhóm menu và có bản sắc giao diện riêng. */
@@ -130,6 +131,7 @@ export const navModules: NavModule[] = [
   {
     code: "M1",
     home: "/executive",
+    shell: "console",
     name: "Nền tảng dùng chung",
     key: "m1",
     icon: Boxes,
