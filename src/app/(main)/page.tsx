@@ -83,6 +83,9 @@ export default async function PortalPage() {
       desc: "Vật liệu khởi đầu, công thức môi trường, theo dõi mẻ cấy, nhiễm mẫu, ra ngôi, xuất bán và truy xuất nguồn gốc cây giống",
       icon: Microscope,
       color: "from-violet-500 to-purple-700",
+      image: "/modules/m3-1-nuoi-cay-mo.jpg",
+      // Ảnh ngang: dịch khung sang trái để giữ cả hai kỹ thuật viên.
+      imagePosition: "object-[35%_50%]",
       href: "/tissue-bench",
       status: "Đang xây dựng",
       stats: [{ label: "mẻ cấy đang nuôi", value: n.batches_growing }],
