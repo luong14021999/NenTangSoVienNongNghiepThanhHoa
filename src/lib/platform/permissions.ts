@@ -129,8 +129,10 @@ const ENTITY_PERMISSION: Record<string, Permission> = {
 
 export const permissionForEntity = (collection: string): Permission => ENTITY_PERMISSION[collection] ?? "write.lab";
 
-/** Tài khoản chỉ mang vai trò Lãnh đạo Viện: vào thẳng bảng quản trị, không hiện các phần mềm nghiệp vụ. */
-export const isLeaderOnly = (roles: readonly string[]) => roles.length > 0 && roles.every((r) => r === "Lãnh đạo Viện");
+/** Vai trò không làm nghiệp vụ (tách nhiệm vụ): chỉ dùng khu Quản trị hệ thống. */
+const CONSOLE_ROLES: readonly string[] = ["Quản trị", "Lãnh đạo Viện"];
+/** Tài khoản chỉ mang vai trò Quản trị / Lãnh đạo Viện: vào thẳng bảng quản trị, không hiện các phần mềm nghiệp vụ. */
+export const isConsoleOnly = (roles: readonly string[]) => roles.length > 0 && roles.every((r) => CONSOLE_ROLES.includes(r));
 
 export function roleAllows(roles: readonly string[], perm: Permission) {
   const allowed = PERMISSIONS[perm].roles as readonly string[];

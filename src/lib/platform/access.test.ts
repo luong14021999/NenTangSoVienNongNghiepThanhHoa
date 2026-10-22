@@ -1,6 +1,6 @@
 // Xác nhận giá trị sử dụng (§7.11.2): phân quyền (§7.11.3) và chữ ký điện tử (M2.6).
 import { describe, expect, it } from "vitest";
-import { PERMISSIONS, isLeaderOnly, permissionForEntity, roleAllows, validateBootstrap } from "./permissions";
+import { PERMISSIONS, isConsoleOnly, permissionForEntity, roleAllows, validateBootstrap } from "./permissions";
 import { contentHash, reportSignedContent, resultSignedContent } from "./signature";
 
 describe("Phân quyền theo vai trò", () => {
@@ -41,9 +41,12 @@ describe("Phân quyền theo vai trò", () => {
     for (const r of ["Trưởng phòng", "Quản trị", "KTV"]) expect(roleAllows([r], "view.executive")).toBe(false);
     // Lãnh đạo chỉ xem: không sửa cấu hình, phân quyền, không ghi dữ liệu nghiệp vụ nào
     for (const p of Object.keys(PERMISSIONS) as (keyof typeof PERMISSIONS)[]) if (p !== "view.executive" && p !== "admin.view") expect(roleAllows(["Lãnh đạo Viện"], p)).toBe(false);
-    expect(isLeaderOnly(["Lãnh đạo Viện"])).toBe(true);
-    expect(isLeaderOnly(["Lãnh đạo Viện", "Trưởng phòng"])).toBe(false);
-    expect(isLeaderOnly([])).toBe(false); // chưa bật phân quyền → không chuyển hướng
+    expect(isConsoleOnly(["Lãnh đạo Viện"])).toBe(true);
+    expect(isConsoleOnly(["Quản trị"])).toBe(true);
+    expect(isConsoleOnly(["Quản trị", "Lãnh đạo Viện"])).toBe(true);
+    expect(isConsoleOnly(["Lãnh đạo Viện", "Trưởng phòng"])).toBe(false);
+    expect(isConsoleOnly(["Trưởng phòng"])).toBe(false);
+    expect(isConsoleOnly([])).toBe(false); // chưa bật phân quyền → không chuyển hướng
     expect(roleAllows(["Quản lý danh mục"], "write.mdm")).toBe(true);
     for (const p of Object.keys(PERMISSIONS) as (keyof typeof PERMISSIONS)[]) if (p !== "write.mdm") expect(roleAllows(["Quản lý danh mục"], p)).toBe(false);
   });

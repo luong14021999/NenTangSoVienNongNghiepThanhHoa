@@ -5,7 +5,7 @@ import { FlaskConical, Gauge, Handshake, Microscope, Sprout } from "lucide-react
 import type { LucideIcon } from "lucide-react";
 import { dbQuery } from "@/lib/platform/db";
 import { currentAccess } from "@/lib/platform/data/access";
-import { isLeaderOnly } from "@/lib/platform/permissions";
+import { isConsoleOnly } from "@/lib/platform/permissions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Nền tảng số – Viện Nông nghiệp tỉnh Thanh Hóa" };
@@ -28,9 +28,9 @@ type Mod = {
 
 /** Trang chủ: chọn phân hệ của nền tảng số Viện. */
 export default async function PortalPage() {
-  // Lãnh đạo Viện không dùng các phần mềm nghiệp vụ: vào thẳng bảng quản trị hệ thống.
+  // Quản trị / Lãnh đạo Viện không dùng các phần mềm nghiệp vụ: vào thẳng bảng quản trị hệ thống.
   const { can, roles } = await currentAccess();
-  if (isLeaderOnly(roles)) redirect("/admin");
+  if (isConsoleOnly(roles)) redirect("/admin");
   const [k] = await dbQuery(
     `select
        (select count(*)::int from analytics.fact_samples where first_issued_at is null) samples_open,
