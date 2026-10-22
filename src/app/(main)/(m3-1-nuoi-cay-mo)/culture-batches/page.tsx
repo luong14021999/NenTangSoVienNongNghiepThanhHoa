@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Boxes, CalendarClock, Bug, Sprout } from "lucide-react";
+import { Boxes, CalendarClock, Biohazard, Sprout } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Badge } from "@/components/ui/badge";
 import { CrudTableCard } from "@/components/crud/crud-table-card";
@@ -98,7 +98,7 @@ export default async function CultureBatchesPage({ searchParams }: { searchParam
             {
               label: "Tỷ lệ nhiễm chung",
               value: fmtPct(overall),
-              icon: Bug,
+              icon: Biohazard,
               accent: overall != null && overall > threshold ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-700",
               hint: `${contaminated}/${vessels} bình · ngưỡng ${threshold}%`,
             },

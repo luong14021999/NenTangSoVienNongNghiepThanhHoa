@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertOctagon, ShieldCheck, TrendingUp, ListChecks, Sparkles } from "lucide-react";
+import { AlertOctagon, ShieldCheck, TrendingUp, ListChecks, Lightbulb } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import {
   Card,
@@ -274,7 +274,7 @@ export default async function RisksPage({
           <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between space-y-0">
             <div>
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" />
+                <Lightbulb className="w-4 h-4 text-primary" />
                 <CardTitle>Cơ hội cải tiến</CardTitle>
               </div>
               <CardDescription>ISO/IEC 17025:2017 §8.5 yêu cầu xác định cả cơ hội bên cạnh rủi ro</CardDescription>

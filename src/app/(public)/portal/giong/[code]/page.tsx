@@ -24,7 +24,7 @@ export default async function PublicMarketPostPage({ params }: { params: Promise
         <div className="text-xs text-muted-foreground">{[p.kind, fmtDateVN(p.published_at), p.variety, p.area].filter(Boolean).join(" · ")}</div>
         <h1 className="text-xl sm:text-2xl font-bold">{p.title}</h1>
         {p.summary && <p className="text-sm font-medium">{p.summary}</p>}
-        {p.price_note && <p className="text-sm">💲 {p.price_note}</p>}
+        {p.price_note && <p className="text-sm">Giá tham khảo: {p.price_note}</p>}
         {p.content && <div className="text-sm leading-relaxed whitespace-pre-line">{p.content}</div>}
         <Link
           href={`/portal/request?${new URLSearchParams({ kind: "Giống cây trồng, vật nuôi, thủy sản", desc: `Liên quan tin ${p.code} – ${p.title}: ` })}`}

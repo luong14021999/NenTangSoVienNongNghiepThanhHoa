@@ -14,11 +14,11 @@ export const metadata = {
 };
 
 /** 4 phần mềm nghiệp vụ của nền tảng (M1 là lớp lõi, không hiện như một phần mềm) – màu đồng bộ với ô vuông ở trang chủ. */
-const SOFTWARE: { code: string; name: string; desc: string; icon: LucideIcon; tone: string }[] = [
-  { code: "M2", name: "Phòng thí nghiệm (LIMS)", desc: "Phân tích đất, nước, phân bón – VILAS 1501", icon: FlaskConical, tone: "from-emerald-400 to-teal-600" },
-  { code: "M3.1", name: "Nuôi cấy mô & truy xuất", desc: "Nhân giống in vitro, vườn ươm, mã QR nguồn gốc", icon: Microscope, tone: "from-violet-400 to-purple-600" },
-  { code: "M3.2", name: "Giống cây trồng, vật nuôi, thủy sản", desc: "Hồ sơ giống, khảo nghiệm, sản xuất theo cấp", icon: Sprout, tone: "from-lime-400 to-green-600" },
-  { code: "M4", name: "Nghiên cứu – dịch vụ – KH&CN", desc: "Dịch vụ khách hàng, nhiệm vụ KH&CN, kho tri thức", icon: Handshake, tone: "from-amber-400 to-orange-500" },
+const SOFTWARE: { code: string; name: string; desc: string; icon: LucideIcon }[] = [
+  { code: "M2", name: "Phòng thí nghiệm (LIMS)", desc: "Phân tích đất, nước, phân bón – VILAS 1501", icon: FlaskConical },
+  { code: "M3.1", name: "Nuôi cấy mô & truy xuất", desc: "Nhân giống in vitro, vườn ươm, mã QR nguồn gốc", icon: Microscope },
+  { code: "M3.2", name: "Giống cây trồng, vật nuôi, thủy sản", desc: "Hồ sơ giống, khảo nghiệm, sản xuất theo cấp", icon: Sprout },
+  { code: "M4", name: "Nghiên cứu – dịch vụ – KH&CN", desc: "Dịch vụ khách hàng, nhiệm vụ KH&CN, kho tri thức", icon: Handshake },
 ];
 /** Ảnh ghép nền panel phải (cùng bộ ảnh với trang chủ). */
 const PHOTOS = ["/modules/m2-phong-thi-nghiem.jpg", "/modules/m3-1-nuoi-cay-mo.jpg", "/modules/m3-2-giong.jpg", "/modules/m4-nghien-cuu-dich-vu.jpg"];
@@ -110,8 +110,8 @@ export default async function LoginPage() {
           <ul className="mt-8 grid max-w-xl gap-2.5">
             {SOFTWARE.map((m) => (
               <li key={m.code} className="flex items-center gap-3 rounded-xl bg-white/[0.08] px-3 py-2.5 ring-1 ring-white/15 backdrop-blur-sm">
-                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${m.tone} shadow`}>
-                  <m.icon className="h-5 w-5" />
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-[hsl(var(--gov-gold)/0.6)] bg-white/5 text-[hsl(var(--gov-gold-light))]">
+                  <m.icon className="h-5 w-5" strokeWidth={1.75} />
                 </span>
                 <span className="min-w-0 leading-tight">
                   <span className="flex items-center gap-2 text-sm font-semibold">

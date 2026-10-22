@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { ArrowRight, Fish, PawPrint, Sprout, Wheat } from "lucide-react";
+import { ArrowRight, Fence, Sprout, Waves, Wheat } from "lucide-react";
 import type { LucideIcon, LucideProps } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 
 /** Biểu tượng theo nhóm giống (BREED_KINDS). */
 export const KIND_ICON: Record<string, LucideIcon> = {
   "Cây trồng": Wheat,
-  "Vật nuôi": PawPrint,
-  "Thủy sản": Fish,
+  "Vật nuôi": Fence,
+  "Thủy sản": Waves,
 };
 
 /** Biểu tượng nhóm giống – component tĩnh, chọn icon theo `kind`. */

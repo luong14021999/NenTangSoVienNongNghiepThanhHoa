@@ -92,7 +92,7 @@ export default async function ReportsPage({
                     <div>{x.approved}/{x.total} kết quả đã phê duyệt</div>
                     {x.total > x.approved && <div className="text-amber-700">{x.total - x.approved} kết quả chưa duyệt – không đưa vào phiếu</div>}
                     {blocks[x.code]?.length > 0 && (
-                      <div className="text-rose-600 mt-0.5" title={blocks[x.code].join("\n")}>⛔ Bị chặn: {blocks[x.code][0]}{blocks[x.code].length > 1 && ` (+${blocks[x.code].length - 1})`}</div>
+                      <div className="text-rose-600 mt-0.5" title={blocks[x.code].join("\n")}>⊘ Bị chặn: {blocks[x.code][0]}{blocks[x.code].length > 1 && ` (+${blocks[x.code].length - 1})`}</div>
                     )}
                   </div>
                   <div className="text-xs md:w-60">

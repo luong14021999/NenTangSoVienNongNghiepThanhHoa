@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bug, Target, AlertTriangle, Thermometer } from "lucide-react";
+import { Biohazard, Target, AlertTriangle, Thermometer } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -118,7 +118,7 @@ export default async function TissueStatsPage({ searchParams }: { searchParams: 
         </div>
         <StatGrid
           stats={[
-            { label: `Tỷ lệ nhiễm ${months} tháng`, value: fmtPct(overall), icon: Bug, accent: overall != null && overall > threshold ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-700", hint: `${contaminated}/${vessels} bình · ${inRange.length} mẻ` },
+            { label: `Tỷ lệ nhiễm ${months} tháng`, value: fmtPct(overall), icon: Biohazard, accent: overall != null && overall > threshold ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-700", hint: `${contaminated}/${vessels} bình · ${inRange.length} mẻ` },
             { label: "Mục tiêu kỹ thuật", value: "5–7%", icon: Target, accent: "bg-blue-50 text-blue-600", hint: `ngưỡng cảnh báo ${threshold}%` },
             { label: "Nhóm vượt ngưỡng", value: flagged.length, icon: AlertTriangle, accent: "bg-amber-50 text-amber-600", hint: `đủ ≥ ${MIN_VESSELS_FOR_CONCLUSION} bình để kết luận` },
             { label: "Phòng nuôi ngoài ngưỡng", value: roomIssues.length, icon: Thermometer, accent: "bg-violet-50 text-violet-600", hint: "theo lần đo mới nhất" },

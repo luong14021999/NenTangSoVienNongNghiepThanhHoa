@@ -11,6 +11,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
+import { iconTone } from "@/components/common/stat-grid";
 import {
   Card,
   CardContent,
@@ -112,28 +113,28 @@ export default async function DashboardPage() {
             value={sampleTotal}
             hint={trend}
             icon={<ClipboardList className="w-5 h-5" />}
-            accent="bg-blue-50 text-blue-600"
+            accent=""
           />
           <KpiCard
             label="Đang phân tích"
             value={open.length}
             hint={`${dueSoon} mẫu đến hạn trong 2 ngày`}
             icon={<FlaskConical className="w-5 h-5" />}
-            accent="bg-amber-50 text-amber-600"
+            accent={dueSoon > 0 ? "amber" : ""}
           />
           <KpiCard
             label="Thiết bị cần hiệu chuẩn"
             value={calibrationDue}
             hint="trong 60 ngày tới"
             icon={<Wrench className="w-5 h-5" />}
-            accent="bg-violet-50 text-violet-600"
+            accent={calibrationDue > 0 ? "amber" : ""}
           />
           <KpiCard
             label="Hóa chất tồn thấp"
             value={lowStock.length}
             hint={`${expiringSoon} sắp hết hạn (30 ngày)`}
             icon={<Beaker className="w-5 h-5" />}
-            accent="bg-rose-50 text-rose-600"
+            accent={lowStock.length > 0 ? "rose" : ""}
           />
         </section>
 
@@ -333,7 +334,7 @@ function KpiCard({
             </div>
           </div>
           <div
-            className={`w-10 h-10 rounded-lg flex items-center justify-center ${accent}`}
+            className={`w-10 h-10 rounded-md border flex items-center justify-center ${iconTone(accent)}`}
           >
             {icon}
           </div>

@@ -163,7 +163,7 @@ function DecisionZone({ result }: { result: ResultRow }) {
 const checkMeta: Record<CheckResult["status"], { icon: string; className: string }> = {
   "Đạt": { icon: "✓", className: "text-emerald-700" },
   "Cảnh báo": { icon: "⚠", className: "text-amber-700" },
-  "Chặn": { icon: "⛔", className: "text-rose-700 font-medium" },
+  "Chặn": { icon: "⊘", className: "text-rose-700 font-medium" },
   "Không áp dụng": { icon: "–", className: "text-muted-foreground" },
 };
 
@@ -177,7 +177,7 @@ function ReleaseChecks({ checks, version, stage }: { checks: CheckResult[]; vers
         <Link href="/release-rules" className="text-[11px] text-primary hover:underline">quy tắc v{version}</Link>
       </div>
       <div className="text-xs mb-2">
-        {blocked ? `⛔ ${blocked} điều kiện CHẶN – không thể ${stage}` : warn ? `⚠ ${warn} cảnh báo – vẫn ${stage} được, cảnh báo được ghi vào lưu vết` : `✓ Đủ điều kiện ${stage}`}
+        {blocked ? `⊘ ${blocked} điều kiện CHẶN – không thể ${stage}` : warn ? `⚠ ${warn} cảnh báo – vẫn ${stage} được, cảnh báo được ghi vào lưu vết` : `✓ Đủ điều kiện ${stage}`}
       </div>
       <ul className="space-y-1.5">
         {checks.map((c) => (

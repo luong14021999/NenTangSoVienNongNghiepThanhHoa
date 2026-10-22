@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowRightLeft, Bug, ClipboardCheck, FlaskConical, Sprout, Truck } from "lucide-react";
+import { ArrowRightLeft, Biohazard, ClipboardCheck, FlaskConical, Sprout, Truck } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { EntityFormDialog, type CrudField } from "@/components/crud/entity-form-dialog";
@@ -199,7 +199,7 @@ export default async function TissueBenchPage({ searchParams }: { searchParams: 
             fields={contaminationFields}
             submitLabel="Ghi nhận"
             successText="Đã ghi nhiễm"
-            trigger={actionBtn(<Bug />, "Ghi nhiễm")}
+            trigger={actionBtn(<Biohazard />, "Ghi nhiễm")}
           />
         </>
       ),

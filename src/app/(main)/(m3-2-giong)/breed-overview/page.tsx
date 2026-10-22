@@ -8,7 +8,7 @@ import {
   Layers,
   MapPin,
   Newspaper,
-  PawPrint,
+  Fence,
   ScanSearch,
   ShoppingCart,
   Sprout,
@@ -234,7 +234,7 @@ export default async function BreedOverviewPage() {
           <SectionHeading id="breed-ladder" icon={Layers} title="Hệ thống giống theo cấp" description="Số lô giống và sản lượng ở từng cấp, từ nguồn giống gốc đến giống xác nhận / thương phẩm" href="/breed-production" linkLabel="Sản xuất theo cấp" />
           <div className="grid gap-4 lg:grid-cols-2">
             <SeedLadder title="Cây trồng" icon={Wheat} steps={cropLadder} />
-            <SeedLadder title="Vật nuôi · thủy sản" icon={PawPrint} steps={animalLadder} />
+            <SeedLadder title="Vật nuôi · thủy sản" icon={Fence} steps={animalLadder} />
           </div>
         </Plot>
 

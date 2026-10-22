@@ -1,4 +1,4 @@
-import { TreePine, PawPrint, AlertTriangle, Users } from "lucide-react";
+import { TreePine, Fence, AlertTriangle, Users } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Badge } from "@/components/ui/badge";
 import { CrudTableCard } from "@/components/crud/crud-table-card";
@@ -43,7 +43,7 @@ export default async function SourceStocksPage({ searchParams }: { searchParams:
         <StatGrid
           stats={[
             { label: "Cây / vườn đầu dòng", value: all.filter((s) => PLANT_KINDS.includes(s.kind)).length, icon: TreePine, accent: "bg-emerald-50 text-emerald-700" },
-            { label: "Đàn giống", value: all.filter((s) => !PLANT_KINDS.includes(s.kind)).length, icon: PawPrint, accent: "bg-blue-50 text-blue-600" },
+            { label: "Đàn giống", value: all.filter((s) => !PLANT_KINDS.includes(s.kind)).length, icon: Fence, accent: "bg-blue-50 text-blue-600" },
             { label: "Cá thể có phả hệ", value: individuals.length, icon: Users, accent: "bg-violet-50 text-violet-600" },
             { label: "Công nhận sắp / hết hiệu lực", value: all.filter((s) => validityAlert(s.validUntil, today)).length, icon: AlertTriangle, accent: "bg-rose-50 text-rose-600", hint: "trong 90 ngày" },
           ]}

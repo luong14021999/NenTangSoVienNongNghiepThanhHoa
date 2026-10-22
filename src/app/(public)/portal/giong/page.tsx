@@ -79,7 +79,7 @@ export default async function PublicBreedPage() {
                 <div className="text-[11px] text-muted-foreground">{[p.kind, fmtDateVN(p.published_at), p.variety, p.area].filter(Boolean).join(" · ")}</div>
                 <Link href={`/portal/giong/${encodeURIComponent(p.code ?? "")}`} className="font-medium text-primary hover:underline">{p.title}</Link>
                 {p.summary && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{p.summary}</p>}
-                {p.price_note && <p className="text-xs mt-1">💲 {p.price_note}</p>}
+                {p.price_note && <p className="text-xs mt-1">Giá tham khảo: {p.price_note}</p>}
               </li>
             ))}
           </ul>

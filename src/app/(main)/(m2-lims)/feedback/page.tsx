@@ -1,6 +1,6 @@
 import {
   MessageSquare,
-  Smile,
+  MessageSquareText,
   AlertTriangle,
   CheckCircle2,
   Filter,
@@ -128,7 +128,7 @@ export default async function FeedbackPage({
     {
       label: "Đánh giá tích cực",
       value: positive.length,
-      icon: Smile,
+      icon: MessageSquareText,
       accent: "bg-blue-50 text-blue-600",
     },
     {

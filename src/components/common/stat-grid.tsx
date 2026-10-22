@@ -9,6 +9,16 @@ export type Stat = {
   hint?: string;
 };
 
+/**
+ * Màu ô biểu tượng theo ý nghĩa, không theo sắc màu trang trí: đỏ = có vấn đề, vàng = cần chú ý,
+ * còn lại dùng màu chủ đạo của phần mềm (đơn sắc, viền mảnh – phong cách văn bản hành chính).
+ */
+export function iconTone(accent: string) {
+  if (/rose|red/.test(accent)) return "border-rose-200 text-rose-700 bg-rose-50/60";
+  if (/amber|orange|yellow/.test(accent)) return "border-amber-200 text-amber-700 bg-amber-50/60";
+  return "border-primary/20 text-primary bg-primary/5";
+}
+
 export function StatGrid({ stats }: { stats: Stat[] }) {
   return (
     <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -25,9 +35,9 @@ export function StatGrid({ stats }: { stats: Stat[] }) {
               )}
             </div>
             <div
-              className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${s.accent}`}
+              className={`w-10 h-10 rounded-md border flex items-center justify-center shrink-0 ${iconTone(s.accent)}`}
             >
-              <s.icon className="w-5 h-5" />
+              <s.icon className="w-5 h-5" strokeWidth={1.75} />
             </div>
           </CardContent>
         </Card>
