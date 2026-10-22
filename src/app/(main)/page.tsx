@@ -96,6 +96,8 @@ export default async function PortalPage() {
       desc: "Lý lịch giống, nguồn gen, khảo nghiệm, chỉ thị phân tử, BLAST+, sản xuất giống, bản đồ cơ sở giống",
       icon: Sprout,
       color: "from-lime-500 to-green-700",
+      // Ảnh ghép 4 khung (lúa, cây giống, thủy sản, cây ăn quả): cắt giữa để thấy cả bốn.
+      image: "/modules/m3-2-giong.jpg",
       href: "/varieties",
       status: "Đang xây dựng",
       stats: [{ label: "giống trong lý lịch", value: n.varieties }],
