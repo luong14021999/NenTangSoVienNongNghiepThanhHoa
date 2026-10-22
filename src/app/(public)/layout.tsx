@@ -26,7 +26,7 @@ export default function PublicLayout({ children }: Readonly<{ children: React.Re
           </div>
         </div>
         <GovGoldRule />
-        <nav className="bg-[hsl(var(--gov-red-dark))]">
+        <nav className="bg-[hsl(var(--gov-main-dark))]">
           <div className="mx-auto flex max-w-6xl gap-0.5 overflow-x-auto px-2 text-xs font-semibold uppercase tracking-wide sm:px-4 sm:text-[13px]">
             {LINKS.map((l) => (
               <Link key={l.href} href={l.href} className="whitespace-nowrap border-b-2 border-transparent px-3 py-2.5 text-white/90 hover:border-[hsl(var(--gov-gold-light))] hover:bg-white/10 hover:text-white">

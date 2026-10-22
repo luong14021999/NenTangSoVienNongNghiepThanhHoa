@@ -38,10 +38,10 @@
 }
 
 :root {
-  /* Nhận diện cơ quan nhà nước (đơn vị thuộc UBND tỉnh): đỏ son – vàng đồng; không đổi theo phần mềm. */
-  --gov-red: 356 72% 36%;
-  --gov-red-dark: 354 68% 24%;
-  --gov-red-deep: 352 66% 16%;
+  /* Nhận diện cơ quan (đơn vị thuộc UBND tỉnh, ngành nông nghiệp): xanh lá lúa – vàng đồng; không đổi theo phần mềm. */
+  --gov-main: 146 64% 27%;
+  --gov-main-dark: 150 62% 19%;
+  --gov-main-deep: 154 64% 12%;
   --gov-gold: 43 78% 48%;
   --gov-gold-light: 46 92% 66%;
 
@@ -51,33 +51,33 @@
   --card-foreground: 222 40% 12%;
   --popover: 0 0% 100%;
   --popover-foreground: 222 40% 12%;
-  /* Trang chủ, đăng nhập (không thuộc phần mềm nào): màu đỏ son của cơ quan. */
-  --primary: 356 72% 36%;
+  /* Trang chủ, đăng nhập (không thuộc phần mềm nào): màu xanh lá của cơ quan. */
+  --primary: 146 64% 27%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 30 30% 96%;
-  --secondary-foreground: 354 45% 18%;
-  --muted: 30 20% 96%;
-  --muted-foreground: 20 8% 38%;
-  --accent: 30 35% 94%;
-  --accent-foreground: 354 45% 18%;
+  --secondary: 120 20% 96%;
+  --secondary-foreground: 150 45% 16%;
+  --muted: 100 15% 96%;
+  --muted-foreground: 140 8% 38%;
+  --accent: 120 25% 94%;
+  --accent-foreground: 150 45% 16%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
   --success: 142 71% 38%;
   --success-foreground: 140 30% 98%;
   --warning: 38 92% 50%;
   --warning-foreground: 222 47% 11%;
-  --border: 30 15% 87%;
-  --input: 30 15% 87%;
-  --ring: 356 72% 36%;
+  --border: 120 12% 87%;
+  --input: 120 12% 87%;
+  --ring: 146 64% 27%;
   --radius: 0.5rem;
-  --sidebar: 354 60% 22%;
-  --sidebar-foreground: 30 30% 94%;
-  --sidebar-accent: 356 60% 34%;
+  --sidebar: 150 60% 19%;
+  --sidebar-foreground: 120 25% 94%;
+  --sidebar-accent: 146 55% 30%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-border: 354 55% 17%;
-  --brand-from: 356 72% 36%;
-  --brand-via: 354 68% 26%;
-  --brand-to: 352 66% 18%;
+  --sidebar-border: 152 58% 15%;
+  --brand-from: 146 64% 27%;
+  --brand-via: 150 62% 20%;
+  --brand-to: 154 64% 13%;
 }
 
 /* Tên cơ quan: chữ có chân, đậm – phong cách văn bản hành chính. */
@@ -85,11 +85,11 @@
   font-family: var(--font-gov-serif), "Times New Roman", serif;
 }
 
-/* Thanh tiêu đề kiểu cơ quan nhà nước: nền đỏ son, ánh sáng nhẹ góc trên. */
+/* Thanh tiêu đề kiểu cơ quan nhà nước: nền xanh lá đậm, ánh sáng nhẹ góc trên. */
 .gov-banner {
   background:
-    radial-gradient(120% 140% at 85% -30%, hsl(var(--gov-red) / 0.0) 0%, hsl(var(--gov-red-deep) / 0.35) 70%),
-    linear-gradient(110deg, hsl(var(--gov-red)) 0%, hsl(var(--gov-red-dark)) 60%, hsl(var(--gov-red-deep)) 100%);
+    radial-gradient(120% 140% at 85% -30%, hsl(var(--gov-main) / 0.0) 0%, hsl(var(--gov-main-deep) / 0.35) 70%),
+    linear-gradient(110deg, hsl(var(--gov-main)) 0%, hsl(var(--gov-main-dark)) 60%, hsl(var(--gov-main-deep)) 100%);
 }
 
 .dark {
@@ -146,31 +146,31 @@
   --ring: 217 68% 62%;
 }
 
-/* Điều hành (M1.4–M1.6, Ban lãnh đạo): đỏ son theo logo Viện */
+/* Điều hành (M1.4–M1.6, Ban lãnh đạo): xanh rêu đậm, trang trọng */
 [data-module="dh"] {
-  --primary: 352 62% 40%;
+  --primary: 165 55% 28%;
   --primary-foreground: 0 0% 100%;
-  --ring: 352 62% 40%;
-  --secondary: 352 40% 96%;
-  --secondary-foreground: 352 45% 18%;
-  --muted: 352 25% 96.5%;
-  --muted-foreground: 352 10% 40%;
-  --accent: 352 40% 94%;
-  --accent-foreground: 352 45% 18%;
-  --border: 352 18% 88%;
-  --input: 352 18% 88%;
-  --sidebar: 352 40% 20%;
-  --sidebar-foreground: 352 30% 92%;
-  --sidebar-accent: 352 55% 34%;
+  --ring: 165 55% 28%;
+  --secondary: 165 40% 96%;
+  --secondary-foreground: 165 45% 18%;
+  --muted: 165 25% 96.5%;
+  --muted-foreground: 165 10% 40%;
+  --accent: 165 40% 94%;
+  --accent-foreground: 165 45% 18%;
+  --border: 165 18% 88%;
+  --input: 165 18% 88%;
+  --sidebar: 165 40% 20%;
+  --sidebar-foreground: 165 30% 92%;
+  --sidebar-accent: 165 55% 34%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-border: 352 40% 15%;
-  --brand-from: 352 65% 38%;
-  --brand-via: 348 58% 27%;
-  --brand-to: 344 55% 17%;
+  --sidebar-border: 165 40% 15%;
+  --brand-from: 165 65% 38%;
+  --brand-via: 163 58% 27%;
+  --brand-to: 160 55% 17%;
 }
 .dark [data-module="dh"], .dark[data-module="dh"] {
-  --primary: 352 62% 62%;
-  --ring: 352 62% 62%;
+  --primary: 165 62% 52%;
+  --ring: 165 62% 52%;
 }
 
 /* M2 · LIMS: xanh ngọc, phòng thí nghiệm */

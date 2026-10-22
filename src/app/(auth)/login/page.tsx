@@ -41,8 +41,8 @@ export default async function LoginPage() {
               <Image src="/logo-vnnth.png" alt={GOV.unit} width={128} height={128} className="h-32 w-32 object-contain" priority />
             </div>
             <div className="leading-tight">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[hsl(var(--gov-red))]">{GOV.parent}</div>
-              <div className="gov-serif mt-1 whitespace-nowrap text-lg font-bold uppercase tracking-wide text-[hsl(var(--gov-red-dark))] sm:text-[1.3rem]">{GOV.unit}</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[hsl(var(--gov-main))]">{GOV.parent}</div>
+              <div className="gov-serif mt-1 whitespace-nowrap text-lg font-bold uppercase tracking-wide text-[hsl(var(--gov-main-dark))] sm:text-[1.3rem]">{GOV.unit}</div>
               <div className="mx-auto my-2 flex items-center justify-center gap-2" aria-hidden>
                 <span className="h-px w-12 bg-[hsl(var(--gov-gold))]" />
                 <span className="text-[hsl(var(--gov-gold))]">★</span>
@@ -52,7 +52,7 @@ export default async function LoginPage() {
             </div>
           </div>
 
-          <h1 className="border-l-4 border-[hsl(var(--gov-red))] pl-3 text-xl font-bold uppercase tracking-wide text-foreground sm:text-2xl">
+          <h1 className="border-l-4 border-[hsl(var(--gov-main))] pl-3 text-xl font-bold uppercase tracking-wide text-foreground sm:text-2xl">
             Đăng nhập hệ thống
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -69,8 +69,8 @@ export default async function LoginPage() {
           </div>
 
           <div className="mt-10 pt-6 border-t border-border space-y-2 text-xs text-muted-foreground">
-            <p className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 bg-[hsl(var(--gov-red))]" aria-hidden />Một tài khoản dùng cho tất cả phần mềm; quyền truy cập theo vai trò được giao.</p>
-            <p className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 bg-[hsl(var(--gov-red))]" aria-hidden />Hỗ trợ xác thực 2 lớp; mọi thao tác được ghi nhật ký.</p>
+            <p className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 bg-[hsl(var(--gov-main))]" aria-hidden />Một tài khoản dùng cho tất cả phần mềm; quyền truy cập theo vai trò được giao.</p>
+            <p className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 bg-[hsl(var(--gov-main))]" aria-hidden />Hỗ trợ xác thực 2 lớp; mọi thao tác được ghi nhật ký.</p>
             {/* Điện thoại: không có panel phải – liệt kê ngắn các phần mềm */}
             <div className="flex flex-wrap gap-1.5 pt-2 lg:hidden">
               {SOFTWARE.map((m) => (
@@ -82,7 +82,7 @@ export default async function LoginPage() {
       </div>
 
       {/* RIGHT: ảnh hoạt động của Viện + 4 phần mềm nghiệp vụ (ẩn trên điện thoại) */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden bg-[hsl(var(--gov-red-deep))]">
+      <div className="hidden lg:flex flex-1 relative overflow-hidden bg-[hsl(var(--gov-main-deep))]">
         <div className="absolute inset-0 grid grid-cols-2 grid-rows-2" aria-hidden>
           {PHOTOS.map((src) => (
             <div key={src} className="relative">
@@ -90,7 +90,7 @@ export default async function LoginPage() {
             </div>
           ))}
         </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--gov-red)/0.93)] via-[hsl(var(--gov-red-dark)/0.9)] to-[hsl(var(--gov-red-deep)/0.96)]" aria-hidden />
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--gov-main)/0.93)] via-[hsl(var(--gov-main-dark)/0.9)] to-[hsl(var(--gov-main-deep)/0.96)]" aria-hidden />
         <DongSonDrum className="pointer-events-none absolute -right-40 top-1/2 h-[46rem] w-[46rem] -translate-y-1/2 text-[hsl(var(--gov-gold-light))] opacity-[0.13]" />
         <div className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-[hsl(var(--gov-gold))] via-[hsl(var(--gov-gold-light))] to-[hsl(var(--gov-gold))]" aria-hidden />
 

@@ -10,7 +10,7 @@ import { usePathname } from "next/navigation";
 import { moduleOf, shellOf } from "@/components/layout/nav-config";
 
 /**
- * Thanh trên cùng dùng chung, phong cách cơ quan nhà nước: nền đỏ son, họa tiết trống đồng Đông Sơn,
+ * Thanh trên cùng dùng chung, phong cách cơ quan nhà nước: nền xanh lá đậm, họa tiết trống đồng Đông Sơn,
  * dòng cơ quan chủ quản + tên Viện; phần mềm đang mở hiện thành nhãn theo màu riêng.
  * Nút Quản trị / Danh mục chỉ hiện với người có quyền.
  */

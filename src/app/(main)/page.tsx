@@ -58,7 +58,7 @@ export default async function PortalPage() {
           name: "Điều hành",
           desc: "Bảng thông tin điều hành dành cho Ban lãnh đạo Viện: chỉ số nghiệp vụ các phần mềm, xu hướng, phân tích và dự báo",
           icon: Gauge,
-          color: "from-rose-600 to-red-800",
+          color: "from-emerald-700 to-teal-900",
           href: "/executive",
           status: "Đang vận hành",
           stats: [{ label: "yêu cầu dịch vụ mới", value: n.requests_new }],
@@ -121,9 +121,9 @@ export default async function PortalPage() {
     <>
       <main className="flex flex-1 flex-col overflow-y-auto scrollbar-thin">
         <div className="relative flex-1 p-4 sm:p-6">
-        <DongSonDrum className="pointer-events-none absolute -right-24 -top-24 hidden h-[28rem] w-[28rem] text-[hsl(var(--gov-red))] opacity-[0.04] lg:block" />
+        <DongSonDrum className="pointer-events-none absolute -right-24 -top-24 hidden h-[28rem] w-[28rem] text-[hsl(var(--gov-main))] opacity-[0.04] lg:block" />
         <div className="relative mb-5 flex flex-wrap items-end gap-3 border-b-2 border-[hsl(var(--gov-gold))] pb-2">
-          <h1 className="border-l-4 border-[hsl(var(--gov-red))] pl-3 text-base font-bold uppercase tracking-wide text-[hsl(var(--gov-red-dark))] sm:text-lg">Hệ thống phần mềm nghiệp vụ</h1>
+          <h1 className="border-l-4 border-[hsl(var(--gov-main))] pl-3 text-base font-bold uppercase tracking-wide text-[hsl(var(--gov-main-dark))] sm:text-lg">Hệ thống phần mềm nghiệp vụ</h1>
           <p className="text-xs text-muted-foreground sm:ml-auto">Chọn phần mềm để làm việc · dữ liệu dùng chung, một tài khoản đăng nhập</p>
         </div>
         <section className="relative grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4 sm:gap-6">

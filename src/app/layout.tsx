@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin", "vietnamese"] });
 const govSerif = Noto_Serif({ subsets: ["latin", "vietnamese"], weight: ["700"], variable: "--font-gov-serif" });
 
 export const viewport: Viewport = {
-  themeColor: "#9e1a22",
+  themeColor: "#19703f",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
