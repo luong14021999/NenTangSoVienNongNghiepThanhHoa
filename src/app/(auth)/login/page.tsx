@@ -1,14 +1,6 @@
 import { Suspense } from "react";
 import Image from "next/image";
-import {
-  Sprout,
-  FlaskConical,
-  TestTube,
-  Beaker,
-  Leaf,
-  Wheat,
-  Award,
-} from "lucide-react";
+import { Boxes, FlaskConical, Handshake, KeyRound, Microscope, ShieldCheck, Sprout, type LucideIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 import { auth, getSessionSafe } from "@/lib/platform/auth/server";
 import { LoginForm } from "./login-form";
@@ -18,6 +10,17 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Đăng nhập – Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa",
 };
+
+/** 5 phần mềm của nền tảng – màu đồng bộ với ô vuông ở trang chủ. */
+const SOFTWARE: { code: string; name: string; desc: string; icon: LucideIcon; tone: string }[] = [
+  { code: "M1", name: "Nền tảng dùng chung", desc: "Tài khoản, danh mục, kết nối LGSP/NDXP, điều hành", icon: Boxes, tone: "from-sky-400 to-blue-600" },
+  { code: "M2", name: "Phòng thí nghiệm (LIMS)", desc: "Phân tích đất, nước, phân bón – VILAS 1501", icon: FlaskConical, tone: "from-emerald-400 to-teal-600" },
+  { code: "M3.1", name: "Nuôi cấy mô & truy xuất", desc: "Nhân giống in vitro, vườn ươm, mã QR nguồn gốc", icon: Microscope, tone: "from-violet-400 to-purple-600" },
+  { code: "M3.2", name: "Giống cây trồng, vật nuôi, thủy sản", desc: "Hồ sơ giống, khảo nghiệm, sản xuất theo cấp", icon: Sprout, tone: "from-lime-400 to-green-600" },
+  { code: "M4", name: "Nghiên cứu – dịch vụ – KH&CN", desc: "Dịch vụ khách hàng, nhiệm vụ KH&CN, kho tri thức", icon: Handshake, tone: "from-amber-400 to-orange-500" },
+];
+/** Ảnh ghép nền panel phải (cùng bộ ảnh với trang chủ). */
+const PHOTOS = ["/modules/m2-phong-thi-nghiem.jpg", "/modules/m3-1-nuoi-cay-mo.jpg", "/modules/m3-2-giong.jpg", "/modules/m4-nghien-cuu-dich-vu.jpg"];
 
 export default async function LoginPage() {
   // Đã đăng nhập → về trang chủ.
@@ -47,7 +50,7 @@ export default async function LoginPage() {
                 Nền tảng số Viện Nông nghiệp tỉnh Thanh Hóa
               </div>
               <div className="text-sm text-muted-foreground">
-                Một tài khoản cho tất cả phân hệ
+                Một tài khoản cho tất cả phần mềm
               </div>
             </div>
           </div>
@@ -68,113 +71,62 @@ export default async function LoginPage() {
             </Suspense>
           </div>
 
-          <div className="mt-10 pt-6 border-t border-border">
-            <div className="text-[11px] text-muted-foreground uppercase font-semibold tracking-wider mb-2">
-              Tuân thủ tiêu chuẩn
-            </div>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1">
-                <Award className="w-3 h-3 text-primary" />
-                ISO/IEC 17025:2017
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1">
-                Mã VILAS 1501
-              </span>
+          <div className="mt-10 pt-6 border-t border-border space-y-2 text-xs text-muted-foreground">
+            <p className="flex items-start gap-2"><KeyRound className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />Một tài khoản dùng cho cả 5 phần mềm; quyền truy cập theo vai trò được giao.</p>
+            <p className="flex items-start gap-2"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />Hỗ trợ xác thực 2 lớp; mọi thao tác được ghi nhật ký.</p>
+            {/* Điện thoại: không có panel phải – liệt kê ngắn các phần mềm */}
+            <div className="flex flex-wrap gap-1.5 pt-2 lg:hidden">
+              {SOFTWARE.map((m) => (
+                <span key={m.code} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5"><m.icon className="h-3 w-3 text-primary" />{m.code}</span>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* RIGHT: green agriculture-lab panel (hidden on mobile) */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden">
-        {/* Gradient background */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(135deg, hsl(145 62% 32%) 0%, hsl(150 55% 24%) 50%, hsl(155 60% 16%) 100%)",
-          }}
-        />
-
-        {/* Decorative pattern overlay */}
-        <svg
-          className="absolute inset-0 w-full h-full opacity-[0.07]"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <defs>
-            <pattern
-              id="leaf-grid"
-              x="0"
-              y="0"
-              width="80"
-              height="80"
-              patternUnits="userSpaceOnUse"
-              patternTransform="rotate(30)"
-            >
-              <path
-                d="M 20 40 Q 40 10, 60 40 Q 40 70, 20 40 Z"
-                fill="white"
-              />
-              <circle cx="70" cy="10" r="2" fill="white" />
-              <circle cx="10" cy="70" r="1.5" fill="white" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#leaf-grid)" />
-        </svg>
-
-        {/* Floating icons */}
-        <div className="absolute inset-0 text-white/10">
-          <FlaskConical className="absolute w-24 h-24 top-16 right-16 rotate-12" />
-          <TestTube className="absolute w-20 h-20 top-52 left-24 -rotate-6" />
-          <Beaker className="absolute w-28 h-28 bottom-24 right-32 rotate-6" />
-          <Leaf className="absolute w-20 h-20 bottom-40 left-20 rotate-45" />
-          <Wheat className="absolute w-24 h-24 top-1/2 right-8 -rotate-12" />
-          <Sprout className="absolute w-16 h-16 top-32 left-1/2 -rotate-6" />
+      {/* RIGHT: ảnh hoạt động của Viện + 5 phần mềm (ẩn trên điện thoại) */}
+      <div className="hidden lg:flex flex-1 relative overflow-hidden bg-[hsl(152_55%_14%)]">
+        <div className="absolute inset-0 grid grid-cols-2 grid-rows-2" aria-hidden>
+          {PHOTOS.map((src) => (
+            <div key={src} className="relative">
+              <Image src={src} alt="" fill sizes="30vw" className="object-cover" />
+            </div>
+          ))}
         </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(150_60%_20%/0.92)] via-[hsl(152_55%_16%/0.88)] to-[hsl(158_60%_10%/0.95)]" aria-hidden />
 
-        {/* Center content */}
-        <div className="relative z-10 flex-1 flex flex-col justify-center items-center text-center px-16 text-white">
-          <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur ring-1 ring-white/40 flex items-center justify-center mb-6">
-            <Sprout className="w-8 h-8" />
-          </div>
-          <h2 className="text-3xl xl:text-4xl font-bold leading-tight">
+        <div className="relative z-10 flex flex-1 flex-col justify-center px-12 xl:px-20 py-12 text-white">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">Viện Nông nghiệp tỉnh Thanh Hóa</div>
+          <h2 className="mt-2 text-3xl xl:text-4xl font-bold leading-tight">
             Nền tảng số
             <br />
-            Viện Nông nghiệp
+            Viện Nông nghiệp Thanh Hóa
           </h2>
-          <p className="mt-4 text-white/80 text-sm max-w-md leading-relaxed">
-            Phòng thí nghiệm VILAS&nbsp;1501 theo ISO/IEC&nbsp;17025:2017 · dịch vụ
-            khoa học &amp; công nghệ · nuôi cấy mô · giống cây trồng, vật nuôi,
-            thủy sản – dữ liệu dùng chung, một lần đăng nhập.
+          <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/80">
+            Hệ thống thống nhất phục vụ nghiên cứu, phân tích – thử nghiệm, nhân giống và chuyển giao khoa học công nghệ:
+            dữ liệu dùng chung giữa các đơn vị, một lần đăng nhập.
           </p>
 
-          <div className="mt-10 grid grid-cols-3 gap-6 text-center max-w-md">
-            <div>
-              <div className="text-2xl xl:text-3xl font-bold">5</div>
-              <div className="text-[11px] uppercase tracking-wider text-white/70 mt-1">
-                Phân hệ
-              </div>
-            </div>
-            <div>
-              <div className="text-2xl xl:text-3xl font-bold">59</div>
-              <div className="text-[11px] uppercase tracking-wider text-white/70 mt-1">
-                Phép thử VILAS
-              </div>
-            </div>
-            <div>
-              <div className="text-2xl xl:text-3xl font-bold">1</div>
-              <div className="text-[11px] uppercase tracking-wider text-white/70 mt-1">
-                Tài khoản dùng chung
-              </div>
-            </div>
-          </div>
+          <ul className="mt-8 grid max-w-xl gap-2.5">
+            {SOFTWARE.map((m) => (
+              <li key={m.code} className="flex items-center gap-3 rounded-xl bg-white/[0.08] px-3 py-2.5 ring-1 ring-white/15 backdrop-blur-sm">
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${m.tone} shadow`}>
+                  <m.icon className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 leading-tight">
+                  <span className="flex items-center gap-2 text-sm font-semibold">
+                    <span className="rounded bg-white/15 px-1.5 py-px font-mono text-[10px]">{m.code}</span>
+                    {m.name}
+                  </span>
+                  <span className="block truncate text-xs text-white/70">{m.desc}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        {/* Bottom credit */}
-        <div className="absolute bottom-6 left-0 right-0 text-center text-[11px] text-white/50">
-          © {new Date().getFullYear()} Viện Nông nghiệp tỉnh Thanh Hóa · 271
-          Nguyễn Thục, phường Đông Quang, tỉnh Thanh Hoá · ĐT 02373.952.119
+        <div className="absolute bottom-6 left-0 right-0 z-10 text-center text-[11px] text-white/55">
+          © {new Date().getFullYear()} Viện Nông nghiệp tỉnh Thanh Hóa · 271 Nguyễn Thục, phường Đông Quang, tỉnh Thanh Hoá · ĐT 02373.952.119
         </div>
       </div>
     </div>
