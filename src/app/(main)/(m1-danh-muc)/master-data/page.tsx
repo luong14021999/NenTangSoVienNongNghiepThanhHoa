@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Database, Layers, CheckCircle2, History } from "lucide-react";
 import { Header } from "@/components/layout/header";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CrudTableCard } from "@/components/crud/crud-table-card";
 import { EntityFormDialog, type CrudField } from "@/components/crud/entity-form-dialog";
@@ -45,7 +45,7 @@ export default async function MasterDataPage({ searchParams }: { searchParams: P
         />
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
           <Card className="h-fit">
-            <CardHeader className="pb-2"><CardTitle className="text-base">Danh mục</CardTitle><CardDescription>API: /api/v1/catalogs/&#123;mã&#125;</CardDescription></CardHeader>
+            <CardHeader className="pb-2"><CardTitle className="text-base">Danh mục</CardTitle></CardHeader>
             <CardContent className="space-y-1">
               {catalogs.map((x) => (
                 <Link key={x.code} href={`/master-data?c=${x.code}`} className={`block rounded-lg px-3 py-2 text-sm ${current?.code === x.code ? "bg-primary/10 text-primary" : "hover:bg-accent"}`}>
