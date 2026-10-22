@@ -95,13 +95,14 @@ import { cn } from "@/lib/utils";
 export type NavItem = { href: string; label: string; icon: LucideIcon };
 export type NavGroup = { label: string; items: NavItem[] };
 /** Tab chính của phần mềm dùng khung riêng: gom một số trang (theo href trong `groups`), trang đầu là trang vào. */
-export type NavTab = { label: string; icon: LucideIcon; hrefs: string[]; /** Hiện ở thanh dưới đáy trên điện thoại. */ mobile?: boolean };
+export type NavTab = { label: string; icon: LucideIcon; hrefs: string[]; /** Hiện ở thanh dưới đáy trên điện thoại. */ mobile?: boolean; /** Mô tả ngắn của khu (khung "areas"). */ description?: string };
 /**
  * Khung điều hướng: "sidebar" = menu dọc bên trái (phòng thí nghiệm);
  * "bench" = tab lớn + danh mục, thanh dưới đáy trên điện thoại (nuôi cấy mô – dùng tại phòng cấy);
- * "hub" = tab ngang theo khu nghiệp vụ, lấy hồ sơ làm trung tâm (giống).
+ * "hub" = tab ngang theo khu nghiệp vụ, lấy hồ sơ làm trung tâm (giống);
+ * "areas" = chọn khu làm việc cho từng nhóm người dùng, mỗi khu một hàng tab trang (dịch vụ – KH&CN).
  */
-export type ModuleShell = "sidebar" | "bench" | "hub";
+export type ModuleShell = "sidebar" | "bench" | "hub" | "areas";
 /** Khóa giao diện: chọn bộ màu `[data-module]` trong globals.css. */
 export type ModuleKey = "m1" | "m2" | "m3-1" | "m3-2" | "m4";
 /** Phân hệ của nền tảng: mỗi phân hệ gồm nhiều nhóm menu và có bản sắc giao diện riêng. */
@@ -245,6 +246,28 @@ export const navModules: NavModule[] = [
   {
     code: "M4",
     home: "/m4-overview",
+    shell: "areas",
+    tabs: [
+      { label: "Tổng quan", icon: Gauge, hrefs: ["/m4-overview"], description: "Toàn cảnh dịch vụ, KH&CN, tri thức" },
+      {
+        label: "Dịch vụ khách hàng",
+        icon: Users2,
+        description: "Yêu cầu → báo giá → hợp đồng → thu tiền",
+        hrefs: ["/request-inbox", "/deal-board", "/customers", "/quotations", "/contracts", "/payments", "/invoices", "/service-requests", "/price-list", "/public-content", "/revenue"],
+      },
+      {
+        label: "Nhiệm vụ KH&CN",
+        icon: FlaskRound,
+        description: "Đề tài, dự án, thí nghiệm, nhà khoa học",
+        hrefs: ["/research-gantt", "/research-tasks", "/provincial-projects", "/field-trials", "/researchers", "/research-stats"],
+      },
+      {
+        label: "Tri thức & SHTT",
+        icon: BookOpen,
+        description: "Kho tri thức, tài sản trí tuệ, chuyển giao",
+        hrefs: ["/knowledge", "/base-data", "/ip-assets", "/tech-transfers", "/partners", "/trainings"],
+      },
+    ],
     name: "Nghiên cứu – dịch vụ – tra cứu KH&CN",
     key: "m4",
     icon: Handshake,

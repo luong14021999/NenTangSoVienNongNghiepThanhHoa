@@ -11,6 +11,7 @@ describe("khung điều hướng theo phần mềm", () => {
   it.each([
     ["M3.1", "bench"],
     ["M3.2", "hub"],
+    ["M4", "areas"],
   ])("%s dùng khung %s: mọi trang nằm ở một tab hoặc trong Danh mục, không trùng", (code, shell) => {
     const m = navModules.find((x) => x.code === code)!;
     expect(shellOf(m)).toBe(shell);
